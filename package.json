@@ -1,0 +1,45 @@
+{
+	"name": "chaintalk-store",
+	"version": "1.0.0",
+	"description": "ChainTalk Store Unit",
+	"leadMaintainer": "Chain Talk, Team.",
+	"main": "src/index.js",
+	"browser": "dist/index.js",
+	"license": "MIT",
+	"files": [
+		"src",
+		"dist"
+	],
+	"scripts": {
+		"clean": "rm -rf dist",
+		"build": "npm run clean && tsc",
+		"test": "jest"
+	},
+	"devDependencies": {
+		"@babel/preset-env": "^7.21.5",
+		"@babel/preset-typescript": "^7.21.5",
+		"@jest/globals": "^29.5.0",
+		"@types/crypto-js": "^4.1.1",
+		"@types/jest": "^29.5.1",
+		"@types/lodash": "^4.14.196",
+		"@types/uuid": "^9.0.2",
+		"@types/ws": "^8.5.5",
+		"fake-indexeddb": "^4.0.2",
+		"jest": "^29.5.0",
+		"ts-jest": "^29.1.0",
+		"ts-node": "^10.9.1"
+	},
+	"dependencies": {
+		"crypto-js": "^4.1.1",
+		"ethers": "^6.7.0",
+		"idb": "^7.1.1",
+		"lodash": "^4.17.21",
+		"mongoose": "^7.4.3",
+		"uuid": "^9.0.0"
+	},
+	"author": "ChainTalk, Team.",
+	"homepage": "https://github.com/chaintalk/",
+	"contributors": [
+		"Chain Talk, Team. <chaintalk@outlook.com>"
+	]
+}
