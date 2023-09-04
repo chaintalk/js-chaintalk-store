@@ -30,8 +30,10 @@
 		"ts-node": "^10.9.1"
 	},
 	"dependencies": {
+		"chaintalk-utils": "^1.0.31",
 		"crypto-js": "^4.1.1",
-		"ethers": "^6.7.0",
+		"dotenv": "^16.3.1",
+		"ethers": "^6.7.1",
 		"idb": "^7.1.1",
 		"lodash": "^4.17.21",
 		"mongoose": "^7.4.3",

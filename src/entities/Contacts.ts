@@ -1,5 +1,6 @@
 import { model, Schema, InferSchemaType, Types } from 'mongoose';
 import { TBaseListResult } from "../interfaces/TBaseEntity";
+import { TypeUtil } from "chaintalk-utils";
 
 /**
  * 	schema
@@ -8,7 +9,11 @@ export const contactsSchema = new Schema( {
 	version : {
 		//	version of the data structure
 		type : String,
-		required : true
+		validate: {
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ),
+			message: ( props: any ) => `invalid version`
+		},
+		required: [ true, 'version required' ]
 	},
 	deleted : {
 		//	deleted === _id, normal == 0
@@ -19,12 +24,20 @@ export const contactsSchema = new Schema( {
 	wallet : {
 		//	owner's wallet address
 		type : String,
-		required : true
+		validate: {
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ),
+			message: ( props: any ) => `invalid wallet`
+		},
+		required: [ true, 'wallet required' ]
 	},
 	sig : {
 		//	signature of this line of data
 		type : String,
-		required : true
+		validate: {
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ),
+			message: ( props: any ) => `invalid sig`
+		},
+		required: [ true, 'sig required' ]
 	},
 	name : {
 		//	user's name
@@ -34,7 +47,11 @@ export const contactsSchema = new Schema( {
 	address : {
 		//	user's wallet address
 		type : String,
-		required : true
+		validate: {
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ),
+			message: ( props: any ) => `invalid address`
+		},
+		required: [ true, 'address required' ]
 	},
 	avatar : {
 		type : String,
