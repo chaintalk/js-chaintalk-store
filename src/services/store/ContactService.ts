@@ -1,6 +1,6 @@
 import { TypeUtil } from "chaintalk-utils";
 import { ContactListResult, ContactModel, ContactType } from "../../entities/ContactEntity";
-import { IService } from "../../interfaces/IService";
+import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
 import { EtherSigner } from "../signer/EtherSigner";
 import { EtherValidator } from "../signer/EtherValidator";
@@ -10,7 +10,7 @@ import { SignEncoder } from "../signer/SignEncoder";
 /**
  * 	class ContactsService
  */
-export class ContactService extends BaseService implements IService<ContactType>
+export class ContactService extends BaseService implements IWeb3StoreService<ContactType>
 {
 	etherSigner ! : EtherSigner;
 	etherValidator ! : EtherValidator;
