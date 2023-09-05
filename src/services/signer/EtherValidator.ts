@@ -1,11 +1,11 @@
 import { TypeUtil } from "chaintalk-utils";
 import { verifyMessage } from "ethers/lib.esm";
-import { ValidatorUtil } from "../utils/ValidatorUtil";
+import { SignEncoder } from "./SignEncoder";
 
 /**
- * 	@class BaseValidator
+ * 	@class EtherValidator
  */
-export class BaseValidator
+export class EtherValidator
 {
 	/**
 	 *	@param signerWalletAddress	{string}
@@ -19,7 +19,7 @@ export class BaseValidator
 		{
 			try
 			{
-				const sortedData : any = ValidatorUtil.sortObjectByKeys<any>( data );
+				const sortedData : any = SignEncoder.sortObjectByKeys<any>( data );
 				if ( ! TypeUtil.isNotNullObject( sortedData ) )
 				{
 					return reject( `invalid data` );

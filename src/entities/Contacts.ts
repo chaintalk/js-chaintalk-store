@@ -18,8 +18,8 @@ export const contactsSchema = new Schema( {
 	deleted : {
 		//	deleted === _id, normal == 0
 		type : Types.ObjectId,
-		required : true,
-		default : 0,
+		// required : false,
+		// default : 0,
 	},
 	wallet : {
 		//	owner's wallet address
@@ -32,6 +32,7 @@ export const contactsSchema = new Schema( {
 	},
 	sig : {
 		//	signature of this line of data
+		//	e.g.: `0x094ca84eaff1a1557093b65e8e9025c7f5c89881e65c7c6885595a25a1596ad82ec2e3eae0ad5f5c240f4845cda3089baab5c47da3d4fdbe2127b9706a818a8e1b`
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,

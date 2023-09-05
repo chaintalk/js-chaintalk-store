@@ -10,7 +10,7 @@ import { WalletBaseItem } from "../../models/WalletModel";
 /**
  * 	@class
  */
-export class TinyWallet
+export class EtherWallet
 {
 	constructor()
 	{
@@ -101,7 +101,7 @@ export class TinyWallet
 				}
 
 				const wallet : WalletBaseItem = this.createWalletFromPrivateKey( keystoreAccount.privateKey );
-				if ( ! TinyWallet.isValidWalletFactoryData( wallet ) )
+				if ( ! EtherWallet.isValidWalletFactoryData( wallet ) )
 				{
 					return reject( `error in createWalletFromPrivateKey` );
 				}
@@ -126,7 +126,7 @@ export class TinyWallet
 		{
 			try
 			{
-				if ( ! TinyWallet.isValidWalletFactoryData( wallet ) )
+				if ( ! EtherWallet.isValidWalletFactoryData( wallet ) )
 				{
 					return reject( `invalid wallet` );
 				}

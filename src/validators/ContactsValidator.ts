@@ -1,11 +1,11 @@
 import { IValidator } from "../interfaces/IValidator";
 import { ContactsType } from "../entities/Contacts";
-import { BaseValidator } from "./BaseValidator";
+import { EtherValidator } from "../services/wallet/EtherValidator";
 
 /**
  * 	@class ContactsValidator
  */
-export class ContactsValidator extends BaseValidator implements IValidator<ContactsType>
+export class ContactsValidator extends EtherValidator implements IValidator<ContactsType>
 {
 	/**
 	 *	@param signerWalletAddress	{string}
