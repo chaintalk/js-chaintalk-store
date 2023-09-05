@@ -1,5 +1,5 @@
 import { TypeUtil } from "chaintalk-utils";
-import { ContactListResult, ContactModel, contactSchema, ContactType } from "../../entities/ContactEntity";
+import { ContactListResult, ContactModel, ContactType } from "../../entities/ContactEntity";
 import { IService } from "../../interfaces/IService";
 import { BaseService } from "./BaseService";
 import { EtherSigner } from "../signer/EtherSigner";
