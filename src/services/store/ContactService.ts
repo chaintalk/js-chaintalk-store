@@ -5,6 +5,7 @@ import { BaseService } from "./BaseService";
 import { EtherSigner } from "../signer/EtherSigner";
 import { EtherValidator } from "../signer/EtherValidator";
 import { Document, Error, Types } from "mongoose";
+import { SignEncoder } from "../signer/SignEncoder";
 
 /**
  * 	class ContactsService
@@ -44,7 +45,8 @@ export class ContactService extends BaseService implements IService<ContactType>
 				}
 
 				//	...
-				const contacts : Document = new ContactModel( { ...data,
+				const contacts : Document = new ContactModel( {
+					...data,
 					deleted : Types.ObjectId.createFromTime( 0 ),
 				} );
 				let error : Error.ValidationError | null = contacts.validateSync();
@@ -71,9 +73,9 @@ export class ContactService extends BaseService implements IService<ContactType>
 	 *	@param wallet	{string}
 	 *	@param data	{ContactType}
 	 *	@param sig	{string}
-	 *	@returns {Promise<number>}
+	 *	@returns {Promise< ContactType | null >}
 	 */
-	public update( wallet : string, data : ContactType, sig : string ) : Promise<number>
+	public update( wallet : string, data : ContactType, sig : string ) : Promise< ContactType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -89,6 +91,24 @@ export class ContactService extends BaseService implements IService<ContactType>
 					return reject( `invalid data.address` );
 				}
 
+				await this.connect();
+				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
+				if ( findContact )
+				{
+					const keysToRemove : Array<string> = [
+						'_id',					//	unique key
+						'__v',
+						'deleted', 'wallet', 'address',		//	unique key
+						'createdAt', 'updatedAt'		//	managed by database
+					];
+					const update : Record<string, any> = SignEncoder.removeObjectKeys( data, keysToRemove );
+					const newContact : ContactType | null = await ContactModel.findOneAndUpdate( findContact, update, { new : true } ).lean<ContactType>();
+
+					//	...
+					return resolve( newContact );
+				}
+
+				resolve( null );
 			}
 			catch ( err )
 			{
@@ -129,8 +149,8 @@ export class ContactService extends BaseService implements IService<ContactType>
 				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
 				if ( findContact )
 				{
-					const update = { deleted: ( findContact as any )._id };
-					const newDoc = await ContactModel.findOneAndUpdate( findContact, update, { new: true } );
+					const update = { deleted : ( findContact as any )._id };
+					const newDoc = await ContactModel.findOneAndUpdate( findContact, update, { new : true } );
 					return resolve( 1 );
 				}
 
@@ -148,7 +168,7 @@ export class ContactService extends BaseService implements IService<ContactType>
 	 *	@param address	{string}	contact wallet address
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	public queryOneByWalletAndAddress( wallet : string, address ? : string ) : Promise< ContactType | null >
+	public queryOneByWalletAndAddress( wallet : string, address ? : string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -202,6 +222,9 @@ export class ContactService extends BaseService implements IService<ContactType>
 					result.total = contacts.length;
 				}
 
+				//	TODO
+				//	pagination
+
 				//	...
 				resolve( result );
 			}
@@ -230,6 +253,6 @@ export class ContactService extends BaseService implements IService<ContactType>
 			{
 				reject( err );
 			}
-		});
+		} );
 	}
 }

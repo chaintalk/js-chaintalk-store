@@ -194,6 +194,75 @@ describe( "ContactsService", () =>
 		}, 60 * 10e3 );
 	} );
 
+	describe( "Updating", () =>
+	{
+		it( "should update a record by wallet and address from database", async () =>
+		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : WalletBaseItem = new EtherWallet().createWalletFromMnemonic( mnemonic );
+
+			const contactsService = new ContactService();
+			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+			const findContact : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+			expect( findContact ).toBeDefined();
+			if ( findContact )
+			{
+				let contactToBeUpdated : ContactType = { ...findContact,
+					deleted : Types.ObjectId.createFromTime( 1 ),
+					name : `name-${ new Date().toLocaleString() }`,
+					avatar : `https://avatar-${ new Date().toLocaleString() }`,
+					remark : `remark .... ${ new Date().toLocaleString() }`,
+				};
+				contactToBeUpdated.sig = await EtherSigner.signObject( walletObj.privateKey, contactToBeUpdated );
+				expect( contactToBeUpdated.sig ).toBeDefined();
+				expect( typeof contactToBeUpdated.sig ).toBe( 'string' );
+				expect( contactToBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+				//	...
+				const allKeys : Array<string> = Object.keys( contactSchema.paths );
+
+				//	...
+				const updatedContact : ContactType | null = await contactsService.update( walletObj.address, contactToBeUpdated, contactToBeUpdated.sig );
+				expect( null !== updatedContact ).toBeTruthy();
+				if ( updatedContact )
+				{
+					for ( const key of allKeys )
+					{
+						expect( updatedContact ).toHaveProperty( key );
+					}
+
+					expect( Types.ObjectId.createFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
+					expect( updatedContact.sig ).toBe( contactToBeUpdated.sig );
+					expect( updatedContact.name ).toBe( contactToBeUpdated.name );
+					expect( updatedContact.avatar ).toBe( contactToBeUpdated.avatar );
+					expect( updatedContact.remark ).toBe( contactToBeUpdated.remark );
+				}
+
+				//	...
+				const findContactAgain : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+				expect( null !== findContactAgain ).toBeTruthy();
+				if ( findContactAgain )
+				{
+					for ( const key of allKeys )
+					{
+						expect( findContactAgain ).toHaveProperty( key );
+					}
+
+					expect( Types.ObjectId.createFromTime( 0 ).equals( findContactAgain.deleted ) ).toBeTruthy();
+					expect( findContactAgain.sig ).toBe( contactToBeUpdated.sig );
+					expect( findContactAgain.name ).toBe( contactToBeUpdated.name );
+					expect( findContactAgain.avatar ).toBe( contactToBeUpdated.avatar );
+					expect( findContactAgain.remark ).toBe( contactToBeUpdated.remark );
+				}
+
+			}
+
+
+		}, 60 * 10e3 );
+	} );
 
 	describe( "Deletion", () =>
 	{
