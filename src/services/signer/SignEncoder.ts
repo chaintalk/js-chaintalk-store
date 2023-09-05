@@ -20,16 +20,10 @@ export class SignEncoder
 					return reject( `invalid obj` );
 				}
 
-				const keysToRemove : Array<string> = [ 'createdAt', 'updatedAt' ];
+				const keysToRemove : Array<string> = [ 'sig', 'createdAt', 'updatedAt' ];
 				const cleanedUpObj : Record<string, any> = this.removeObjectKeys( obj, keysToRemove );
 				const sortedObj : Record<string, any> = this.sortObjectByKeys( cleanedUpObj );
 				const encodedMessage : string = JSON.stringify( sortedObj );
-
-				// console.log( `removeKeys : `, keysToRemove )
-				// console.log( `obj : `, obj )
-				// console.log( `cleanedUpObj : `, cleanedUpObj )
-				// console.log( `sortedObj : `, sortedObj )
-				// console.log( `message : `, encodedMessage )
 
 				resolve( encodedMessage );
 			}

@@ -1,8 +1,12 @@
 import { describe, expect } from '@jest/globals';
-import { ContactsType } from "../../../src/entities/Contacts";
+import { ContactListResult, contactSchema, ContactType } from "../../../src/entities/ContactEntity";
 import { EtherWallet } from "../../../src/services/signer/EtherWallet";
 import { ethers } from "ethers";
 import { EtherSigner } from "../../../src/services/signer/EtherSigner";
+import { WalletBaseItem } from "../../../src/models/WalletModel";
+import { ContactService } from "../../../src/services/store/ContactService";
+import { MongoConnection } from "../../../src/connections/MongoConnection";
+import { Types } from "mongoose";
 
 
 
@@ -16,16 +20,23 @@ describe( "ContactsService", () =>
 	} );
 	afterAll( async () =>
 	{
+		//
+		//	disconnect
+		//
+		await new MongoConnection().disconnect();
 	} );
 
 	describe( "Add record", () =>
 	{
 		it( "should add a record to database", async () =>
 		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : WalletBaseItem = new EtherWallet().createWalletFromMnemonic( mnemonic );
 
-			const mnemonic = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj = new EtherWallet().createWalletFromMnemonic( mnemonic );
-
+			//	assert ...
 			expect( walletObj ).not.toBeNull();
 			expect( walletObj.mnemonic ).toBe( mnemonic );
 			expect( walletObj.privateKey.startsWith( '0x' ) ).toBe( true );
@@ -33,26 +44,187 @@ describe( "ContactsService", () =>
 			expect( walletObj.index ).toBe( 0 );
 			expect( walletObj.path ).toBe( ethers.defaultPath );
 
-			let contact : ContactsType = {
+			//
+			//	create a new contact with ether signature
+			//
+			let contact : ContactType = {
 				version : '1.0.0',
+				deleted : Types.ObjectId.createFromTime( 0 ),
 				wallet : walletObj.address,
+				address : '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
 				sig : ``,
 				name : `Sam`,
-				address : '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
 				avatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
 				remark : 'no remark',
 				createdAt: new Date(),
 				updatedAt: new Date()
 			};
-			const sig : string = await EtherSigner.signObject( walletObj.privateKey, contact );
-			expect( sig ).toBeDefined();
-			expect( typeof sig ).toBe( 'string' );
-			expect( sig.length ).toBeGreaterThanOrEqual( 0 );
+			contact.sig = await EtherSigner.signObject( walletObj.privateKey, contact );
+			expect( contact.sig ).toBeDefined();
+			expect( typeof contact.sig ).toBe( 'string' );
+			expect( contact.sig.length ).toBeGreaterThanOrEqual( 0 );
 
-			//	set sig
-			contact.sig = sig;
+			//
+			//	try to save the record to database
+			//
+			const contactsService = new ContactService();
+			await contactsService.clearAll();
+
+			const result = await contactsService.add( walletObj.address, contact, contact.sig );
+			expect( result ).toBeGreaterThanOrEqual( 0 );
+
+			try
+			{
+				const resultDup = await contactsService.add( walletObj.address, contact, contact.sig );
+			}
+			catch ( err )
+			{
+				//	MongoServerError: E11000 duplicate key error collection: chaintalk.contacts index: deleted_1_wallet_1_address_1 dup key: { deleted: ObjectId('000000000000000000000000'), wallet: "0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357", address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" }
+				//         at /Users/xing/Documents/wwwroot/chaintalk/js-chaintalk-store/node_modules/mongodb/src/operations/insert.ts:85:25
+				//         at /Users/xing/Documents/wwwroot/chaintalk/js-chaintalk-store/node_modules/mongodb/src/operations/command.ts:173:14
+				//         at processTicksAndRejections (node:internal/process/task_queues:95:5) {
+				//       index: 0,
+				//       code: 11000,
+				//       keyPattern: { deleted: 1, wallet: 1, address: 1 },
+				//       keyValue: {
+				//         deleted: new ObjectId("000000000000000000000000"),
+				//         wallet: '0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357',
+				//         address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+				//       },
+				//       [Symbol(errorLabels)]: Set(0) {}
+				//     }
+
+				//console.log( `err: `, JSON.stringify( err ) );
+				//	err: {"index":0,"code":11000,"keyPattern":{"deleted":1,"wallet":1,"address":1},"keyValue":{"deleted":"000000000000000000000000","wallet":"0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357","address":"0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"}}
+				expect( JSON.stringify( err ) ).toContain( `"code":11000,` );
+			}
+
+		}, 60 * 10e3 );
+	} );
+
+	describe( "Query one", () =>
+	{
+		it( "should return a record by wallet and address from database", async () =>
+		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : WalletBaseItem = new EtherWallet().createWalletFromMnemonic( mnemonic );
+
+			const contactsService = new ContactService();
+			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+			const result : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+			//
+			//    console.log( result );
+			//    {
+			//       _id: new ObjectId("64f77f5bec0dc99ac8b63d2e"),
+			//       version: '1.0.0',
+			//       deleted: new ObjectId("000000000000000000000000"),
+			//       wallet: '0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357',
+			//       sig: '0x1940051530cfec64217770a6ad239ceb9d891e1724e3664b53e17b09117426961a10a7e2a0ae4a7391d13a8b087b03e034ef4cd6d123e8df34ba11b11ed11ee41c',
+			//       name: 'Sam',
+			//       address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+			//       avatar: 'https://avatars.githubusercontent.com/u/142800322?v=4',
+			//       remark: 'no remark',
+			//       createdAt: 2023-09-05T19:19:55.852Z,
+			//       updatedAt: 2023-09-05T19:19:55.852Z,
+			//       __v: 0
+			//     }
+			//
+			if ( result )
+			{
+				const allKeys : Array<string> = Object.keys( contactSchema.paths );
+				for ( const key of allKeys )
+				{
+					expect( result ).toHaveProperty( key );
+				}
+			}
+
+		}, 60 * 10e3 );
+	} );
 
 
+	describe( "Query list", () =>
+	{
+		it( "should return a list of records by wallet and address from database", async () =>
+		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : WalletBaseItem = new EtherWallet().createWalletFromMnemonic( mnemonic );
+
+			const contactsService = new ContactService();
+			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+			const results : ContactListResult = await contactsService.queryListByWalletAndAddress( walletObj.address, address );
+			expect( results ).toHaveProperty( 'total' );
+			expect( results ).toHaveProperty( 'list' );
+			//
+			//    console.log( results );
+			//    {
+			//       total: 1,
+			//       list: [
+			//         {
+			//           _id: new ObjectId("64f77f309936976f7397f70b"),
+			//           version: '1.0.0',
+			//           deleted: new ObjectId("000000000000000000000000"),
+			//           wallet: '0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357',
+			//           sig: '0x1940051530cfec64217770a6ad239ceb9d891e1724e3664b53e17b09117426961a10a7e2a0ae4a7391d13a8b087b03e034ef4cd6d123e8df34ba11b11ed11ee41c',
+			//           name: 'Sam',
+			//           address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+			//           avatar: 'https://avatars.githubusercontent.com/u/142800322?v=4',
+			//           remark: 'no remark',
+			//           createdAt: 2023-09-05T19:19:12.263Z,
+			//           updatedAt: 2023-09-05T19:19:12.263Z,
+			//           __v: 0
+			//         }
+			//       ]
+			//     }
+			//
+			const allKeys : Array<string> = Object.keys( contactSchema.paths );
+			for ( const contact of results.list )
+			{
+				for ( const key of allKeys )
+				{
+					expect( contact ).toHaveProperty( key );
+				}
+			}
+
+		}, 60 * 10e3 );
+	} );
+
+
+	describe( "Deletion", () =>
+	{
+		it( "should logically delete a record by wallet and address from database", async () =>
+		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : WalletBaseItem = new EtherWallet().createWalletFromMnemonic( mnemonic );
+
+			const contactsService = new ContactService();
+			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+			const findContact : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+			if ( findContact )
+			{
+				let contactToBeDeleted : ContactType = { ...findContact,
+					deleted : Types.ObjectId.createFromTime( 1 ),
+				};
+				contactToBeDeleted.sig = await EtherSigner.signObject( walletObj.privateKey, contactToBeDeleted );
+				expect( contactToBeDeleted.sig ).toBeDefined();
+				expect( typeof contactToBeDeleted.sig ).toBe( 'string' );
+				expect( contactToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+				//	...
+				const result : number = await contactsService.delete( walletObj.address, contactToBeDeleted, contactToBeDeleted.sig );
+				expect( result ).toBeGreaterThanOrEqual( 0 );
+
+				const findContactAgain : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+				expect( findContactAgain ).toBe( null );
+			}
 
 
 		}, 60 * 10e3 );

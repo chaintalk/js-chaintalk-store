@@ -1,4 +1,4 @@
-import { ethers, SigningKey } from "ethers"
+import { ethers, SigningKey, verifyMessage } from "ethers"
 import { SignEncoder } from "./SignEncoder";
 
 

@@ -1,5 +1,5 @@
 import { TypeUtil } from "chaintalk-utils";
-import { verifyMessage } from "ethers/lib.esm";
+import { verifyMessage } from "ethers";
 import { SignEncoder } from "./SignEncoder";
 
 /**
@@ -9,23 +9,33 @@ export class EtherValidator
 {
 	/**
 	 *	@param signerWalletAddress	{string}
-	 *	@param data			{any}
+	 *	@param obj			{any}
 	 *	@param sig			{string}
 	 *	@returns {boolean}
 	 */
-	public verifyDataSignature( signerWalletAddress : string, data : any, sig : string ) : Promise<boolean>
+	public validateObject( signerWalletAddress : string, obj : any, sig : string ) : Promise<boolean>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
 			try
 			{
-				const sortedData : any = SignEncoder.sortObjectByKeys<any>( data );
-				if ( ! TypeUtil.isNotNullObject( sortedData ) )
+				if ( ! TypeUtil.isNotEmptyString( signerWalletAddress ) )
 				{
-					return reject( `invalid data` );
+					return reject( `invalid signerWalletAddress` );
+				}
+				if ( ! TypeUtil.isNotNullObject( obj ) )
+				{
+					return reject( `invalid obj` );
+				}
+				if ( ! TypeUtil.isNotEmptyString( sig ) )
+				{
+					return reject( `invalid sig` );
 				}
 
-				const isSignatureValid : boolean = await this.verifySortedDataSignature( signerWalletAddress, sortedData, sig );
+				//	...
+				const dataToSign : string = await SignEncoder.encode( obj );
+				const isSignatureValid = this.validateMessage( signerWalletAddress, dataToSign, sig );
+
 				resolve( isSignatureValid );
 			}
 			catch ( err )
@@ -37,11 +47,11 @@ export class EtherValidator
 
 	/**
 	 *	@param signerWalletAddress	{string}
-	 *	@param sortedData		{any}
+	 *	@param message			{Uint8Array | string}
 	 *	@param sig			{string}
 	 *	@returns {boolean}
 	 */
-	public verifySortedDataSignature( signerWalletAddress : string, sortedData : any, sig : string ) : Promise<boolean>
+	public validateMessage( signerWalletAddress : string, message: Uint8Array | string, sig : string ) : Promise<boolean>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -51,17 +61,25 @@ export class EtherValidator
 				{
 					return reject( `invalid signerWalletAddress` );
 				}
-				if ( ! TypeUtil.isNotNullObject( sortedData ) )
+				if ( ! message )
 				{
-					return reject( `invalid sortedData` );
+					return reject( `invalid message` );
 				}
 				if ( ! TypeUtil.isNotEmptyString( sig ) )
 				{
 					return reject( `invalid sig` );
 				}
 
-				const dataToSign : string = JSON.stringify( sortedData );
-				const isSignatureValid = verifyMessage( dataToSign, sig ) === signerWalletAddress;
+				//	ether verify
+				const verifyResult : string = verifyMessage( message, sig );
+				const isSignatureValid = verifyResult.trim().toLowerCase() === signerWalletAddress.trim().toLowerCase();
+
+				// console.log( `signerWalletAddress : `, signerWalletAddress );
+				// console.log( `message : `, message );
+				// console.log( `sig : `, sig );
+				// console.log( `verifyResult : `, verifyResult );
+				// console.log( `isSignatureValid : `, isSignatureValid );
+
 				resolve( isSignatureValid );
 			}
 			catch ( err )

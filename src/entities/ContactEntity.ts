@@ -5,7 +5,7 @@ import { TypeUtil } from "chaintalk-utils";
 /**
  * 	schema
  */
-export const contactsSchema = new Schema( {
+export const contactSchema = new Schema( {
 	version : {
 		//	version of the data structure
 		type : String,
@@ -17,9 +17,9 @@ export const contactsSchema = new Schema( {
 	},
 	deleted : {
 		//	deleted === _id, normal == 0
-		type : Types.ObjectId,
-		// required : false,
-		// default : 0,
+		type : Schema.Types.ObjectId,
+		required : [ true, 'deleted required' ],
+		default : Types.ObjectId.createFromTime( 0 ),
 	},
 	wallet : {
 		//	owner's wallet address
@@ -69,21 +69,34 @@ export const contactsSchema = new Schema( {
 		{
 			if ( undefined !== address )
 			{
-				return this.find({ wallet : wallet, address : address } );
+				return this.find({
+					deleted : Types.ObjectId.createFromTime( 0 ),
+					wallet : wallet,
+					address : address } );
 			}
 			else
 			{
-				return this.find({ wallet : wallet } );
+				return this.find({
+					deleted : Types.ObjectId.createFromTime( 0 ),
+					wallet : wallet } );
 			}
 		}
 	}
 } );
 
-contactsSchema.method('uniqueKey', function uniqueKey() {
+/**
+ * 	united unique index
+ * 	 1 represents ascending index,
+ * 	-1 represents descending index
+ */
+contactSchema.index({ deleted : 1, wallet: 1, address: 1 }, { unique: true } );
+
+contactSchema.method('getUniqueKey', function getUniqueKey()
+{
 	return `${ this.wallet }-${ this.address }`;
 });
 
-export type ContactsType = InferSchemaType< typeof contactsSchema >;
+export type ContactType = InferSchemaType< typeof contactSchema >;
 // InferSchemaType will determine the type as follows:
 // type ContactsType = {
 //	version : string;
@@ -95,10 +108,10 @@ export type ContactsType = InferSchemaType< typeof contactsSchema >;
 //	remark ?: string;
 // }
 
-export type ContactsListResult = TBaseListResult &
+export type ContactListResult = TBaseListResult &
 {
-	list : Array< ContactsType >;
+	list : Array< ContactType >;
 }
 
 
-export const ContactsModel = model( 'Contacts', contactsSchema );
+export const ContactModel = model( 'Contact', contactSchema );

@@ -1,4 +1,4 @@
-import { connection, connect, ConnectOptions, Mongoose } from "mongoose";
+import { connection, connect, disconnect, ConnectOptions, Mongoose } from "mongoose";
 import { MongoConfig } from "../configs/MongoConfig";
 import { LogUtil } from "chaintalk-utils";
 
@@ -72,5 +72,33 @@ export class MongoConnection
 				reject( err );
 			}
 		} );
+	}
+
+	/**
+	 * 	@returns {Promise<boolean>}
+	 */
+	public disconnect() : Promise<boolean>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				await disconnect();
+				LogUtil.info( `database connection has been disconnected` );
+
+				//
+				//	Connection ready state:
+				//	0 = disconnected
+				//	1 = connected
+				//	2 = connecting
+				//	3 = disconnecting
+				//
+				resolve( 0 === connection.readyState );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
 	}
 }
