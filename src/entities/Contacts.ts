@@ -10,7 +10,7 @@ export const contactsSchema = new Schema( {
 		//	version of the data structure
 		type : String,
 		validate: {
-			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ),
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 16,
 			message: ( props: any ) => `invalid version`
 		},
 		required: [ true, 'version required' ]
@@ -25,7 +25,7 @@ export const contactsSchema = new Schema( {
 		//	owner's wallet address
 		type : String,
 		validate: {
-			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ),
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
 			message: ( props: any ) => `invalid wallet`
 		},
 		required: [ true, 'wallet required' ]
@@ -34,7 +34,7 @@ export const contactsSchema = new Schema( {
 		//	signature of this line of data
 		type : String,
 		validate: {
-			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ),
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
 			message: ( props: any ) => `invalid sig`
 		},
 		required: [ true, 'sig required' ]
@@ -48,7 +48,7 @@ export const contactsSchema = new Schema( {
 		//	user's wallet address
 		type : String,
 		validate: {
-			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ),
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
 			message: ( props: any ) => `invalid address`
 		},
 		required: [ true, 'address required' ]

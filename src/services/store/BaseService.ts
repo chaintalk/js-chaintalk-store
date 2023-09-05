@@ -1,4 +1,4 @@
-import { MongoConnection } from "../connections/MongoConnection";
+import { MongoConnection } from "../../connections/MongoConnection";
 
 export abstract class BaseService extends MongoConnection
 {

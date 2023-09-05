@@ -1,7 +1,7 @@
 import { TypeUtil } from "chaintalk-utils";
-import { ContactsListResult, ContactsModel, ContactsType } from "../entities/Contacts";
-import { IService } from "../interfaces/IService";
-import { ContactsValidator } from "../validators/ContactsValidator";
+import { ContactsListResult, ContactsModel, ContactsType } from "../../entities/Contacts";
+import { IService } from "../../interfaces/IService";
+import { ContactsValidator } from "../../validators/ContactsValidator";
 import { BaseService } from "./BaseService";
 
 /**
