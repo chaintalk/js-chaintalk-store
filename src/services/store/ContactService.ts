@@ -2,9 +2,9 @@ import { PageUtil, TypeUtil } from "chaintalk-utils";
 import { ContactListResult, ContactModel, ContactType } from "../../entities/ContactEntity";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
-import { Web3StoreValidator } from "../signer/Web3StoreValidator";
+import { Web3StoreValidator } from "../../utils/signer/Web3StoreValidator";
 import { Document, Error, Types } from "mongoose";
-import { Web3StoreEncoder } from "../signer/Web3StoreEncoder";
+import { Web3StoreEncoder } from "../../utils/signer/Web3StoreEncoder";
 import { TQueueListOptions } from "../../models/TQuery";
 
 /**
