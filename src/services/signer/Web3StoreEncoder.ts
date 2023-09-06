@@ -1,9 +1,9 @@
 import { TypeUtil } from "chaintalk-utils";
 
 /**
- * 	@class SignEncoder
+ * 	@class Web3StoreEncoder
  */
-export class SignEncoder
+export class Web3StoreEncoder
 {
 	/**
 	 *	@param obj	{Record<string, any>}

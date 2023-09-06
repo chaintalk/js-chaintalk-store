@@ -2,24 +2,24 @@ import { TypeUtil } from "chaintalk-utils";
 import { ContactListResult, ContactModel, ContactType } from "../../entities/ContactEntity";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
-import { EtherSigner } from "../signer/EtherSigner";
-import { EtherValidator } from "../signer/EtherValidator";
+import { Web3StoreSigner } from "../signer/Web3StoreSigner";
+import { Web3StoreValidator } from "../signer/Web3StoreValidator";
 import { Document, Error, Types } from "mongoose";
-import { SignEncoder } from "../signer/SignEncoder";
+import { Web3StoreEncoder } from "../signer/Web3StoreEncoder";
 
 /**
  * 	class ContactsService
  */
 export class ContactService extends BaseService implements IWeb3StoreService<ContactType>
 {
-	etherSigner ! : EtherSigner;
-	etherValidator ! : EtherValidator;
+	web3StoreSigner ! : Web3StoreSigner;
+	web3StoreValidator ! : Web3StoreValidator;
 
 	constructor()
 	{
 		super();
-		this.etherSigner = new EtherSigner();
-		this.etherValidator = new EtherValidator();
+		this.web3StoreSigner = new Web3StoreSigner();
+		this.web3StoreValidator = new Web3StoreValidator();
 	}
 
 	/**
@@ -34,7 +34,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 		{
 			try
 			{
-				if ( ! await this.etherValidator.validateObject( wallet, data, sig ) )
+				if ( ! await this.web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
 				}
@@ -81,7 +81,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 		{
 			try
 			{
-				if ( ! await this.etherValidator.validateObject( wallet, data, sig ) )
+				if ( ! await this.web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
 				}
@@ -101,7 +101,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 						'deleted', 'wallet', 'address',		//	unique key
 						'createdAt', 'updatedAt'		//	managed by database
 					];
-					const update : Record<string, any> = SignEncoder.removeObjectKeys( data, keysToRemove );
+					const update : Record<string, any> = Web3StoreEncoder.removeObjectKeys( data, keysToRemove );
 					const newContact : ContactType | null = await ContactModel.findOneAndUpdate( findContact, update, { new : true } ).lean<ContactType>();
 
 					//	...
@@ -129,7 +129,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 		{
 			try
 			{
-				if ( ! await this.etherValidator.validateObject( wallet, data, sig ) )
+				if ( ! await this.web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
 				}

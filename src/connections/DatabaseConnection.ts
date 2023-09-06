@@ -1,24 +1,22 @@
 import { connection, connect, disconnect, ConnectOptions, Mongoose } from "mongoose";
-import { MongoConfig } from "../configs/MongoConfig";
+import { DatabaseConfig } from "../configs/DatabaseConfig";
 import { LogUtil } from "chaintalk-utils";
 
 /**
- * 	@class MongoConnection
+ * 	@class DatabaseConnection
  */
-export class MongoConnection
+export class DatabaseConnection
 {
 	public conn !: Mongoose;
-	public mongoConfig : MongoConfig;
 
 	constructor()
 	{
-		this.mongoConfig = new MongoConfig();
 	}
 
 	/**
 	 * 	@returns {Mongoose}
 	 */
-	public getConn()
+	public getConn() : Mongoose
 	{
 		return this.conn;
 	}
@@ -32,6 +30,7 @@ export class MongoConnection
 		{
 			try
 			{
+				const url : string = DatabaseConfig.getUrl();
 				//
 				//	Connection ready state:
 				//	0 = disconnected
@@ -47,19 +46,19 @@ export class MongoConnection
 					const options : ConnectOptions = {
 						serverSelectionTimeoutMS : 30 * 10e3
 					};
-					this.conn = await connect( this.mongoConfig.getUrl(), options );
-					LogUtil.info( `Connected to the database [${ this.mongoConfig.getUrl() }]` );
+					this.conn = await connect( url, options );
+					LogUtil.info( `Connected to the database [${ url }]` );
 				}
 				else if ( 1 === connection.readyState )
 				{
-					LogUtil.info( `Already connected to the database [${ this.mongoConfig.getUrl() }]` );
+					LogUtil.info( `Already connected to the database [${ url }]` );
 				}
 				else
 				{
 					LogUtil.info( `Connecting or disconnecting, waiting for the connection to complete` );
 					connection.once( 'open', () =>
 					{
-						LogUtil.info( `Connected to the database [${ this.mongoConfig.getUrl() }]` );
+						LogUtil.info( `Connected to the database [${ url }]` );
 					} );
 				}
 

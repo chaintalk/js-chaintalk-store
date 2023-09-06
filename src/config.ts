@@ -1,26 +1,24 @@
 import { ConnectOptions } from "mongoose";
+import { DatabaseConfig } from "./configs/DatabaseConfig";
 
 /**
  * 	database config
  */
-let databaseUrl : string	= `mongodb://127.0.0.1:27017/chaintalk`;
-let databaseOptions : ConnectOptions	= {};
-
 export function getDatabaseUrl() : string
 {
-	return databaseUrl;
+	return DatabaseConfig.getUrl();
 }
 export function setDatabaseUrl( url : string ) : void
 {
-	databaseUrl = url;
+	return DatabaseConfig.setUrl( url );
 }
 
 
 export function getDatabaseOptions() : ConnectOptions
 {
-	return databaseOptions;
+	return DatabaseConfig.getConnectOptions();
 }
 export function setDatabaseOptions( options : ConnectOptions ) : void
 {
-	databaseOptions = options;
+	return DatabaseConfig.setConnectOptions( options );
 }

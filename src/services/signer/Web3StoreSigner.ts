@@ -1,11 +1,11 @@
 import { ethers, SigningKey, verifyMessage } from "ethers"
-import { SignEncoder } from "./SignEncoder";
+import { Web3StoreEncoder } from "./Web3StoreEncoder";
 
 
 /**
- * 	@class EtherSigner
+ * 	@class Web3StoreSigner
  */
-export class EtherSigner
+export class Web3StoreSigner
 {
 	/**
 	 *	@param privateKey	{ string | SigningKey }
@@ -27,7 +27,7 @@ export class EtherSigner
 					return reject( `invalid obj` );
 				}
 
-				const message : string = await SignEncoder.encode( obj );
+				const message : string = await Web3StoreEncoder.encode( obj );
 				const sig : string = await this.signMessage( privateKey, message );
 
 				// console.log( `sig : `, sig )

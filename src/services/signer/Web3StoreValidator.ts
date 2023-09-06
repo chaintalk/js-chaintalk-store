@@ -1,11 +1,11 @@
 import { TypeUtil } from "chaintalk-utils";
 import { verifyMessage } from "ethers";
-import { SignEncoder } from "./SignEncoder";
+import { Web3StoreEncoder } from "./Web3StoreEncoder";
 
 /**
- * 	@class EtherValidator
+ * 	@class Web3StoreValidator
  */
-export class EtherValidator
+export class Web3StoreValidator
 {
 	/**
 	 *	@param signerWalletAddress	{string}
@@ -33,7 +33,7 @@ export class EtherValidator
 				}
 
 				//	...
-				const dataToSign : string = await SignEncoder.encode( obj );
+				const dataToSign : string = await Web3StoreEncoder.encode( obj );
 				const isSignatureValid = this.validateMessage( signerWalletAddress, dataToSign, sig );
 
 				resolve( isSignatureValid );

@@ -2,10 +2,10 @@ import { describe, expect } from '@jest/globals';
 import { ContactListResult, contactSchema, ContactType } from "../../../src/entities/ContactEntity";
 import { EtherWallet } from "../../../src/services/signer/EtherWallet";
 import { ethers } from "ethers";
-import { EtherSigner } from "../../../src/services/signer/EtherSigner";
+import { Web3StoreSigner } from "../../../src/services/signer/Web3StoreSigner";
 import { WalletBaseItem } from "../../../src/models/WalletModel";
 import { ContactService } from "../../../src/services/store/ContactService";
-import { MongoConnection } from "../../../src/connections/MongoConnection";
+import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 
 
@@ -23,7 +23,7 @@ describe( "ContactsService", () =>
 		//
 		//	disconnect
 		//
-		await new MongoConnection().disconnect();
+		await new DatabaseConnection().disconnect();
 	} );
 
 	describe( "Add record", () =>
@@ -59,7 +59,7 @@ describe( "ContactsService", () =>
 				createdAt: new Date(),
 				updatedAt: new Date()
 			};
-			contact.sig = await EtherSigner.signObject( walletObj.privateKey, contact );
+			contact.sig = await Web3StoreSigner.signObject( walletObj.privateKey, contact );
 			expect( contact.sig ).toBeDefined();
 			expect( typeof contact.sig ).toBe( 'string' );
 			expect( contact.sig.length ).toBeGreaterThanOrEqual( 0 );
@@ -216,7 +216,7 @@ describe( "ContactsService", () =>
 					avatar : `https://avatar-${ new Date().toLocaleString() }`,
 					remark : `remark .... ${ new Date().toLocaleString() }`,
 				};
-				contactToBeUpdated.sig = await EtherSigner.signObject( walletObj.privateKey, contactToBeUpdated );
+				contactToBeUpdated.sig = await Web3StoreSigner.signObject( walletObj.privateKey, contactToBeUpdated );
 				expect( contactToBeUpdated.sig ).toBeDefined();
 				expect( typeof contactToBeUpdated.sig ).toBe( 'string' );
 				expect( contactToBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
@@ -282,7 +282,7 @@ describe( "ContactsService", () =>
 				let contactToBeDeleted : ContactType = { ...findContact,
 					deleted : Types.ObjectId.createFromTime( 1 ),
 				};
-				contactToBeDeleted.sig = await EtherSigner.signObject( walletObj.privateKey, contactToBeDeleted );
+				contactToBeDeleted.sig = await Web3StoreSigner.signObject( walletObj.privateKey, contactToBeDeleted );
 				expect( contactToBeDeleted.sig ).toBeDefined();
 				expect( typeof contactToBeDeleted.sig ).toBe( 'string' );
 				expect( contactToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );

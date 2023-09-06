@@ -1,6 +1,6 @@
-import { MongoConnection } from "../../connections/MongoConnection";
+import { DatabaseConnection } from "../../connections/DatabaseConnection";
 
-export abstract class BaseService extends MongoConnection
+export abstract class BaseService extends DatabaseConnection
 {
 	protected constructor()
 	{
