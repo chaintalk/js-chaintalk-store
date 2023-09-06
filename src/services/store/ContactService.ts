@@ -2,7 +2,6 @@ import { PageUtil, TypeUtil } from "chaintalk-utils";
 import { ContactListResult, ContactModel, ContactType } from "../../entities/ContactEntity";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
-import { Web3StoreSigner } from "../signer/Web3StoreSigner";
 import { Web3StoreValidator } from "../signer/Web3StoreValidator";
 import { Document, Error, Types } from "mongoose";
 import { Web3StoreEncoder } from "../signer/Web3StoreEncoder";

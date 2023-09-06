@@ -1,4 +1,4 @@
-import { ethers, SigningKey, verifyMessage } from "ethers"
+import { ethers, SigningKey } from "ethers"
 import { Web3StoreEncoder } from "./Web3StoreEncoder";
 
 

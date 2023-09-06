@@ -113,7 +113,7 @@ export class EtherWallet
 
 	/**
 	 * 	Resolved to the JSON Keystore Wallet for {wallet} encrypted with {password}.
-	 *	@param wallet	{WalletEntityBaseItem}
+	 *	@param wallet	{TWalletBaseItem}
 	 *	@param password	{string}		encrypt {wallet} with {password}
 	 */
 	public static getKeystoreOfWallet( wallet : TWalletBaseItem, password: string = '' ) : Promise<string>
