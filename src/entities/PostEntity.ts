@@ -3,9 +3,9 @@ import { TypeUtil } from "chaintalk-utils";
 import { TQueueListResult } from "../models/TQuery";
 
 /**
- * 	Contact
+ * 	Post
  */
-export const contactSchema = new Schema( {
+export const postSchema = new Schema( {
 	version : {
 		//	version of the data structure
 		type : String,
@@ -89,14 +89,14 @@ export const contactSchema = new Schema( {
  * 	 1 represents ascending index,
  * 	-1 represents descending index
  */
-contactSchema.index({ deleted : 1, wallet: 1, address: 1 }, { unique: true } );
+postSchema.index({ deleted : 1, wallet: 1, address: 1 }, { unique: true } );
 
-contactSchema.method('getUniqueKey', function getUniqueKey()
+postSchema.method('getUniqueKey', function getUniqueKey()
 {
 	return `${ this.wallet }-${ this.address }`;
 });
 
-export type ContactType = InferSchemaType< typeof contactSchema >;
+export type PostType = InferSchemaType< typeof postSchema >;
 // InferSchemaType will determine the type as follows:
 // type ContactsType = {
 //	version : string;
@@ -108,10 +108,10 @@ export type ContactType = InferSchemaType< typeof contactSchema >;
 //	remark ?: string;
 // }
 
-export type ContactListResult = TQueueListResult &
+export type PostListResult = TQueueListResult &
 {
-	list : Array< ContactType >;
+	list : Array< PostType >;
 }
 
 
-export const ContactModel = model( 'Contact', contactSchema );
+export const PostModel = model( 'Post', postSchema );

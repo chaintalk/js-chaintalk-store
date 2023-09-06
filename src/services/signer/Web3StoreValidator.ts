@@ -13,7 +13,7 @@ export class Web3StoreValidator
 	 *	@param sig			{string}
 	 *	@returns {boolean}
 	 */
-	public validateObject( signerWalletAddress : string, obj : any, sig : string ) : Promise<boolean>
+	public static validateObject( signerWalletAddress : string, obj : any, sig : string ) : Promise<boolean>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -51,7 +51,7 @@ export class Web3StoreValidator
 	 *	@param sig			{string}
 	 *	@returns {boolean}
 	 */
-	public validateMessage( signerWalletAddress : string, message: Uint8Array | string, sig : string ) : Promise<boolean>
+	public static validateMessage( signerWalletAddress : string, message: Uint8Array | string, sig : string ) : Promise<boolean>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

@@ -4,7 +4,7 @@ import {
 	isKeystoreJson, decryptKeystoreJson, encryptKeystoreJson, isAddress
 } from "ethers";
 import { TypeUtil } from "chaintalk-utils";
-import { WalletBaseItem } from "../../models/WalletModel";
+import { TWalletBaseItem } from "../../models/TWallet";
 
 
 /**
@@ -12,10 +12,6 @@ import { WalletBaseItem } from "../../models/WalletModel";
  */
 export class EtherWallet
 {
-	constructor()
-	{
-	}
-
 	public static isValidWalletFactoryData( wallet : any )
 	{
 		return TypeUtil.isNotNullObjectWithKeys( wallet, [ 'isHD', 'mnemonic', 'password', 'address', 'publicKey', 'privateKey', 'index', 'path' ] );
@@ -25,7 +21,7 @@ export class EtherWallet
 	 * 	Create a wallet from a mnemonic phrase.
 	 *	@param mnemonic	- string
 	 */
-	public createWalletFromMnemonic( mnemonic? : string ) : WalletBaseItem
+	public static createWalletFromMnemonic( mnemonic? : string ) : TWalletBaseItem
 	{
 		//
 		//	TODO
@@ -74,7 +70,7 @@ export class EtherWallet
 	 *	@param keystoreJson	{string} Wallet keystore JSON string
 	 *	@param password		{string} decrypt keystoreJson using {password}
 	 */
-	public createWalletFromKeystore( keystoreJson : string, password: string = '' ) : Promise<WalletBaseItem>
+	public static createWalletFromKeystore( keystoreJson : string, password: string = '' ) : Promise<TWalletBaseItem>
 	{
 		return new Promise( async ( resolve, reject) =>
 		{
@@ -100,8 +96,8 @@ export class EtherWallet
 					return reject( `error in decryptKeystoreJson` );
 				}
 
-				const wallet : WalletBaseItem = this.createWalletFromPrivateKey( keystoreAccount.privateKey );
-				if ( ! EtherWallet.isValidWalletFactoryData( wallet ) )
+				const wallet : TWalletBaseItem = this.createWalletFromPrivateKey( keystoreAccount.privateKey );
+				if ( ! this.isValidWalletFactoryData( wallet ) )
 				{
 					return reject( `error in createWalletFromPrivateKey` );
 				}
@@ -120,13 +116,13 @@ export class EtherWallet
 	 *	@param wallet	{WalletEntityBaseItem}
 	 *	@param password	{string}		encrypt {wallet} with {password}
 	 */
-	public getKeystoreOfWallet( wallet : WalletBaseItem, password: string = '' ) : Promise<string>
+	public static getKeystoreOfWallet( wallet : TWalletBaseItem, password: string = '' ) : Promise<string>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
 			try
 			{
-				if ( ! EtherWallet.isValidWalletFactoryData( wallet ) )
+				if ( ! this.isValidWalletFactoryData( wallet ) )
 				{
 					return reject( `invalid wallet` );
 				}
@@ -176,7 +172,7 @@ export class EtherWallet
 	 *	@param {*} extendedKey	- BIP32 Extended Private Key
 	 *	@returns
 	 */
-	public createWalletFromExtendedKey( extendedKey : string ) : WalletBaseItem
+	public static createWalletFromExtendedKey( extendedKey : string ) : TWalletBaseItem
 	{
 		if ( !extendedKey )
 		{
@@ -184,7 +180,7 @@ export class EtherWallet
 		}
 
 		const walletObj = ethers.HDNodeWallet.fromExtendedKey( extendedKey )
-		let wallet = {} as WalletBaseItem;
+		let wallet = {} as TWalletBaseItem;
 		wallet.isHD = true;
 		wallet.mnemonic = '';
 		wallet.password = '';
@@ -243,7 +239,7 @@ export class EtherWallet
 	 *	Create a wallet from a wallet private key
 	 *	@param {*} privateKey
 	 */
-	public createWalletFromPrivateKey( privateKey : any = null ) : WalletBaseItem
+	public static createWalletFromPrivateKey( privateKey : any = null ) : TWalletBaseItem
 	{
 		if ( ! privateKey )
 		{
@@ -292,7 +288,7 @@ export class EtherWallet
 	 *	Create a watch wallet from a wallet address
 	 *	@param {*} address
 	 */
-	public createWalletFromAddress( address : string ) : WalletBaseItem
+	public static createWalletFromAddress( address : string ) : TWalletBaseItem
 	{
 		if ( ! this.isValidAddress( address ) )
 		{
@@ -310,7 +306,7 @@ export class EtherWallet
 			path : null,	//	walletObj.path
 		}
 	}
-	public createWatchWallet( address : string ) : WalletBaseItem
+	public static createWatchWallet( address : string ) : TWalletBaseItem
 	{
 		return this.createWalletFromAddress( address );
 	}
@@ -319,7 +315,7 @@ export class EtherWallet
 	 *	@param address	{string} wallet address
 	 *	@return {boolean}
 	 */
-	public isValidAddress( address : string ) : boolean
+	public static isValidAddress( address : string ) : boolean
 	{
 		return isAddress( address );
 	}
@@ -329,7 +325,7 @@ export class EtherWallet
 	 *	@param {*} wallet
 	 *	@returns
 	 */
-	public createNewAddress( wallet : any ) : WalletBaseItem
+	public static createNewAddress( wallet : any ) : TWalletBaseItem
 	{
 		if ( ! wallet )
 		{

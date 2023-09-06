@@ -1,7 +1,7 @@
 /**
  * 	https://github.com/jakearchibald/idb
  */
-export interface WalletBaseItem
+export interface TWalletBaseItem
 {
 	/**
 	 * 	HD wallet?
@@ -64,7 +64,7 @@ export interface WalletBaseItem
 	chainCode ?: string;
 }
 
-export interface WalletItem extends WalletBaseItem
+export interface TWalletItem extends TWalletBaseItem
 {
 	name: string;
 	chainId : number;		//	network changed to chainId

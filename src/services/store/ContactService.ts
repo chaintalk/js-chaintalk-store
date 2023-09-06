@@ -1,4 +1,4 @@
-import { TypeUtil } from "chaintalk-utils";
+import { PageUtil, TypeUtil } from "chaintalk-utils";
 import { ContactListResult, ContactModel, ContactType } from "../../entities/ContactEntity";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
@@ -6,20 +6,16 @@ import { Web3StoreSigner } from "../signer/Web3StoreSigner";
 import { Web3StoreValidator } from "../signer/Web3StoreValidator";
 import { Document, Error, Types } from "mongoose";
 import { Web3StoreEncoder } from "../signer/Web3StoreEncoder";
+import { TQueueListOptions } from "../../models/TQuery";
 
 /**
  * 	class ContactsService
  */
 export class ContactService extends BaseService implements IWeb3StoreService<ContactType>
 {
-	web3StoreSigner ! : Web3StoreSigner;
-	web3StoreValidator ! : Web3StoreValidator;
-
 	constructor()
 	{
 		super();
-		this.web3StoreSigner = new Web3StoreSigner();
-		this.web3StoreValidator = new Web3StoreValidator();
 	}
 
 	/**
@@ -34,7 +30,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 		{
 			try
 			{
-				if ( ! await this.web3StoreValidator.validateObject( wallet, data, sig ) )
+				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
 				}
@@ -81,7 +77,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 		{
 			try
 			{
-				if ( ! await this.web3StoreValidator.validateObject( wallet, data, sig ) )
+				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
 				}
@@ -129,7 +125,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 		{
 			try
 			{
-				if ( ! await this.web3StoreValidator.validateObject( wallet, data, sig ) )
+				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
 				}
@@ -195,18 +191,25 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	}
 
 	/**
-	 *	@param wallet	{string}	wallet address
-	 *	@param address	{string}	contact wallet address
+	 *	@param wallet		{string}	wallet address
+	 *	@param address		{string}	contact wallet address
+	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	public queryListByWalletAndAddress( wallet : string, address ? : string ) : Promise<ContactListResult>
+	public queryListByWalletAndAddress( wallet : string, address ? : string, options ?: TQueueListOptions ) : Promise<ContactListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
 			try
 			{
+				const pageNo = PageUtil.getSafePageNo( options?.pageNo );
+				const pageSize = PageUtil.getSafePageSize( options?.pageSize );
+				const skip = ( pageNo - 1 ) * pageSize;
+
 				let result : ContactListResult = {
 					total : 0,
+					pageNo : pageNo,
+					pageSize : pageSize,
 					list : [],
 				};
 
@@ -214,6 +217,8 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				const contacts : Array<ContactType> = await ContactModel
 					.find()
 					.byWalletAndAddress( wallet, address )
+					.skip( skip )
+					.limit( pageSize )
 					.lean<Array<ContactType>>()
 					.exec();
 				if ( Array.isArray( contacts ) )

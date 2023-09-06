@@ -3,10 +3,11 @@ import { ContactListResult, contactSchema, ContactType } from "../../../src/enti
 import { EtherWallet } from "../../../src/services/signer/EtherWallet";
 import { ethers } from "ethers";
 import { Web3StoreSigner } from "../../../src/services/signer/Web3StoreSigner";
-import { WalletBaseItem } from "../../../src/models/WalletModel";
+import { TWalletBaseItem } from "../../../src/models/TWallet";
 import { ContactService } from "../../../src/services/store/ContactService";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
+import { TQueueListOptions } from "../../../src/models/TQuery";
 
 
 
@@ -34,7 +35,7 @@ describe( "ContactsService", () =>
 			//	create a wallet by mnemonic
 			//
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : WalletBaseItem = new EtherWallet().createWalletFromMnemonic( mnemonic );
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			//	assert ...
 			expect( walletObj ).not.toBeNull();
@@ -110,7 +111,7 @@ describe( "ContactsService", () =>
 			//	create a wallet by mnemonic
 			//
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : WalletBaseItem = new EtherWallet().createWalletFromMnemonic( mnemonic );
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const contactsService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
@@ -147,13 +148,13 @@ describe( "ContactsService", () =>
 
 	describe( "Query list", () =>
 	{
-		it( "should return a list of records by wallet and address from database", async () =>
+		it( "should return a list of records from database", async () =>
 		{
 			//
 			//	create a wallet by mnemonic
 			//
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : WalletBaseItem = new EtherWallet().createWalletFromMnemonic( mnemonic );
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const contactsService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
@@ -194,6 +195,99 @@ describe( "ContactsService", () =>
 		}, 60 * 10e3 );
 	} );
 
+
+	describe( "Query list by pagination", () =>
+	{
+		it( "should return a list of records by pagination from database", async () =>
+		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
+
+			//
+			//	create many contacts
+			//
+			const contactsService = new ContactService();
+			await contactsService.clearAll();
+			for ( let i = 0; i < 100; i ++ )
+			{
+				const NoStr : string = Number(i).toString().padStart( 2, '0' );
+				let contact : ContactType = {
+					version : '1.0.0',
+					deleted : Types.ObjectId.createFromTime( 0 ),
+					wallet : walletObj.address,
+					address : `0xd8dA6BF26964aF9D7eEd9e03E53415D37aA960${ NoStr }`,
+					sig : ``,
+					name : `Sam-${ NoStr }`,
+					avatar : `https://avatars.githubusercontent.com/u/142800322?v=4&no=${ NoStr }`,
+					remark : `no remark ${ NoStr }`,
+					createdAt: new Date(),
+					updatedAt: new Date()
+				};
+				contact.sig = await Web3StoreSigner.signObject( walletObj.privateKey, contact );
+				expect( contact.sig ).toBeDefined();
+				expect( typeof contact.sig ).toBe( 'string' );
+				expect( contact.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+				const result = await contactsService.add( walletObj.address, contact, contact.sig );
+			}
+
+			//
+			//	....
+			//
+			for ( let page = 1; page <= 10; page ++ )
+			{
+				const options : TQueueListOptions = {
+					pageNo : page,
+					pageSize : 10
+				};
+				const results : ContactListResult = await contactsService.queryListByWalletAndAddress( walletObj.address, undefined, options );
+				expect( results ).toHaveProperty( 'total' );
+				expect( results ).toHaveProperty( 'pageNo' );
+				expect( results ).toHaveProperty( 'pageSize' );
+				expect( results ).toHaveProperty( 'list' );
+				expect( results.pageNo ).toBe( options.pageNo );
+				expect( results.pageSize ).toBe( options.pageSize );
+				//
+				//    console.log( results );
+				//    {
+				//       total: 1,
+				//       pageNo: 2,
+				//       pageSize: 10,
+				//       list: [
+				//         {
+				//           _id: new ObjectId("64f77f309936976f7397f70b"),
+				//           version: '1.0.0',
+				//           deleted: new ObjectId("000000000000000000000000"),
+				//           wallet: '0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357',
+				//           sig: '0x1940051530cfec64217770a6ad239ceb9d891e1724e3664b53e17b09117426961a10a7e2a0ae4a7391d13a8b087b03e034ef4cd6d123e8df34ba11b11ed11ee41c',
+				//           name: 'Sam',
+				//           address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+				//           avatar: 'https://avatars.githubusercontent.com/u/142800322?v=4',
+				//           remark: 'no remark',
+				//           createdAt: 2023-09-05T19:19:12.263Z,
+				//           updatedAt: 2023-09-05T19:19:12.263Z,
+				//           __v: 0
+				//         }
+				//       ]
+				//     }
+				//
+				const allKeys : Array<string> = Object.keys( contactSchema.paths );
+				for ( const contact of results.list )
+				{
+					for ( const key of allKeys )
+					{
+						expect( contact ).toHaveProperty( key );
+					}
+				}
+			}
+
+		}, 60 * 10e3 );
+	} );
+
+
 	describe( "Updating", () =>
 	{
 		it( "should update a record by wallet and address from database", async () =>
@@ -202,7 +296,7 @@ describe( "ContactsService", () =>
 			//	create a wallet by mnemonic
 			//
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : WalletBaseItem = new EtherWallet().createWalletFromMnemonic( mnemonic );
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const contactsService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
@@ -272,7 +366,7 @@ describe( "ContactsService", () =>
 			//	create a wallet by mnemonic
 			//
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : WalletBaseItem = new EtherWallet().createWalletFromMnemonic( mnemonic );
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const contactsService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
