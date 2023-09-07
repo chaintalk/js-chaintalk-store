@@ -49,8 +49,20 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				//	...
 				await this.connect();
 
-				//	检测相同内容的帖子是否刚刚发布过？
-
+				//	check the time of the last post to prevent attacks
+				const options : TQueueListOptions = {
+					pageNo : 1,
+					pageSize : 1,
+					sort : { createdAt: -1 }
+				};
+				const results : PostListResult = await this.queryListByWallet( wallet, options );
+				if ( results && results.total > 0 )
+				{
+					if ( new Date().getTime() - results.list[ 0 ].createdAt.getTime() < 60 * 1000 )
+					{
+						return reject( `operate too frequently. (only one post is allowed to be created in a minute)` );
+					}
+				}
 
 				await postModel.save();
 
@@ -215,9 +227,6 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 					result.list = contacts;
 					result.total = contacts.length;
 				}
-
-				//	TODO
-				//	pagination
 
 				//	...
 				resolve( result );
