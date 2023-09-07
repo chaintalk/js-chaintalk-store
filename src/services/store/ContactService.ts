@@ -7,7 +7,6 @@ import { Document, Error, SortOrder, Types } from "mongoose";
 import { Web3StoreEncoder } from "../../utils/signer/Web3StoreEncoder";
 import { TQueueListOptions } from "../../models/TQuery";
 import { QueryUtil } from "../../utils/QueryUtil";
-import { PostModel, PostType } from "../../entities/PostEntity";
 
 /**
  * 	class ContactsService

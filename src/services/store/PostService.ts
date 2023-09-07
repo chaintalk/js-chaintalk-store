@@ -2,12 +2,12 @@ import { PageUtil, TypeUtil } from "chaintalk-utils";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
 import { Web3StoreValidator } from "../../utils/signer/Web3StoreValidator";
-import { Document, Error, Model, SortOrder, Types } from "mongoose";
+import { Document, Error, SortOrder, Types } from "mongoose";
 import { Web3StoreEncoder } from "../../utils/signer/Web3StoreEncoder";
 import { TQueueListOptions } from "../../models/TQuery";
 import { PostListResult, PostModel, PostType } from "../../entities/PostEntity";
 import { QueryUtil } from "../../utils/QueryUtil";
-import { ContactModel, ContactType } from "../../entities/ContactEntity";
+import { ContactType } from "../../entities/ContactEntity";
 
 /**
  * 	class PostService
