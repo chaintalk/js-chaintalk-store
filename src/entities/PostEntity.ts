@@ -9,23 +9,119 @@ import { MBaseEntity } from "../models/MBaseEntity";
  */
 export const postSchema = new Schema( {
 	...MBaseEntity,
-	name : {
-		//	user's name
-		type : String,
-		required : false
-	},
-	address : {
-		//	user's wallet address
+	authorName : {
 		type : String,
 		validate: {
-			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
-			message: ( props: any ) => `invalid address`
+			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
+			message: ( props: any ) => `invalid authorName. (should be less than 128 characters)`
 		},
-		required: [ true, 'address required' ]
+		required: [ true, 'authorName required' ]
 	},
-	avatar : {
+	authorAvatar : {
+		type : String,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
+			message: ( props: any ) => `invalid authorAvatar. (should be less than 256 characters)`
+		},
+		required: [ true, 'authorAvatar required' ]
+	},
+	body : {
+		//	post body/content
+		type : String,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
+			message: ( props: any ) => `invalid body. (should be less than 2048 characters)`
+		},
+		required: [ true, 'body required' ]
+	},
+	pictures : {
+		type : [String],
+		validate: {
+			validator : ( v: any ) =>
+			{
+				if ( ! Array.isArray( v ) )
+				{
+					return false;
+				}
+				for ( const picture of v )
+				{
+					if ( ! TypeUtil.isNotEmptyString( v ) || v.length > 256 )
+					{
+						return false;
+					}
+				}
+				return true;
+			},
+			message: ( props: any ) => `invalid pictures. (each element should be less than 256 characters)`
+		},
+		required: [ true, 'pictures required' ]
+	},
+	videos : {
+		type : [String],
+		validate: {
+			validator : ( v: any ) =>
+			{
+				if ( ! Array.isArray( v ) )
+				{
+					return false;
+				}
+				for ( const picture of v )
+				{
+					if ( ! TypeUtil.isNotEmptyString( v ) || v.length > 256 )
+					{
+						return false;
+					}
+				}
+				return true;
+			},
+			message: ( props: any ) => `invalid videos. (each element should be less than 256 characters)`
+		},
+		required: [ true, 'videos required' ]
+	},
+	bitcoinPrice : {
+		//	Bitcoin price, just a string
 		type : String,
 		required : false
+	},
+	statisticView : {
+		type : Number,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
+			message: ( props: any ) => `invalid statisticView. (should be greater than or equal to 0)`
+		},
+		required: [ true, 'statisticView required' ]
+	},
+	statisticRepost : {
+		type : Number,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
+			message: ( props: any ) => `invalid statisticRepost. (should be greater than or equal to 0)`
+		},
+		required: [ true, 'statisticRepost required' ]
+	},
+	statisticQuote : {
+		type : Number,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
+			message: ( props: any ) => `invalid statisticQuote. (should be greater than or equal to 0)`
+		},
+		required: [ true, 'statisticQuote required' ]
+	},
+	statisticLike : {
+		type : Number,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
+			message: ( props: any ) => `invalid statisticLike. (should be greater than or equal to 0)`
+		},
+		required: [ true, 'statisticLike required' ]
+	},
+	statisticReply : {
+		type : Number,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
+			message: ( props: any ) => `invalid statisticReply. (should be greater than or equal to 0)`
+		},
+		required: [ true, 'statisticReply required' ]
 	},
 	remark : {
 		type : String,
@@ -34,36 +130,14 @@ export const postSchema = new Schema( {
 }, {
 	timestamps: true,
 	query: {
-		byWalletAndAddress( wallet: string, address ?: string )
+		byWallet( wallet: string )
 		{
-			if ( undefined !== address )
-			{
-				return this.find({
-					deleted : Types.ObjectId.createFromTime( 0 ),
-					wallet : wallet,
-					address : address } );
-			}
-			else
-			{
-				return this.find({
-					deleted : Types.ObjectId.createFromTime( 0 ),
-					wallet : wallet } );
-			}
+			return this.find({
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				wallet : wallet } );
 		}
 	}
 } );
-
-/**
- * 	united unique index
- * 	 1 represents ascending index,
- * 	-1 represents descending index
- */
-postSchema.index({ deleted : 1, wallet: 1, address: 1 }, { unique: true } );
-
-postSchema.method('getUniqueKey', function getUniqueKey()
-{
-	return `${ this.wallet }-${ this.address }`;
-});
 
 export type PostType = InferSchemaType< typeof postSchema >;
 // InferSchemaType will determine the type as follows:
@@ -71,10 +145,7 @@ export type PostType = InferSchemaType< typeof postSchema >;
 //	version : string;
 //	wallet : string;
 //	sig : string;
-//	name ?: string;
-//	address : string;
-//	avatar ?: string;
-//	remark ?: string;
+//	...
 // }
 
 export type PostListResult = TQueueListResult &

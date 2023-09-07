@@ -1,17 +1,17 @@
 import { PageUtil, TypeUtil } from "chaintalk-utils";
-import { ContactListResult, ContactModel, ContactType } from "../../entities/ContactEntity";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
 import { Web3StoreValidator } from "../../utils/signer/Web3StoreValidator";
 import { Document, Error, SortOrder, Types } from "mongoose";
 import { Web3StoreEncoder } from "../../utils/signer/Web3StoreEncoder";
 import { TQueueListOptions } from "../../models/TQuery";
+import { PostListResult, PostModel, PostType } from "../../entities/PostEntity";
 import { QueryUtil } from "../../utils/QueryUtil";
 
 /**
- * 	class ContactsService
+ * 	class PostService
  */
-export class ContactService extends BaseService implements IWeb3StoreService<ContactType>
+export class PostService extends BaseService implements IWeb3StoreService<PostType>
 {
 	constructor()
 	{
@@ -20,11 +20,11 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param data	{ContactType}
+	 *	@param data	{PostType}
 	 *	@param sig	{string}
 	 *	@returns {Promise<number>}
 	 */
-	public add( wallet : string, data : ContactType, sig : string ) : Promise<number>
+	public add( wallet : string, data : PostType, sig : string ) : Promise<number>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -34,18 +34,13 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				{
 					return reject( `failed to validate` );
 				}
-				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'address' ] ) ||
-					! TypeUtil.isNotEmptyString( data.address ) )
-				{
-					return reject( `invalid data.address` );
-				}
 
 				//	...
-				const contactModel : Document = new ContactModel( {
+				const postModel : Document = new PostModel( {
 					...data,
 					deleted : Types.ObjectId.createFromTime( 0 ),
 				} );
-				let error : Error.ValidationError | null = contactModel.validateSync();
+				let error : Error.ValidationError | null = postModel.validateSync();
 				if ( error )
 				{
 					return reject( error );
@@ -53,7 +48,11 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 
 				//	...
 				await this.connect();
-				await contactModel.save();
+
+				//	检测相同内容的帖子是否刚刚发布过？
+
+
+				await postModel.save();
 
 				//	...
 				resolve( 1 );
@@ -67,11 +66,11 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param data	{ContactType}
+	 *	@param data	{PostType}
 	 *	@param sig	{string}
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	public update( wallet : string, data : ContactType, sig : string ) : Promise< ContactType | null >
+	public update( wallet : string, data : PostType, sig : string ) : Promise< PostType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -81,24 +80,19 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				{
 					return reject( `failed to validate` );
 				}
-				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'address' ] ) ||
-					! TypeUtil.isNotEmptyString( data.address ) )
-				{
-					return reject( `invalid data.address` );
-				}
 
 				await this.connect();
-				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
+				const findContact : PostType | null = await this.queryOneByWallet( wallet );
 				if ( findContact )
 				{
 					const keysToRemove : Array<string> = [
 						'_id',					//	unique key
 						'__v',
-						'deleted', 'wallet', 'address',		//	unique key
+						'deleted', 'wallet',			//
 						'createdAt', 'updatedAt'		//	managed by database
 					];
 					const update : Record<string, any> = Web3StoreEncoder.removeObjectKeys( data, keysToRemove );
-					const newContact : ContactType | null = await ContactModel.findOneAndUpdate( findContact, update, { new : true } ).lean<ContactType>();
+					const newContact : PostType | null = await PostModel.findOneAndUpdate( findContact, update, { new : true } ).lean<PostType>();
 
 					//	...
 					return resolve( newContact );
@@ -115,11 +109,11 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param data	{ContactType}
+	 *	@param data	{PostType}
 	 *	@param sig	{string}
 	 *	@returns {Promise<number>}
 	 */
-	public delete( wallet : string, data : ContactType, sig : string ) : Promise<number>
+	public delete( wallet : string, data : PostType, sig : string ) : Promise<number>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -129,11 +123,6 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				{
 					return reject( `failed to validate` );
 				}
-				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'address' ] ) ||
-					! TypeUtil.isNotEmptyString( data.address ) )
-				{
-					return reject( `invalid data.address` );
-				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
 					! Types.ObjectId.createFromTime( 1 ).equals( data.deleted ) )
 				{
@@ -142,11 +131,11 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				}
 
 				await this.connect();
-				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
+				const findContact : PostType | null = await this.queryOneByWallet( wallet );
 				if ( findContact )
 				{
 					const update = { deleted : ( findContact as any )._id };
-					const newDoc = await ContactModel.findOneAndUpdate( findContact, update, { new : true } );
+					const newDoc = await PostModel.findOneAndUpdate( findContact, update, { new : true } );
 					return resolve( 1 );
 				}
 
@@ -161,20 +150,19 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 
 	/**
 	 *	@param wallet	{string}	wallet address
-	 *	@param address	{string}	contact wallet address
-	 *	@returns {Promise< ContactType | null >}
+	 *	@returns {Promise< PostType | null >}
 	 */
-	public queryOneByWalletAndAddress( wallet : string, address ? : string ) : Promise<ContactType | null>
+	public queryOneByWallet( wallet : string ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
 			try
 			{
 				await this.connect();
-				const contacts = await ContactModel
+				const contacts = await PostModel
 					.findOne()
-					.byWalletAndAddress( wallet, address )
-					.lean<ContactType>()
+					.byWallet( wallet )
+					.lean<PostType>()
 					.exec();
 				if ( Array.isArray( contacts ) && 1 === contacts.length )
 				{
@@ -192,11 +180,10 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 
 	/**
 	 *	@param wallet		{string}	wallet address
-	 *	@param address		{string}	contact wallet address
 	 *	@param options	{TQueueListOptions}
-	 *	@returns {Promise<ContactListResult>}
+	 *	@returns {Promise<PostListResult>}
 	 */
-	public queryListByWalletAndAddress( wallet : string, address ? : string, options ?: TQueueListOptions ) : Promise<ContactListResult>
+	public queryListByWallet( wallet : string, options ?: TQueueListOptions ) : Promise<PostListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -207,7 +194,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				const skip = ( pageNo - 1 ) * pageSize;
 				const sortBy : { [ key : string ] : SortOrder } = QueryUtil.getSafeSortBy( options?.sort );
 
-				let result : ContactListResult = {
+				let result : PostListResult = {
 					total : 0,
 					pageNo : pageNo,
 					pageSize : pageSize,
@@ -215,13 +202,13 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				};
 
 				await this.connect();
-				const contacts : Array<ContactType> = await ContactModel
+				const contacts : Array<PostType> = await PostModel
 					.find()
-					.byWalletAndAddress( wallet, address )
+					.byWallet( wallet )
 					.sort( sortBy )
 					.skip( skip )
 					.limit( pageSize )
-					.lean<Array<ContactType>>()
+					.lean<Array<PostType>>()
 					.exec();
 				if ( Array.isArray( contacts ) )
 				{
@@ -252,7 +239,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 			try
 			{
 				await this.connect();
-				await ContactModel.deleteMany( {} );
+				await PostModel.deleteMany( {} );
 
 				resolve();
 			}
