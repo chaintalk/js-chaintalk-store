@@ -83,6 +83,25 @@ export class Web3StoreEncoder
 		return Object.fromEntries( Object.entries( obj ).filter( ( [ key ] ) => ! keysToRemove.includes( key ) ) );
 	}
 
+	/**
+	 *	@param obj		{Record<string, any>}
+	 *	@param reservedKeys	{Array<string>}
+	 *	@returns {Record<string, any>}
+	 */
+	public static reserveObjectKeys( obj: Record<string, any>, reservedKeys: Array<string> ) : Record<string, any>
+	{
+		if ( ! TypeUtil.isNotNullObject( obj ) )
+		{
+			return obj;
+		}
+		if ( ! Array.isArray( reservedKeys ) || 0 === reservedKeys.length )
+		{
+			return obj;
+		}
+
+		return Object.fromEntries( Object.entries( obj ).filter( ( [ key ] ) => reservedKeys.includes( key ) ) );
+	}
+
 
 	/**
 	 *	@param obj	{*}

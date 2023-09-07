@@ -1,4 +1,4 @@
-import { PageUtil, TypeUtil } from "chaintalk-utils";
+import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
 import { ContactListResult, ContactModel, ContactType } from "../../entities/ContactEntity";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
@@ -7,6 +7,7 @@ import { Document, Error, SortOrder, Types } from "mongoose";
 import { Web3StoreEncoder } from "../../utils/signer/Web3StoreEncoder";
 import { TQueueListOptions } from "../../models/TQuery";
 import { QueryUtil } from "../../utils/QueryUtil";
+import { PostModel, PostType } from "../../entities/PostEntity";
 
 /**
  * 	class ContactsService
@@ -51,6 +52,16 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 					return reject( error );
 				}
 
+				//	throat checking
+				const latestElapsedMillisecond = await this.queryLatestElapsedMillisecondByCreatedAt<ContactType>( ContactModel, wallet );
+				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 60 * 1000 )
+				{
+					if ( ! TestUtil.isTestEnv() )
+					{
+						return reject( `operate too frequently. (only one is allowed to be created in a minute)` );
+					}
+				}
+
 				//	...
 				await this.connect();
 				await contactModel.save();
@@ -87,17 +98,19 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 					return reject( `invalid data.address` );
 				}
 
+				//	throat checking
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<ContactType>( ContactModel, wallet );
+				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				{
+					return reject( `operate too frequently.` );
+				}
+
 				await this.connect();
 				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
 				if ( findContact )
 				{
-					const keysToRemove : Array<string> = [
-						'_id',					//	unique key
-						'__v',
-						'deleted', 'wallet', 'address',		//	unique key
-						'createdAt', 'updatedAt'		//	managed by database
-					];
-					const update : Record<string, any> = Web3StoreEncoder.removeObjectKeys( data, keysToRemove );
+					const allowUpdatedKeys : Array<string> = [ 'version', 'name', 'avatar', 'remark' ];
+					const update : Record<string, any> = { ...Web3StoreEncoder.reserveObjectKeys( data, allowUpdatedKeys ), sig : sig };
 					const newContact : ContactType | null = await ContactModel.findOneAndUpdate( findContact, update, { new : true } ).lean<ContactType>();
 
 					//	...
@@ -141,6 +154,14 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 					return reject( `invalid data.deleted` );
 				}
 
+				//	throat checking
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<ContactType>( ContactModel, wallet );
+				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				{
+					return reject( `operate too frequently.` );
+				}
+
+				//	...
 				await this.connect();
 				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
 				if ( findContact )

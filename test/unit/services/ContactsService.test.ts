@@ -8,6 +8,7 @@ import { ContactService } from "../../../src/services/store/ContactService";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 import { TQueueListOptions } from "../../../src/models/TQuery";
+import { TestUtil } from "chaintalk-utils";
 
 
 
@@ -99,6 +100,9 @@ describe( "ContactsService", () =>
 				//	err: {"index":0,"code":11000,"keyPattern":{"deleted":1,"wallet":1,"address":1},"keyValue":{"deleted":"000000000000000000000000","wallet":"0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357","address":"0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"}}
 				expect( JSON.stringify( err ) ).toContain( `"code":11000,` );
 			}
+
+			//	wait for a while
+			await TestUtil.sleep(5 * 1000 );
 
 		}, 60 * 10e3 );
 	} );
@@ -284,6 +288,9 @@ describe( "ContactsService", () =>
 				}
 			}
 
+			//	wait for a while
+			await TestUtil.sleep(5 * 1000 );
+
 		}, 60 * 10e3 );
 	} );
 
@@ -305,7 +312,6 @@ describe( "ContactsService", () =>
 			if ( findContact )
 			{
 				let contactToBeUpdated : ContactType = { ...findContact,
-					deleted : Types.ObjectId.createFromTime( 1 ),
 					name : `name-${ new Date().toLocaleString() }`,
 					avatar : `https://avatar-${ new Date().toLocaleString() }`,
 					remark : `remark .... ${ new Date().toLocaleString() }`,
@@ -354,6 +360,65 @@ describe( "ContactsService", () =>
 
 			}
 
+			//	wait for a while
+			await TestUtil.sleep(5 * 1000 );
+
+		}, 60 * 10e3 );
+
+		it( "should only be able to update keys that are allowed to be updated", async () =>
+		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
+
+			const contactsService = new ContactService();
+			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+			const findContact : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+			expect( findContact ).toBeDefined();
+			if ( findContact )
+			{
+				let contactToBeUpdated : ContactType = { ...findContact,
+					//	deleted key is not allowed to be updated, will be ignored ...
+					deleted : Types.ObjectId.createFromTime( 1 ),
+
+					//	keys that are allowed to be updated
+					name : `name-${ new Date().toLocaleString() }`,
+					avatar : `https://avatar-${ new Date().toLocaleString() }`,
+					remark : `remark .... ${ new Date().toLocaleString() }`,
+				};
+				contactToBeUpdated.sig = await Web3StoreSigner.signObject( walletObj.privateKey, contactToBeUpdated );
+				expect( contactToBeUpdated.sig ).toBeDefined();
+				expect( typeof contactToBeUpdated.sig ).toBe( 'string' );
+				expect( contactToBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+				//	...
+				const allKeys : Array<string> = Object.keys( contactSchema.paths );
+
+				//	...
+				const updatedContact : ContactType | null = await contactsService.update( walletObj.address, contactToBeUpdated, contactToBeUpdated.sig );
+				expect( null !== updatedContact ).toBeTruthy();
+				if ( updatedContact )
+				{
+					for ( const key of allKeys )
+					{
+						expect( updatedContact ).toHaveProperty( key );
+					}
+
+					expect( Types.ObjectId.createFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
+					expect( updatedContact.sig ).toBe( contactToBeUpdated.sig );
+					expect( updatedContact.name ).toBe( contactToBeUpdated.name );
+					expect( updatedContact.avatar ).toBe( contactToBeUpdated.avatar );
+					expect( updatedContact.remark ).toBe( contactToBeUpdated.remark );
+
+					//	check the result according to the keys that are not allowed to be updated
+					expect( Types.ObjectId.createFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
+				}
+			}
+
+			//	wait for a while
+			await TestUtil.sleep(5 * 1000 );
 
 		}, 60 * 10e3 );
 	} );

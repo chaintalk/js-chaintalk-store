@@ -2,11 +2,12 @@ import { PageUtil, TypeUtil } from "chaintalk-utils";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
 import { Web3StoreValidator } from "../../utils/signer/Web3StoreValidator";
-import { Document, Error, SortOrder, Types } from "mongoose";
+import { Document, Error, Model, SortOrder, Types } from "mongoose";
 import { Web3StoreEncoder } from "../../utils/signer/Web3StoreEncoder";
 import { TQueueListOptions } from "../../models/TQuery";
 import { PostListResult, PostModel, PostType } from "../../entities/PostEntity";
 import { QueryUtil } from "../../utils/QueryUtil";
+import { ContactModel, ContactType } from "../../entities/ContactEntity";
 
 /**
  * 	class PostService
@@ -46,24 +47,15 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 					return reject( error );
 				}
 
-				//	...
-				await this.connect();
-
-				//	check the time of the last post to prevent attacks
-				const options : TQueueListOptions = {
-					pageNo : 1,
-					pageSize : 1,
-					sort : { createdAt: -1 }
-				};
-				const results : PostListResult = await this.queryListByWallet( wallet, options );
-				if ( results && results.total > 0 )
+				//	throat check
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByCreatedAt<PostType>( PostModel, wallet );
+				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 60 * 1000 )
 				{
-					if ( new Date().getTime() - results.list[ 0 ].createdAt.getTime() < 60 * 1000 )
-					{
-						return reject( `operate too frequently. (only one post is allowed to be created in a minute)` );
-					}
+					return reject( `operate too frequently. (only one is allowed to be created in a minute)` );
 				}
 
+				//	...
+				await this.connect();
 				await postModel.save();
 
 				//	...
@@ -93,17 +85,19 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 					return reject( `failed to validate` );
 				}
 
+				//	throat checking
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
+				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				{
+					return reject( `operate too frequently.` );
+				}
+
 				await this.connect();
 				const findContact : PostType | null = await this.queryOneByWallet( wallet );
 				if ( findContact )
 				{
-					const keysToRemove : Array<string> = [
-						'_id',					//	unique key
-						'__v',
-						'deleted', 'wallet',			//
-						'createdAt', 'updatedAt'		//	managed by database
-					];
-					const update : Record<string, any> = Web3StoreEncoder.removeObjectKeys( data, keysToRemove );
+					const allowUpdatedKeys : Array<string> = [ 'version', 'name', 'avatar', 'remark' ];
+					const update : Record<string, any> = { ...Web3StoreEncoder.reserveObjectKeys( data, allowUpdatedKeys ), sig : sig };
 					const newContact : PostType | null = await PostModel.findOneAndUpdate( findContact, update, { new : true } ).lean<PostType>();
 
 					//	...
@@ -142,6 +136,14 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 					return reject( `invalid data.deleted` );
 				}
 
+				//	throat checking
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
+				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				{
+					return reject( `operate too frequently.` );
+				}
+
+				//	...
 				await this.connect();
 				const findContact : PostType | null = await this.queryOneByWallet( wallet );
 				if ( findContact )

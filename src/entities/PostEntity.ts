@@ -115,6 +115,14 @@ export const postSchema = new Schema( {
 		},
 		required: [ true, 'statisticLike required' ]
 	},
+	statisticFavorite : {
+		type : Number,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
+			message: ( props: any ) => `invalid statisticFavorite. (should be greater than or equal to 0)`
+		},
+		required: [ true, 'statisticFavorite required' ]
+	},
 	statisticReply : {
 		type : Number,
 		validate: {
