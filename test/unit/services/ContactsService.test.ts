@@ -1,8 +1,7 @@
 import { describe, expect } from '@jest/globals';
 import { ContactListResult, contactSchema, ContactType } from "../../../src/entities/ContactEntity";
-import { EtherWallet } from "../../../src/utils/signer/EtherWallet";
+import { EtherWallet, Web3StoreSigner } from "web3id";
 import { ethers } from "ethers";
-import { Web3StoreSigner } from "../../../src/utils/signer/Web3StoreSigner";
 import { TWalletBaseItem } from "../../../src/models/TWallet";
 import { ContactService } from "../../../src/services/store/ContactService";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";

@@ -37,7 +37,8 @@
 		"idb": "^7.1.1",
 		"lodash": "^4.17.21",
 		"mongoose": "^7.4.3",
-		"uuid": "^9.0.0"
+		"uuid": "^9.0.0",
+		"web3id": "^1.0.0"
 	},
 	"author": "ChainTalk, Team.",
 	"homepage": "https://github.com/chaintalk/",
