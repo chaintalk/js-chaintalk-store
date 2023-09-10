@@ -1,5 +1,3 @@
-import { PostType } from "../entities/PostEntity";
-
 /**
  * 	@interface IWeb3StoreService
  */
