@@ -1,5 +1,5 @@
-import { PageUtil, TypeUtil } from "chaintalk-utils";
-import { Web3StoreEncoder, Web3StoreValidator } from "web3id";
+import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
+import { EtherWallet, Web3StoreEncoder, Web3StoreValidator } from "web3id";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
 import { Document, Error, SortOrder, Types } from "mongoose";
@@ -21,15 +21,23 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 	 *	@param wallet	{string}
 	 *	@param data	{PostType}
 	 *	@param sig	{string}
-	 *	@returns {Promise<number>}
+	 *	@returns {Promise<PostType>}
 	 */
-	public add( wallet : string, data : PostType, sig : string ) : Promise<number>
+	public add( wallet : string, data : PostType, sig : string ) : Promise< PostType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
 			try
 			{
-				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+
+				const exceptedKeys : Array<string> = [
+					'statisticView', 'statisticRepost', 'statisticQuote', 'statisticLike', 'statisticFavorite', 'statisticReply'
+				];
+				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig, exceptedKeys ) )
 				{
 					return reject( `failed to validate` );
 				}
@@ -46,18 +54,21 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				}
 
 				//	throat check
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByCreatedAt<PostType>( PostModel, wallet );
-				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 60 * 1000 )
+				if ( ! TestUtil.isTestEnv() )
 				{
-					return reject( `operate too frequently. (only one is allowed to be created in a minute)` );
+					const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByCreatedAt<PostType>( PostModel, wallet );
+					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 30 * 1000 )
+					{
+						return reject( `operate too frequently, please try again later.` );
+					}
 				}
 
 				//	...
 				await this.connect();
-				await postModel.save();
+				const savedDoc : Document<PostType> = await postModel.save();
 
 				//	...
-				resolve( 1 );
+				resolve( savedDoc.toObject() );
 			}
 			catch ( err )
 			{
@@ -78,10 +89,20 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 		{
 			try
 			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'hexId' ] ) ||
+					! TypeUtil.isNotEmptyString( data.hexId ) )
+				{
+					return reject( `invalid data.hexId` );
+				}
 				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
 				}
+
 
 				//	throat checking
 				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
@@ -91,15 +112,22 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				}
 
 				await this.connect();
-				const findContact : PostType | null = await this.queryOneByWallet( wallet );
+				const findContact : PostType | null = await this.queryOneByWalletAndHexId( wallet, data.hexId );
 				if ( findContact )
 				{
-					const allowUpdatedKeys : Array<string> = [ 'version', 'name', 'avatar', 'remark' ];
+					const allowUpdatedKeys : Array<string> = [
+						'version',
+						`authorName`, `authorAvatar`,
+						`body`,
+						`pictures`, `videos`,
+						`statisticView`, `statisticRepost`, `statisticQuote`, `statisticLike`, `statisticFavorite`, `statisticReply`,
+						`remark`
+					];
 					const update : Record<string, any> = { ...Web3StoreEncoder.reserveObjectKeys( data, allowUpdatedKeys ), sig : sig };
-					const newContact : PostType | null = await PostModel.findOneAndUpdate( findContact, update, { new : true } ).lean<PostType>();
+					const savedPost : PostType | null = await PostModel.findOneAndUpdate( findContact, update, { new : true } ).lean<PostType>();
 
 					//	...
-					return resolve( newContact );
+					return resolve( savedPost );
 				}
 
 				resolve( null );
@@ -123,6 +151,15 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 		{
 			try
 			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'hexId' ] ) ||
+					! TypeUtil.isNotEmptyString( data.hexId ) )
+				{
+					return reject( `invalid data.hexId` );
+				}
 				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
@@ -143,11 +180,11 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 
 				//	...
 				await this.connect();
-				const findContact : PostType | null = await this.queryOneByWallet( wallet );
-				if ( findContact )
+				const findPost : PostType | null = await this.queryOneByWalletAndHexId( wallet, data.hexId );
+				if ( findPost )
 				{
-					const update = { deleted : ( findContact as any )._id };
-					const newDoc = await PostModel.findOneAndUpdate( findContact, update, { new : true } );
+					const update = { deleted : findPost._id };
+					const newDoc = await PostModel.findOneAndUpdate( findPost, update, { new : true } );
 					return resolve( 1 );
 				}
 
@@ -162,23 +199,33 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 
 	/**
 	 *	@param wallet	{string}	wallet address
+	 *	@param hexId	{string}	a 24-character hexadecimal string representing of an ObjectId
 	 *	@returns {Promise< PostType | null >}
 	 */
-	public queryOneByWallet( wallet : string ) : Promise<PostType | null>
+	public queryOneByWalletAndHexId( wallet : string, hexId : string ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
 			try
 			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! Types.ObjectId.isValid( hexId ) )
+				{
+					return reject( `invalid hexId` );
+				}
+
 				await this.connect();
-				const contacts = await PostModel
+				const contact = await PostModel
 					.findOne()
-					.byWallet( wallet )
+					.byWalletAndHexId( wallet, hexId )
 					.lean<PostType>()
 					.exec();
-				if ( Array.isArray( contacts ) && 1 === contacts.length )
+				if ( contact )
 				{
-					return resolve( contacts[ 0 ] );
+					return resolve( contact );
 				}
 
 				resolve( null );
@@ -201,6 +248,11 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 		{
 			try
 			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+
 				const pageNo = PageUtil.getSafePageNo( options?.pageNo );
 				const pageSize = PageUtil.getSafePageSize( options?.pageSize );
 				const skip = ( pageNo - 1 ) * pageSize;

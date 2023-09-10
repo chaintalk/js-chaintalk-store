@@ -1,5 +1,5 @@
 import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
-import { Web3StoreEncoder, Web3StoreValidator } from "web3id";
+import { EtherWallet, Web3StoreEncoder, Web3StoreValidator } from "web3id";
 import { ContactListResult, ContactModel, ContactType } from "../../entities/ContactEntity";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
@@ -21,14 +21,18 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param wallet	{string}
 	 *	@param data	{ContactType}
 	 *	@param sig	{string}
-	 *	@returns {Promise<number>}
+	 *	@returns {Promise< ContactType | null >}
 	 */
-	public add( wallet : string, data : ContactType, sig : string ) : Promise<number>
+	public add( wallet : string, data : ContactType, sig : string ) : Promise< ContactType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
 			try
 			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
 				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
@@ -51,21 +55,21 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				}
 
 				//	throat checking
-				const latestElapsedMillisecond = await this.queryLatestElapsedMillisecondByCreatedAt<ContactType>( ContactModel, wallet );
-				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 60 * 1000 )
+				if ( ! TestUtil.isTestEnv() )
 				{
-					if ( ! TestUtil.isTestEnv() )
+					const latestElapsedMillisecond = await this.queryLatestElapsedMillisecondByCreatedAt<ContactType>( ContactModel, wallet );
+					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 30 * 1000 )
 					{
-						return reject( `operate too frequently. (only one is allowed to be created in a minute)` );
+						return reject( `operate too frequently, please try again later.` );
 					}
 				}
 
 				//	...
 				await this.connect();
-				await contactModel.save();
+				const savedDoc : Document<ContactType> = await contactModel.save();
 
 				//	...
-				resolve( 1 );
+				resolve( savedDoc.toObject() );
 			}
 			catch ( err )
 			{
@@ -86,6 +90,10 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 		{
 			try
 			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
 				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
@@ -136,6 +144,10 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 		{
 			try
 			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
 				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
@@ -164,7 +176,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
 				if ( findContact )
 				{
-					const update = { deleted : ( findContact as any )._id };
+					const update = { deleted : findContact._id };
 					const newDoc = await ContactModel.findOneAndUpdate( findContact, update, { new : true } );
 					return resolve( 1 );
 				}
@@ -189,6 +201,11 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 		{
 			try
 			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+
 				await this.connect();
 				const contacts = await ContactModel
 					.findOne()
@@ -221,6 +238,11 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 		{
 			try
 			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+
 				const pageNo = PageUtil.getSafePageNo( options?.pageNo );
 				const pageSize = PageUtil.getSafePageSize( options?.pageSize );
 				const skip = ( pageNo - 1 ) * pageSize;

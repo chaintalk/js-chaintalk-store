@@ -1,4 +1,4 @@
-import { model, Schema, InferSchemaType, Types } from 'mongoose';
+import { model, Schema, InferSchemaType, Types, Document } from 'mongoose';
 import { TypeUtil } from "chaintalk-utils";
 import { TQueueListResult } from "../models/TQuery";
 import { MBaseEntity } from "../models/MBaseEntity";
@@ -54,7 +54,7 @@ export const postSchema = new Schema( {
 			},
 			message: ( props: any ) => `invalid pictures. (each element should be less than 256 characters)`
 		},
-		required: [ true, 'pictures required' ]
+		required: false
 	},
 	videos : {
 		type : [String],
@@ -76,7 +76,7 @@ export const postSchema = new Schema( {
 			},
 			message: ( props: any ) => `invalid videos. (each element should be less than 256 characters)`
 		},
-		required: [ true, 'videos required' ]
+		required: false
 	},
 	bitcoinPrice : {
 		//	Bitcoin price, just a string
@@ -142,12 +142,29 @@ export const postSchema = new Schema( {
 		{
 			return this.find({
 				deleted : Types.ObjectId.createFromTime( 0 ),
-				wallet : wallet } );
+				wallet : wallet
+			} );
+		},
+		byWalletAndId( wallet: string, id : Types.ObjectId )
+		{
+			return this.findOne({
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				wallet : wallet,
+				_id : id,
+			} );
+		},
+		byWalletAndHexId( wallet: string, hexId : string )
+		{
+			return this.findOne({
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				wallet : wallet,
+				_id : Types.ObjectId.createFromHexString( hexId ),
+			} );
 		}
 	}
 } );
 
-export type PostType = InferSchemaType< typeof postSchema >;
+export type PostType = InferSchemaType< typeof postSchema > & Document<Types.ObjectId>;
 // InferSchemaType will determine the type as follows:
 // type ContactsType = {
 //	version : string;

@@ -1,20 +1,20 @@
 import { describe, expect } from '@jest/globals';
 import { ContactListResult, contactSchema, ContactType } from "../../../src/entities/ContactEntity";
-import { EtherWallet, Web3StoreSigner } from "web3id";
+import { EtherWallet, Web3StoreSigner, TWalletBaseItem } from "web3id";
 import { ethers } from "ethers";
-import { TWalletBaseItem } from "../../../src/models/TWallet";
 import { ContactService } from "../../../src/services/store/ContactService";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 import { TQueueListOptions } from "../../../src/models/TQuery";
 import { TestUtil } from "chaintalk-utils";
+import { SchemaUtil } from "../../../src/utils/SchemaUtil";
 
 
 
 /**
  *	unit test
  */
-describe( "ContactsService", () =>
+describe( "ContactService", () =>
 {
 	beforeAll( async () =>
 	{
@@ -68,15 +68,26 @@ describe( "ContactsService", () =>
 			//
 			//	try to save the record to database
 			//
-			const contactsService = new ContactService();
-			await contactsService.clearAll();
+			const contactService = new ContactService();
+			await contactService.clearAll();
 
-			const result = await contactsService.add( walletObj.address, contact, contact.sig );
-			expect( result ).toBeGreaterThanOrEqual( 0 );
+			const result = await contactService.add( walletObj.address, contact, contact.sig );
+			expect( result ).toBeDefined();
+
+			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+			expect( Array.isArray( requiredKeys ) ).toBeTruthy();
+			if ( requiredKeys )
+			{
+				for ( const key of requiredKeys )
+				{
+					expect( result ).toHaveProperty( key );
+				}
+			}
+
 
 			try
 			{
-				const resultDup = await contactsService.add( walletObj.address, contact, contact.sig );
+				const resultDup = await contactService.add( walletObj.address, contact, contact.sig );
 			}
 			catch ( err )
 			{
@@ -116,9 +127,9 @@ describe( "ContactsService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const contactsService = new ContactService();
+			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const result : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+			const result : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
 			//
 			//    console.log( result );
 			//    {
@@ -138,10 +149,14 @@ describe( "ContactsService", () =>
 			//
 			if ( result )
 			{
-				const allKeys : Array<string> = Object.keys( contactSchema.paths );
-				for ( const key of allKeys )
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
+				if ( requiredKeys )
 				{
-					expect( result ).toHaveProperty( key );
+					for ( const key of requiredKeys )
+					{
+						expect( result ).toHaveProperty( key );
+					}
 				}
 			}
 
@@ -159,9 +174,9 @@ describe( "ContactsService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const contactsService = new ContactService();
+			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const results : ContactListResult = await contactsService.queryListByWalletAndAddress( walletObj.address, address );
+			const results : ContactListResult = await contactService.queryListByWalletAndAddress( walletObj.address, address );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -186,12 +201,16 @@ describe( "ContactsService", () =>
 			//       ]
 			//     }
 			//
-			const allKeys : Array<string> = Object.keys( contactSchema.paths );
-			for ( const contact of results.list )
+			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+			expect( Array.isArray( requiredKeys ) ).toBeTruthy();
+			if ( requiredKeys )
 			{
-				for ( const key of allKeys )
+				for ( const contact of results.list )
 				{
-					expect( contact ).toHaveProperty( key );
+					for ( const key of requiredKeys )
+					{
+						expect( contact ).toHaveProperty( key );
+					}
 				}
 			}
 
@@ -212,8 +231,8 @@ describe( "ContactsService", () =>
 			//
 			//	create many contacts
 			//
-			const contactsService = new ContactService();
-			await contactsService.clearAll();
+			const contactService = new ContactService();
+			await contactService.clearAll();
 			for ( let i = 0; i < 100; i ++ )
 			{
 				const NoStr : string = Number(i).toString().padStart( 2, '0' );
@@ -234,7 +253,7 @@ describe( "ContactsService", () =>
 				expect( typeof contact.sig ).toBe( 'string' );
 				expect( contact.sig.length ).toBeGreaterThanOrEqual( 0 );
 
-				const result = await contactsService.add( walletObj.address, contact, contact.sig );
+				const result = await contactService.add( walletObj.address, contact, contact.sig );
 			}
 
 			//
@@ -246,7 +265,7 @@ describe( "ContactsService", () =>
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : ContactListResult = await contactsService.queryListByWalletAndAddress( walletObj.address, undefined, options );
+				const results : ContactListResult = await contactService.queryListByWalletAndAddress( walletObj.address, undefined, options );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );
@@ -277,12 +296,16 @@ describe( "ContactsService", () =>
 				//       ]
 				//     }
 				//
-				const allKeys : Array<string> = Object.keys( contactSchema.paths );
-				for ( const contact of results.list )
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
+				if ( requiredKeys )
 				{
-					for ( const key of allKeys )
+					for ( const contact of results.list )
 					{
-						expect( contact ).toHaveProperty( key );
+						for ( const key of requiredKeys )
+						{
+							expect( contact ).toHaveProperty( key );
+						}
 					}
 				}
 			}
@@ -304,9 +327,9 @@ describe( "ContactsService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const contactsService = new ContactService();
+			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+			const findContact : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
 			expect( findContact ).toBeDefined();
 			if ( findContact )
 			{
@@ -321,14 +344,15 @@ describe( "ContactsService", () =>
 				expect( contactToBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				//	...
-				const allKeys : Array<string> = Object.keys( contactSchema.paths );
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 
 				//	...
-				const updatedContact : ContactType | null = await contactsService.update( walletObj.address, contactToBeUpdated, contactToBeUpdated.sig );
+				const updatedContact : ContactType | null = await contactService.update( walletObj.address, contactToBeUpdated, contactToBeUpdated.sig );
 				expect( null !== updatedContact ).toBeTruthy();
-				if ( updatedContact )
+				if ( requiredKeys && updatedContact )
 				{
-					for ( const key of allKeys )
+					for ( const key of requiredKeys )
 					{
 						expect( updatedContact ).toHaveProperty( key );
 					}
@@ -341,11 +365,11 @@ describe( "ContactsService", () =>
 				}
 
 				//	...
-				const findContactAgain : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+				const findContactAgain : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
 				expect( null !== findContactAgain ).toBeTruthy();
-				if ( findContactAgain )
+				if ( requiredKeys && findContactAgain )
 				{
-					for ( const key of allKeys )
+					for ( const key of requiredKeys )
 					{
 						expect( findContactAgain ).toHaveProperty( key );
 					}
@@ -372,9 +396,9 @@ describe( "ContactsService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const contactsService = new ContactService();
+			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+			const findContact : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
 			expect( findContact ).toBeDefined();
 			if ( findContact )
 			{
@@ -393,14 +417,15 @@ describe( "ContactsService", () =>
 				expect( contactToBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				//	...
-				const allKeys : Array<string> = Object.keys( contactSchema.paths );
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 
 				//	...
-				const updatedContact : ContactType | null = await contactsService.update( walletObj.address, contactToBeUpdated, contactToBeUpdated.sig );
+				const updatedContact : ContactType | null = await contactService.update( walletObj.address, contactToBeUpdated, contactToBeUpdated.sig );
 				expect( null !== updatedContact ).toBeTruthy();
-				if ( updatedContact )
+				if ( requiredKeys && updatedContact )
 				{
-					for ( const key of allKeys )
+					for ( const key of requiredKeys )
 					{
 						expect( updatedContact ).toHaveProperty( key );
 					}
@@ -432,9 +457,9 @@ describe( "ContactsService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const contactsService = new ContactService();
+			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+			const findContact : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
 			if ( findContact )
 			{
 				let contactToBeDeleted : ContactType = { ...findContact,
@@ -446,10 +471,10 @@ describe( "ContactsService", () =>
 				expect( contactToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				//	...
-				const result : number = await contactsService.delete( walletObj.address, contactToBeDeleted, contactToBeDeleted.sig );
+				const result : number = await contactService.delete( walletObj.address, contactToBeDeleted, contactToBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findContactAgain : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
+				const findContactAgain : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
 				expect( findContactAgain ).toBe( null );
 			}
 

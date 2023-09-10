@@ -5,6 +5,12 @@ import { Schema, Types } from "mongoose";
  * 	@module MBaseEntity
  */
 export const MBaseEntity : any = {
+	hexId : {
+		//	a 24-character hexadecimal string representing of an ObjectId
+		//	used to uniquely specify the updating or deleting objects
+		type : String,
+		required: false
+	},
 	version : {
 		//	version of the data structure
 		type : String,

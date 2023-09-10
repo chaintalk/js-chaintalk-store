@@ -1,4 +1,4 @@
-import { model, Schema, InferSchemaType, Types } from 'mongoose';
+import { model, Schema, InferSchemaType, Types, Document } from 'mongoose';
 import { TypeUtil } from "chaintalk-utils";
 import { TQueueListResult } from "../models/TQuery";
 import { MBaseEntity } from "../models/MBaseEntity";
@@ -64,7 +64,7 @@ contactSchema.method('getUniqueKey', function getUniqueKey()
 	return `${ this.wallet }-${ this.address }`;
 });
 
-export type ContactType = InferSchemaType< typeof contactSchema >;
+export type ContactType = InferSchemaType< typeof contactSchema > & Document<Types.ObjectId>;
 // InferSchemaType will determine the type as follows:
 // type ContactsType = {
 //	version : string;
