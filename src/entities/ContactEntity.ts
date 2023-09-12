@@ -2,6 +2,7 @@ import { model, Schema, InferSchemaType, Types, Document } from 'mongoose';
 import { TypeUtil } from "chaintalk-utils";
 import { TQueueListResult } from "../models/TQuery";
 import { MBaseEntity } from "../models/MBaseEntity";
+import { EtherWallet } from "web3id";
 
 /**
  * 	Contact
@@ -14,10 +15,11 @@ export const contactSchema = new Schema( {
 		required : false
 	},
 	address : {
-		//	user's wallet address
+		//	user's wallet address, CASE SENSITIVE
+		//	e.g.: `0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357`
 		type : String,
 		validate: {
-			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && EtherWallet.isValidAddress( v ),
 			message: ( props: any ) => `invalid address`
 		},
 		required: [ true, 'address required' ]
@@ -48,6 +50,14 @@ export const contactSchema = new Schema( {
 					deleted : Types.ObjectId.createFromTime( 0 ),
 					wallet : wallet } );
 			}
+		},
+		byWalletAndHash( wallet: string, hash : string )
+		{
+			return this.findOne({
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				wallet : wallet,
+				hash : hash,
+			} );
 		}
 	}
 } );

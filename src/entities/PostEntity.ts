@@ -160,6 +160,14 @@ export const postSchema = new Schema( {
 				wallet : wallet,
 				_id : Types.ObjectId.createFromHexString( hexId ),
 			} );
+		},
+		byWalletAndHash( wallet: string, hash : string )
+		{
+			return this.findOne({
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				wallet : wallet,
+				hash : hash,
+			} );
 		}
 	}
 } );

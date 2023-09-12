@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals';
-import { EtherWallet, Web3StoreSigner, TWalletBaseItem } from "web3id";
+import { EtherWallet, Web3Signer, TWalletBaseItem, Web3Digester } from "web3id";
 import { ethers } from "ethers";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
@@ -55,6 +55,8 @@ describe( "PostService", () =>
 			//	create a new contact with ether signature
 			//
 			let post : PostType = {
+				timestamp : new Date().getTime(),
+				hash : '',
 				version : '1.0.0',
 				deleted : Types.ObjectId.createFromTime( 0 ),
 				wallet : walletObj.address,
@@ -75,7 +77,8 @@ describe( "PostService", () =>
 				createdAt: new Date(),
 				updatedAt: new Date()
 			};
-			post.sig = await Web3StoreSigner.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.hash = await Web3Digester.hashObject( post, exceptedKeys );
 			expect( post.sig ).toBeDefined();
 			expect( typeof post.sig ).toBe( 'string' );
 			expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
@@ -120,8 +123,21 @@ describe( "PostService", () =>
 			}
 			catch ( err )
 			{
-				//	`operate too frequently, please try again later.`
-				expect( JSON.stringify( err ) ).toContain( `operate too frequently` );
+				//
+				//	MongoServerError: E11000 duplicate key error collection: chaintalk.posts index: sig_1 dup key: { sig: "0x4d4b3cf5ebbf090cc1b615ac0cad2f0f37208b70629a51a21eebd72e36fdb8a73e069014a111b0c1181843b7bddd65f52d7fea873a2861093d954d17a2d3a7721b" }
+				//         at /Users/xing/Documents/wwwroot/chaintalk/js-chaintalk-store/node_modules/mongodb/src/operations/insert.ts:85:25
+				//         at /Users/xing/Documents/wwwroot/chaintalk/js-chaintalk-store/node_modules/mongodb/src/operations/command.ts:173:14
+				//         at processTicksAndRejections (node:internal/process/task_queues:95:5) {
+				//       index: 0,
+				//       code: 11000,
+				//       keyPattern: { sig: 1 },
+				//       keyValue: {
+				//         sig: '0x4d4b3cf5ebbf090cc1b615ac0cad2f0f37208b70629a51a21eebd72e36fdb8a73e069014a111b0c1181843b7bddd65f52d7fea873a2861093d954d17a2d3a7721b'
+				//       },
+				//       [Symbol(errorLabels)]: Set(0) {}
+				//     }
+				//
+				expect( JSON.stringify( err ) ).toContain( `"code":11000,` );
 			}
 
 			//	wait for a while
@@ -141,8 +157,7 @@ describe( "PostService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const postService = new PostService();
-			const hexId : string = savedPost._id.toString();
-			const result : PostType | null = await postService.queryOneByWalletAndHexId( walletObj.address, hexId );
+			const result : PostType | null = await postService.queryOneByWalletAndHash( walletObj.address, savedPost.hash );
 			//
 			//    console.log( result );
 			//    {
@@ -269,6 +284,8 @@ describe( "PostService", () =>
 			{
 				const NoStr : string = Number(i).toString().padStart( 2, '0' );
 				let post : PostType = {
+					timestamp : new Date().getTime(),
+					hash : '',
 					version : '1.0.0',
 					deleted : Types.ObjectId.createFromTime( 0 ),
 					wallet : walletObj.address,
@@ -289,7 +306,8 @@ describe( "PostService", () =>
 					createdAt: new Date(),
 					updatedAt: new Date()
 				};
-				post.sig = await Web3StoreSigner.signObject( walletObj.privateKey, post, exceptedKeys );
+				post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+				post.hash = await Web3Digester.hashObject( post, exceptedKeys );
 				expect( post.sig ).toBeDefined();
 				expect( typeof post.sig ).toBe( 'string' );
 				expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
@@ -382,6 +400,8 @@ describe( "PostService", () =>
 			//	create a new post with signature
 			//
 			let post : PostType = {
+				timestamp : new Date().getTime(),
+				hash : '',
 				version : '1.0.0',
 				deleted : Types.ObjectId.createFromTime( 0 ),
 				wallet : walletObj.address,
@@ -402,7 +422,8 @@ describe( "PostService", () =>
 				createdAt: new Date(),
 				updatedAt: new Date()
 			};
-			post.sig = await Web3StoreSigner.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.hash = await Web3Digester.hashObject( post, exceptedKeys );
 
 			//
 			//	try to save the record to database
@@ -418,13 +439,12 @@ describe( "PostService", () =>
 			//
 			//	....
 			//
-			const hexId : string = savedPost._id.toString();
-			const findPost : PostType | null = await postService.queryOneByWalletAndHexId( walletObj.address, hexId );
+			const findPost : PostType | null = await postService.queryOneByWalletAndHash( walletObj.address, post.hash );
 			expect( findPost ).toBeDefined();
 			if ( findPost )
 			{
 				let toBeUpdated : PostType = { ...findPost,
-					hexId : findPost._id.toString(),
+					// hexId : findPost._id.toString(),
 					authorName : `authorName-${ new Date().toLocaleString() }`,
 					authorAvatar : `https://avatar-${ new Date().toLocaleString() }`,
 					body : `Hello 1 at ${ new Date().toLocaleString() }`,
@@ -432,7 +452,7 @@ describe( "PostService", () =>
 					videos : [ `video-${ new Date().toLocaleString() }` ],
 					remark : `remark .... ${ new Date().toLocaleString() }`,
 				};
-				toBeUpdated.sig = await Web3StoreSigner.signObject( walletObj.privateKey, toBeUpdated );
+				toBeUpdated.sig = await Web3Signer.signObject( walletObj.privateKey, toBeUpdated );
 				expect( toBeUpdated.sig ).toBeDefined();
 				expect( typeof toBeUpdated.sig ).toBe( 'string' );
 				expect( toBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
@@ -442,39 +462,47 @@ describe( "PostService", () =>
 				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 
 				//	...
-				const updatedPost : PostType | null = await postService.update( walletObj.address, toBeUpdated, toBeUpdated.sig );
-				expect( null !== updatedPost ).toBeTruthy();
-				if ( requiredKeys && updatedPost )
+				try
 				{
-					for ( const key of requiredKeys )
-					{
-						expect( updatedPost ).toHaveProperty( key );
-					}
-
-					expect( Types.ObjectId.createFromTime( 0 ).equals( updatedPost.deleted ) ).toBeTruthy();
-					expect( updatedPost.sig ).toBe( toBeUpdated.sig );
-					expect( updatedPost.authorName ).toBe( toBeUpdated.authorName );
-					expect( updatedPost.authorAvatar ).toBe( toBeUpdated.authorAvatar );
-					expect( updatedPost.body ).toBe( toBeUpdated.body );
-					expect( updatedPost.remark ).toBe( toBeUpdated.remark );
+					const updatedPost : PostType | null = await postService.update( walletObj.address, toBeUpdated, toBeUpdated.sig );
+					expect( null !== updatedPost ).toBeTruthy();
+					// if ( requiredKeys && updatedPost )
+					// {
+					// 	for ( const key of requiredKeys )
+					// 	{
+					// 		expect( updatedPost ).toHaveProperty( key );
+					// 	}
+					//
+					// 	expect( Types.ObjectId.createFromTime( 0 ).equals( updatedPost.deleted ) ).toBeTruthy();
+					// 	expect( updatedPost.sig ).toBe( toBeUpdated.sig );
+					// 	expect( updatedPost.authorName ).toBe( toBeUpdated.authorName );
+					// 	expect( updatedPost.authorAvatar ).toBe( toBeUpdated.authorAvatar );
+					// 	expect( updatedPost.body ).toBe( toBeUpdated.body );
+					// 	expect( updatedPost.remark ).toBe( toBeUpdated.remark );
+					// }
+					//
+					// //	...
+					// const findPostAgain : PostType | null = await postService.queryOneByWalletAndHexId( walletObj.address, hexId );
+					// expect( null !== findPostAgain ).toBeTruthy();
+					// if ( requiredKeys && findPostAgain )
+					// {
+					// 	for ( const key of requiredKeys )
+					// 	{
+					// 		expect( findPostAgain ).toHaveProperty( key );
+					// 	}
+					//
+					// 	expect( Types.ObjectId.createFromTime( 0 ).equals( findPostAgain.deleted ) ).toBeTruthy();
+					// 	expect( findPostAgain.sig ).toBe( toBeUpdated.sig );
+					// 	expect( findPostAgain.authorName ).toBe( toBeUpdated.authorName );
+					// 	expect( findPostAgain.authorAvatar ).toBe( toBeUpdated.authorAvatar );
+					// 	expect( findPostAgain.body ).toBe( toBeUpdated.body );
+					// 	expect( findPostAgain.remark ).toBe( toBeUpdated.remark );
+					// }
 				}
-
-				//	...
-				const findPostAgain : PostType | null = await postService.queryOneByWalletAndHexId( walletObj.address, hexId );
-				expect( null !== findPostAgain ).toBeTruthy();
-				if ( requiredKeys && findPostAgain )
+				catch ( err )
 				{
-					for ( const key of requiredKeys )
-					{
-						expect( findPostAgain ).toHaveProperty( key );
-					}
-
-					expect( Types.ObjectId.createFromTime( 0 ).equals( findPostAgain.deleted ) ).toBeTruthy();
-					expect( findPostAgain.sig ).toBe( toBeUpdated.sig );
-					expect( findPostAgain.authorName ).toBe( toBeUpdated.authorName );
-					expect( findPostAgain.authorAvatar ).toBe( toBeUpdated.authorAvatar );
-					expect( findPostAgain.body ).toBe( toBeUpdated.body );
-					expect( findPostAgain.remark ).toBe( toBeUpdated.remark );
+					//
+					expect( err ).toBe( `updating is banned` );
 				}
 
 			}
@@ -483,98 +511,80 @@ describe( "PostService", () =>
 			await TestUtil.sleep(5 * 1000 );
 
 		}, 60 * 10e3 );
-		//
-		// it( "should only be able to update keys that are allowed to be updated", async () =>
-		// {
-		// 	//
-		// 	//	create a wallet by mnemonic
-		// 	//
-		// 	const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-		// 	const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-		//
-		// 	const contactsService = new ContactService();
-		// 	const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-		// 	const findContact : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
-		// 	expect( findContact ).toBeDefined();
-		// 	if ( findContact )
-		// 	{
-		// 		let contactToBeUpdated : ContactType = { ...findContact,
-		// 			//	deleted key is not allowed to be updated, will be ignored ...
-		// 			deleted : Types.ObjectId.createFromTime( 1 ),
-		//
-		// 			//	keys that are allowed to be updated
-		// 			name : `name-${ new Date().toLocaleString() }`,
-		// 			avatar : `https://avatar-${ new Date().toLocaleString() }`,
-		// 			remark : `remark .... ${ new Date().toLocaleString() }`,
-		// 		};
-		// 		contactToBeUpdated.sig = await Web3StoreSigner.signObject( walletObj.privateKey, contactToBeUpdated );
-		// 		expect( contactToBeUpdated.sig ).toBeDefined();
-		// 		expect( typeof contactToBeUpdated.sig ).toBe( 'string' );
-		// 		expect( contactToBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
-		//
-		// 		//	...
-		// 		const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( postSchema );
-		// 		expect( Array.isArray( requiredKeys ) ).toBeTruthy();
-		//
-		// 		//	...
-		// 		const updatedContact : ContactType | null = await contactsService.update( walletObj.address, contactToBeUpdated, contactToBeUpdated.sig );
-		// 		expect( null !== updatedContact ).toBeTruthy();
-		// 		if ( requiredKeys && updatedContact )
-		// 		{
-		// 			for ( const key of requiredKeys )
-		// 			{
-		// 				expect( updatedContact ).toHaveProperty( key );
-		// 			}
-		//
-		// 			expect( Types.ObjectId.createFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
-		// 			expect( updatedContact.sig ).toBe( contactToBeUpdated.sig );
-		// 			expect( updatedContact.name ).toBe( contactToBeUpdated.name );
-		// 			expect( updatedContact.avatar ).toBe( contactToBeUpdated.avatar );
-		// 			expect( updatedContact.remark ).toBe( contactToBeUpdated.remark );
-		//
-		// 			//	check the result according to the keys that are not allowed to be updated
-		// 			expect( Types.ObjectId.createFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
-		// 		}
-		// 	}
-		//
-		// 	//	wait for a while
-		// 	await TestUtil.sleep(5 * 1000 );
-		//
-		// }, 60 * 10e3 );
 	} );
-	//
-	// describe( "Deletion", () =>
-	// {
-	// 	it( "should logically delete a record by wallet and address from database", async () =>
-	// 	{
-	// 		//
-	// 		//	create a wallet by mnemonic
-	// 		//
-	// 		const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-	// 		const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-	//
-	// 		const contactsService = new ContactService();
-	// 		const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-	// 		const findContact : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
-	// 		if ( findContact )
-	// 		{
-	// 			let contactToBeDeleted : ContactType = { ...findContact,
-	// 				deleted : Types.ObjectId.createFromTime( 1 ),
-	// 			};
-	// 			contactToBeDeleted.sig = await Web3StoreSigner.signObject( walletObj.privateKey, contactToBeDeleted );
-	// 			expect( contactToBeDeleted.sig ).toBeDefined();
-	// 			expect( typeof contactToBeDeleted.sig ).toBe( 'string' );
-	// 			expect( contactToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
-	//
-	// 			//	...
-	// 			const result : number = await contactsService.delete( walletObj.address, contactToBeDeleted, contactToBeDeleted.sig );
-	// 			expect( result ).toBeGreaterThanOrEqual( 0 );
-	//
-	// 			const findContactAgain : ContactType | null = await contactsService.queryOneByWalletAndAddress( walletObj.address, address );
-	// 			expect( findContactAgain ).toBe( null );
-	// 		}
-	//
-	//
-	// 	}, 60 * 10e3 );
-	// } );
+
+
+	describe( "Deletion", () =>
+	{
+		it( "should logically delete a record by wallet and address from database", async () =>
+		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
+
+			//
+			//	create a new post with signature
+			//
+			let post : PostType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				wallet : walletObj.address,
+				sig : ``,
+				authorName : 'XING',
+				authorAvatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
+				body : 'Hello 1',
+				pictures : [],
+				videos : [],
+				bitcoinPrice : '25888',
+				statisticView : 0,
+				statisticRepost : 0,
+				statisticQuote : 0,
+				statisticLike : 0,
+				statisticFavorite : 0,
+				statisticReply : 0,
+				remark : 'no ...',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.hash = await Web3Digester.hashObject( post, exceptedKeys );
+
+			//
+			//	try to save the record to database
+			//
+			const postService = new PostService();
+			savedPost = await postService.add( walletObj.address, post, post.sig );
+			expect( savedPost ).toBeDefined();
+			expect( savedPost ).toHaveProperty( '_id' );
+
+			//	wait for a while
+			await TestUtil.sleep(5 * 1000 );
+
+			//	...
+			const findPost : PostType | null = await postService.queryOneByWalletAndHash( walletObj.address, post.hash );
+			if ( findPost )
+			{
+				let toBeDeleted : PostType = { ...findPost,
+					deleted : Types.ObjectId.createFromTime( 1 ),
+				};
+				toBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, toBeDeleted );
+				expect( toBeDeleted.sig ).toBeDefined();
+				expect( typeof toBeDeleted.sig ).toBe( 'string' );
+				expect( toBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+				//	...
+				const result : number = await postService.delete( walletObj.address, toBeDeleted, toBeDeleted.sig );
+				expect( result ).toBeGreaterThanOrEqual( 0 );
+
+				const findPostAgain : PostType | null = await postService.queryOneByWalletAndHash( walletObj.address, post.hash );
+				expect( findPostAgain ).toBe( null );
+			}
+
+
+		}, 60 * 10e3 );
+	} );
 } );

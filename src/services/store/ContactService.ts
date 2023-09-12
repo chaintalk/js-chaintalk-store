@@ -1,11 +1,12 @@
 import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
-import { EtherWallet, Web3StoreEncoder, Web3StoreValidator } from "web3id";
+import { EtherWallet, Web3Encoder, Web3Validator } from "web3id";
 import { ContactListResult, ContactModel, ContactType } from "../../entities/ContactEntity";
 import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
-import { Document, Error, SortOrder, Types } from "mongoose";
+import { connection, Document, Error, SortOrder, Types } from "mongoose";
 import { TQueueListOptions } from "../../models/TQuery";
 import { QueryUtil } from "../../utils/QueryUtil";
+import { PostModel, PostType } from "../../entities/PostEntity";
 
 /**
  * 	class ContactsService
@@ -33,7 +34,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				{
 					return reject( `invalid wallet` );
 				}
-				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
+				if ( ! await Web3Validator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
 				}
@@ -94,7 +95,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				{
 					return reject( `invalid wallet` );
 				}
-				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
+				if ( ! await Web3Validator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
 				}
@@ -116,7 +117,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				if ( findContact )
 				{
 					const allowUpdatedKeys : Array<string> = [ 'version', 'name', 'avatar', 'remark' ];
-					const update : Record<string, any> = { ...Web3StoreEncoder.reserveObjectKeys( data, allowUpdatedKeys ), sig : sig };
+					const update : Record<string, any> = { ...Web3Encoder.reserveObjectKeys( data, allowUpdatedKeys ), sig : sig };
 					const newContact : ContactType | null = await ContactModel.findOneAndUpdate( findContact, update, { new : true } ).lean<ContactType>();
 
 					//	...
@@ -148,7 +149,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				{
 					return reject( `invalid wallet` );
 				}
-				if ( ! await Web3StoreValidator.validateObject( wallet, data, sig ) )
+				if ( ! await Web3Validator.validateObject( wallet, data, sig ) )
 				{
 					return reject( `failed to validate` );
 				}
@@ -195,7 +196,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param address	{string}	contact wallet address
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	public queryOneByWalletAndAddress( wallet : string, address ? : string ) : Promise<ContactType | null>
+	public queryOneByWalletAndAddress( wallet : string, address : string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -204,6 +205,10 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				if ( ! EtherWallet.isValidAddress( wallet ) )
 				{
 					return reject( `invalid wallet` );
+				}
+				if ( ! EtherWallet.isValidAddress( address ) )
+				{
+					return reject( `invalid address` );
 				}
 
 				await this.connect();
@@ -215,6 +220,46 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				if ( Array.isArray( contacts ) && 1 === contacts.length )
 				{
 					return resolve( contacts[ 0 ] );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param wallet	{string}	wallet address
+	 * 	@param hash	{string}	a 66-character hexadecimal string
+	 *	@returns {Promise< ContactType | null >}
+	 */
+	public queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<ContactType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotEmptyString( hash ) )
+				{
+					return reject( `invalid hash` );
+				}
+
+				await this.connect();
+				const contact = await ContactModel
+					.findOne()
+					.byWalletAndHash( wallet, hash )
+					.lean<PostType>()
+					.exec();
+				if ( contact )
+				{
+					return resolve( contact );
 				}
 
 				resolve( null );
@@ -294,6 +339,8 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 			{
 				await this.connect();
 				await ContactModel.deleteMany( {} );
+				await ContactModel.collection.drop();
+				await connection.createCollection( ContactModel.collection.name );
 
 				resolve();
 			}
