@@ -1,5 +1,6 @@
 import { DatabaseConnection } from "../../connections/DatabaseConnection";
-import { Model, Types } from "mongoose";
+import { connection, Model, Types } from "mongoose";
+import { PostModel } from "../../entities/PostEntity";
 
 export abstract class BaseService extends DatabaseConnection
 {
@@ -105,5 +106,33 @@ export abstract class BaseService extends DatabaseConnection
 				reject( err );
 			}
 		});
+	}
+
+	/**
+	 * 	@returns {Promise<void>}
+	 */
+	public clearAll<T>( model : Model<T>) : Promise<void>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! model )
+				{
+					return reject( `invalid model` );
+				}
+
+				await this.connect();
+				await model.deleteMany( {} );
+				await model.collection.drop();
+				await connection.createCollection( model.collection.name );
+
+				resolve();
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
 	}
 }

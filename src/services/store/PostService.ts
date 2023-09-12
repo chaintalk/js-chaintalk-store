@@ -4,8 +4,9 @@ import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
 import { connection, Document, Error, SortOrder, Types } from "mongoose";
 import { TQueueListOptions } from "../../models/TQuery";
-import { PostListResult, PostModel, PostType } from "../../entities/PostEntity";
+import { PostListResult, PostModel, postSchema, PostType } from "../../entities/PostEntity";
 import { QueryUtil } from "../../utils/QueryUtil";
+import { SchemaUtil } from "../../utils/SchemaUtil";
 
 /**
  * 	class PostService
@@ -136,6 +137,88 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				// }
 				//
 				// resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param hash	{string}
+	 *	@param key	{string} statisticView, statisticRepost, statisticQuote, ...
+	 *	@returns {Promise< PostType | null >}
+	 */
+	public increaseStatistics( wallet : string, hash : string, key : string ) : Promise< PostType | null >
+	{
+		return this.updateStatistics( wallet, hash, key, 1 );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param hash	{string}
+	 *	@param key	{string} statisticView, statisticRepost, statisticQuote, ...
+	 *	@returns {Promise< PostType | null >}
+	 */
+	public decreaseStatistics( wallet : string, hash : string, key : string ) : Promise< PostType | null >
+	{
+		return this.updateStatistics( wallet, hash, key, -1 );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param hash	{string}
+	 *	@param key	{string} statisticView, statisticRepost, statisticQuote, ...
+	 *	@param value	{number} 1 or -1
+	 *	@returns {Promise< PostType | null >}
+	 */
+	public updateStatistics( wallet : string, hash : string, key : string, value : 1 | -1 ) : Promise< PostType | null >
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! SchemaUtil.isValidKeccak256Hash( hash ) )
+				{
+					return reject( `invalid hash` );
+				}
+
+				const statisticKeys : Array<string> | null = SchemaUtil.getPrefixedKeys( postSchema, 'statistic' );
+				if ( ! Array.isArray( statisticKeys ) || 0 === statisticKeys.length )
+				{
+					return reject( `failed to calculate statistic prefixed keys` );
+				}
+				if ( ! statisticKeys.includes( key ) )
+				{
+					return reject( `invalid key` );
+				}
+
+				//	throat checking
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
+				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				{
+					return reject( `operate too frequently.` );
+				}
+
+				await this.connect();
+				const findPost : PostType | null = await this.queryOneByWalletAndHash( wallet, hash );
+				if ( findPost )
+				{
+					const newValue : number = findPost[ key ] + ( 1 === value ? 1 : -1 );
+					const update : Record<string, any> = { [ key ] : newValue >= 0 ? newValue : 0 };
+					const savedPost : PostType | null = await PostModel.findOneAndUpdate( findPost, update, { new : true } ).lean<PostType>();
+
+					//	...
+					return resolve( savedPost );
+				}
+
+				resolve( null );
 			}
 			catch ( err )
 			{
@@ -300,21 +383,6 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 	 */
 	public clearAll() : Promise<void>
 	{
-		return new Promise( async ( resolve, reject ) =>
-		{
-			try
-			{
-				await this.connect();
-				await PostModel.deleteMany( {} );
-				await PostModel.collection.drop();
-				await connection.createCollection( PostModel.collection.name );
-
-				resolve();
-			}
-			catch ( err )
-			{
-				reject( err );
-			}
-		} );
+		return super.clearAll<PostType>( PostModel );
 	}
 }

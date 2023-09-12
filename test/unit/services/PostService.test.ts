@@ -511,6 +511,78 @@ describe( "PostService", () =>
 			await TestUtil.sleep(5 * 1000 );
 
 		}, 60 * 10e3 );
+
+
+		it( "should update statistics", async () =>
+		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
+
+			//
+			//	create a new post with signature
+			//
+			let post : PostType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				wallet : walletObj.address,
+				sig : ``,
+				authorName : 'XING',
+				authorAvatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
+				body : 'Hello 1',
+				pictures : [],
+				videos : [],
+				bitcoinPrice : '25888',
+				statisticView : 0,
+				statisticRepost : 0,
+				statisticQuote : 0,
+				statisticLike : 0,
+				statisticFavorite : 0,
+				statisticReply : 0,
+				remark : 'no ...',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.hash = await Web3Digester.hashObject( post, exceptedKeys );
+
+			//
+			//	try to save the record to database
+			//
+			const postService = new PostService();
+			savedPost = await postService.add( walletObj.address, post, post.sig );
+			expect( savedPost ).toBeDefined();
+			expect( savedPost ).toHaveProperty( '_id' );
+
+			//	wait for a while
+			await TestUtil.sleep(5 * 1000 );
+
+			//
+			//	try to increase statistic
+			//
+			const increasePost : PostType | null = await postService.increaseStatistics( walletObj.address, post.hash, `statisticView` );
+			expect( increasePost ).toBeDefined();
+			expect( increasePost.statisticView ).toBe( 1 );
+
+			const findPost : PostType | number = await postService.queryOneByWalletAndHash( walletObj.address, post.hash );
+			expect( findPost ).toBeDefined();
+			expect( findPost.statisticView ).toBe( 1 );
+
+			//	wait for a while
+			await TestUtil.sleep(5 * 1000 );
+
+			const decreasePost : PostType | null = await postService.decreaseStatistics( walletObj.address, post.hash, `statisticView` );
+			expect( decreasePost ).toBeDefined();
+			expect( decreasePost.statisticView ).toBe( 0 );
+
+			//	wait for a while
+			await TestUtil.sleep(5 * 1000 );
+
+		}, 60 * 10e3 );
 	} );
 
 

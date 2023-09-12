@@ -333,21 +333,6 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 */
 	public clearAll() : Promise<void>
 	{
-		return new Promise( async ( resolve, reject ) =>
-		{
-			try
-			{
-				await this.connect();
-				await ContactModel.deleteMany( {} );
-				await ContactModel.collection.drop();
-				await connection.createCollection( ContactModel.collection.name );
-
-				resolve();
-			}
-			catch ( err )
-			{
-				reject( err );
-			}
-		} );
+		return super.clearAll<ContactType>( ContactModel );
 	}
 }

@@ -1,6 +1,7 @@
 import { TypeUtil } from "chaintalk-utils";
 import { Schema, Types } from "mongoose";
 import { EtherWallet } from "web3id";
+import { SchemaUtil } from "../utils/SchemaUtil";
 
 /**
  * 	@module MBaseEntity
@@ -21,7 +22,7 @@ export const MBaseEntity : any = {
 		unique: true,
 		validate: {
 			//	Starts with "0x" (case-insensitive)
-			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && 66 === v.length && /^0x[0-9a-f]{64}$/.test( v ),
+			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
 			message: ( props: any ) => `invalid hash, must be 66 lowercase hex characters`
 		},
 		required: [ true, 'hash required' ]
