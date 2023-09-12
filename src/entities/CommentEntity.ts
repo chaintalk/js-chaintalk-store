@@ -2,14 +2,26 @@ import { model, Schema, InferSchemaType, Types, Document } from 'mongoose';
 import { TypeUtil } from "chaintalk-utils";
 import { TQueueListResult } from "../models/TQuery";
 import { MBaseEntity } from "../models/MBaseEntity";
+import { SchemaUtil } from "../utils/SchemaUtil";
 import { MStatisticEntity } from "../models/MStatisticEntity";
 
 
 /**
- * 	Post
+ * 	Comment
  */
-export const postSchema = new Schema( {
+export const commentSchema = new Schema( {
 	...MBaseEntity,
+	postHash : {
+		//	Keccak-256(SHA-3), see the hash value of the Ethereum data block
+		type : String,
+		unique: true,
+		validate: {
+			//	Starts with "0x" (case-insensitive)
+			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
+			message: ( props: any ) => `invalid postHash, must be 66 lowercase hex characters`
+		},
+		required: [ true, 'postHash required' ]
+	},
 	authorName : {
 		type : String,
 		validate: {
@@ -25,6 +37,15 @@ export const postSchema = new Schema( {
 			message: ( props: any ) => `invalid authorAvatar. (should be less than 256 characters)`
 		},
 		required: [ true, 'authorAvatar required' ]
+	},
+	replyTo : {
+		//	Reply to the specified author name. @authorName
+		type : String,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
+			message: ( props: any ) => `invalid replyTo. (should be less than 128 characters)`
+		},
+		required: false
 	},
 	body : {
 		//	post body/content
@@ -92,12 +113,30 @@ export const postSchema = new Schema( {
 }, {
 	timestamps: true,
 	query: {
-		byWallet( wallet: string )
+		byPostHash( postHash : string )
 		{
 			return this.find({
 				deleted : Types.ObjectId.createFromTime( 0 ),
-				wallet : wallet
+				postHash : postHash,
 			} );
+		},
+		byWalletAndPostHash( wallet: string, postHash ?: string )
+		{
+			if ( SchemaUtil.isValidKeccak256Hash( postHash ) )
+			{
+				return this.find({
+					deleted : Types.ObjectId.createFromTime( 0 ),
+					wallet : wallet,
+					postHash : postHash,
+				} );
+			}
+			else
+			{
+				return this.find({
+					deleted : Types.ObjectId.createFromTime( 0 ),
+					wallet : wallet
+				} );
+			}
 		},
 		byWalletAndId( wallet: string, id : Types.ObjectId )
 		{
@@ -122,11 +161,18 @@ export const postSchema = new Schema( {
 				wallet : wallet,
 				hash : hash,
 			} );
+		},
+		byHash( hash : string )
+		{
+			return this.findOne({
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				hash : hash,
+			} );
 		}
 	}
 } );
 
-export type PostType = InferSchemaType< typeof postSchema > & Document<Types.ObjectId>;
+export type CommentType = InferSchemaType< typeof commentSchema > & Document<Types.ObjectId>;
 // InferSchemaType will determine the type as follows:
 // type ContactsType = {
 //	version : string;
@@ -135,10 +181,10 @@ export type PostType = InferSchemaType< typeof postSchema > & Document<Types.Obj
 //	...
 // }
 
-export type PostListResult = TQueueListResult &
+export type CommentListResult = TQueueListResult &
 {
-	list : Array< PostType >;
+	list : Array< CommentType >;
 }
 
 
-export const PostModel = model( 'Post', postSchema );
+export const CommentModel = model( 'Comment', commentSchema );
