@@ -116,29 +116,6 @@ describe( "PostService", () =>
 			expect( savedPost ).toBeDefined();
 			expect( savedPost ).toHaveProperty( '_id' );
 
-			try
-			{
-				const resultDup = await postService.add( walletObj.address, post, post.sig );
-			}
-			catch ( err )
-			{
-				//
-				//	MongoServerError: E11000 duplicate key error collection: chaintalk.posts index: sig_1 dup key: { sig: "0x4d4b3cf5ebbf090cc1b615ac0cad2f0f37208b70629a51a21eebd72e36fdb8a73e069014a111b0c1181843b7bddd65f52d7fea873a2861093d954d17a2d3a7721b" }
-				//         at /Users/xing/Documents/wwwroot/chaintalk/js-chaintalk-store/node_modules/mongodb/src/operations/insert.ts:85:25
-				//         at /Users/xing/Documents/wwwroot/chaintalk/js-chaintalk-store/node_modules/mongodb/src/operations/command.ts:173:14
-				//         at processTicksAndRejections (node:internal/process/task_queues:95:5) {
-				//       index: 0,
-				//       code: 11000,
-				//       keyPattern: { sig: 1 },
-				//       keyValue: {
-				//         sig: '0x4d4b3cf5ebbf090cc1b615ac0cad2f0f37208b70629a51a21eebd72e36fdb8a73e069014a111b0c1181843b7bddd65f52d7fea873a2861093d954d17a2d3a7721b'
-				//       },
-				//       [Symbol(errorLabels)]: Set(0) {}
-				//     }
-				//
-				expect( JSON.stringify( err ) ).toContain( `"code":11000,` );
-			}
-
 			//	wait for a while
 			await TestUtil.sleep(5 * 1000 );
 

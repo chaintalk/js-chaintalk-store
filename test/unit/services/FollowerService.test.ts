@@ -1,20 +1,20 @@
 import { describe, expect } from '@jest/globals';
-import { ContactListResult, contactSchema, ContactType } from "../../../src/entities/ContactEntity";
+import { FollowerListResult, followerSchema, FollowerType } from "../../../src/entities/FollowerEntity";
 import { EtherWallet, Web3Signer, TWalletBaseItem, Web3Digester } from "web3id";
 import { ethers } from "ethers";
-import { ContactService } from "../../../src/services/store/ContactService";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 import { TQueueListOptions } from "../../../src/models/TQuery";
 import { TestUtil } from "chaintalk-utils";
 import { SchemaUtil } from "../../../src/utils/SchemaUtil";
+import { FollowerService } from "../../../src/services/store/FollowerService";
 
 
 
 /**
  *	unit test
  */
-describe( "ContactService", () =>
+describe( "FollowerService", () =>
 {
 	beforeAll( async () =>
 	{
@@ -26,6 +26,9 @@ describe( "ContactService", () =>
 		//
 		await new DatabaseConnection().disconnect();
 	} );
+
+	//	...
+	const oneFollowerAddress : string = `0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045`;
 
 	describe( "Add record", () =>
 	{
@@ -46,15 +49,15 @@ describe( "ContactService", () =>
 			expect( walletObj.path ).toBe( ethers.defaultPath );
 
 			//
-			//	create a new contact with ether signature
+			//	create a new follower with ether signature
 			//
-			let contact : ContactType = {
+			let follower : FollowerType = {
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
 				deleted : Types.ObjectId.createFromTime( 0 ),
 				wallet : walletObj.address,
-				address : '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+				address : oneFollowerAddress,
 				sig : ``,
 				name : `Sam`,
 				avatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
@@ -62,22 +65,22 @@ describe( "ContactService", () =>
 				createdAt: new Date(),
 				updatedAt: new Date()
 			};
-			contact.sig = await Web3Signer.signObject( walletObj.privateKey, contact );
-			contact.hash = await Web3Digester.hashObject( contact );
-			expect( contact.sig ).toBeDefined();
-			expect( typeof contact.sig ).toBe( 'string' );
-			expect( contact.sig.length ).toBeGreaterThanOrEqual( 0 );
+			follower.sig = await Web3Signer.signObject( walletObj.privateKey, follower );
+			follower.hash = await Web3Digester.hashObject( follower );
+			expect( follower.sig ).toBeDefined();
+			expect( typeof follower.sig ).toBe( 'string' );
+			expect( follower.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 			//
 			//	try to save the record to database
 			//
-			const contactService = new ContactService();
-			await contactService.clearAll();
+			const followerService = new FollowerService();
+			await followerService.clearAll();
 
-			const result = await contactService.add( walletObj.address, contact, contact.sig );
+			const result = await followerService.add( walletObj.address, follower, follower.sig );
 			expect( result ).toBeDefined();
 
-			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( followerSchema );
 			expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 			if ( requiredKeys )
 			{
@@ -90,11 +93,12 @@ describe( "ContactService", () =>
 
 			try
 			{
-				const resultDup = await contactService.add( walletObj.address, contact, contact.sig );
+				const resultDup = await followerService.add( walletObj.address, follower, follower.sig );
+				expect( resultDup ).toBe( null );
 			}
 			catch ( err )
 			{
-				//	MongoServerError: E11000 duplicate key error collection: chaintalk.contacts index: deleted_1_wallet_1_address_1 dup key: { deleted: ObjectId('000000000000000000000000'), wallet: "0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357", address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" }
+				//	MongoServerError: E11000 duplicate key error collection: chaintalk.followers index: deleted_1_wallet_1_address_1 dup key: { deleted: ObjectId('000000000000000000000000'), wallet: "0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357", address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" }
 				//         at /Users/xing/Documents/wwwroot/chaintalk/js-chaintalk-store/node_modules/mongodb/src/operations/insert.ts:85:25
 				//         at /Users/xing/Documents/wwwroot/chaintalk/js-chaintalk-store/node_modules/mongodb/src/operations/command.ts:173:14
 				//         at processTicksAndRejections (node:internal/process/task_queues:95:5) {
@@ -132,29 +136,32 @@ describe( "ContactService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const contactService = new ContactService();
-			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const result : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+			const followerService = new FollowerService();
+			const result : FollowerType | null = await followerService.queryOneByWalletAndAddress( walletObj.address, oneFollowerAddress );
+			expect( result ).not.toBe( null );
+			expect( result ).toBeDefined();
 			//
 			//    console.log( result );
 			//    {
-			//       _id: new ObjectId("64f77f5bec0dc99ac8b63d2e"),
+			//       _id: new ObjectId("650224f4e471e1a1637722d2"),
+			//       timestamp: 1694639348227,
+			//       hash: '0xcbc70ff34e94695aa4695b192f8c05b2ce862d595c6744539efda3e67d79cebf',
 			//       version: '1.0.0',
 			//       deleted: new ObjectId("000000000000000000000000"),
 			//       wallet: '0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357',
-			//       sig: '0x1940051530cfec64217770a6ad239ceb9d891e1724e3664b53e17b09117426961a10a7e2a0ae4a7391d13a8b087b03e034ef4cd6d123e8df34ba11b11ed11ee41c',
-			//       name: 'Sam',
+			//       sig: '0x2370448b6d72d4f02b335d35a6f0ebf5f8fc09744530e2e72480d0e245c301cd7d396af0c611fc97473d04e411aa8f7c1ef18fb9f22499b9846e6098e67e7b131c',
 			//       address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+			//       name: 'Sam',
 			//       avatar: 'https://avatars.githubusercontent.com/u/142800322?v=4',
 			//       remark: 'no remark',
-			//       createdAt: 2023-09-05T19:19:55.852Z,
-			//       updatedAt: 2023-09-05T19:19:55.852Z,
+			//       createdAt: 2023-09-13T21:09:08.227Z,
+			//       updatedAt: 2023-09-13T21:09:08.227Z,
 			//       __v: 0
 			//     }
 			//
 			if ( result )
 			{
-				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( followerSchema );
 				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 				if ( requiredKeys )
 				{
@@ -179,9 +186,8 @@ describe( "ContactService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const contactService = new ContactService();
-			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const results : ContactListResult = await contactService.queryListByWalletAndAddress( walletObj.address, address );
+			const followerService = new FollowerService();
+			const results : FollowerListResult = await followerService.queryListByWalletAndAddress( walletObj.address, oneFollowerAddress );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -206,15 +212,15 @@ describe( "ContactService", () =>
 			//       ]
 			//     }
 			//
-			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( followerSchema );
 			expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 			if ( requiredKeys )
 			{
-				for ( const contact of results.list )
+				for ( const follower of results.list )
 				{
 					for ( const key of requiredKeys )
 					{
-						expect( contact ).toHaveProperty( key );
+						expect( follower ).toHaveProperty( key );
 					}
 				}
 			}
@@ -234,10 +240,10 @@ describe( "ContactService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			//
-			//	create many contacts
+			//	create many followers
 			//
-			const contactService = new ContactService();
-			await contactService.clearAll();
+			const followerService = new FollowerService();
+			await followerService.clearAll();
 
 			let walletObjNew : TWalletBaseItem = walletObj;
 			for ( let i = 0; i < 100; i ++ )
@@ -245,7 +251,7 @@ describe( "ContactService", () =>
 				const NoStr : string = Number(i).toString().padStart( 2, '0' );
 
 				walletObjNew = EtherWallet.createNewAddress( walletObjNew );
-				let contact : ContactType = {
+				let follower : FollowerType = {
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
@@ -259,13 +265,13 @@ describe( "ContactService", () =>
 					createdAt: new Date(),
 					updatedAt: new Date()
 				};
-				contact.sig = await Web3Signer.signObject( walletObj.privateKey, contact );
-				contact.hash = await Web3Digester.hashObject( contact );
-				expect( contact.sig ).toBeDefined();
-				expect( typeof contact.sig ).toBe( 'string' );
-				expect( contact.sig.length ).toBeGreaterThanOrEqual( 0 );
+				follower.sig = await Web3Signer.signObject( walletObj.privateKey, follower );
+				follower.hash = await Web3Digester.hashObject( follower );
+				expect( follower.sig ).toBeDefined();
+				expect( typeof follower.sig ).toBe( 'string' );
+				expect( follower.sig.length ).toBeGreaterThanOrEqual( 0 );
 
-				const result = await contactService.add( walletObj.address, contact, contact.sig );
+				const result = await followerService.add( walletObj.address, follower, follower.sig );
 			}
 
 			//
@@ -277,7 +283,7 @@ describe( "ContactService", () =>
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : ContactListResult = await contactService.queryListByWalletAndAddress( walletObj.address, undefined, options );
+				const results : FollowerListResult = await followerService.queryListByWalletAndAddress( walletObj.address, undefined, options );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );
@@ -308,15 +314,15 @@ describe( "ContactService", () =>
 				//       ]
 				//     }
 				//
-				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( followerSchema );
 				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 				if ( requiredKeys )
 				{
-					for ( const contact of results.list )
+					for ( const follower of results.list )
 					{
 						for ( const key of requiredKeys )
 						{
-							expect( contact ).toHaveProperty( key );
+							expect( follower ).toHaveProperty( key );
 						}
 					}
 				}
@@ -339,117 +345,35 @@ describe( "ContactService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const contactService = new ContactService();
+			const followerService = new FollowerService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+			const findContact : FollowerType | null = await followerService.queryOneByWalletAndAddress( walletObj.address, address );
 			expect( findContact ).toBeDefined();
 			if ( findContact )
 			{
-				let contactToBeUpdated : ContactType = { ...findContact,
+				let followerToBeUpdated : FollowerType = { ...findContact,
 					name : `name-${ new Date().toLocaleString() }`,
 					avatar : `https://avatar-${ new Date().toLocaleString() }`,
 					remark : `remark .... ${ new Date().toLocaleString() }`,
 				};
-				contactToBeUpdated.sig = await Web3Signer.signObject( walletObj.privateKey, contactToBeUpdated );
-				expect( contactToBeUpdated.sig ).toBeDefined();
-				expect( typeof contactToBeUpdated.sig ).toBe( 'string' );
-				expect( contactToBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
+				followerToBeUpdated.sig = await Web3Signer.signObject( walletObj.privateKey, followerToBeUpdated );
+				expect( followerToBeUpdated.sig ).toBeDefined();
+				expect( typeof followerToBeUpdated.sig ).toBe( 'string' );
+				expect( followerToBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				//	...
-				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( followerSchema );
 				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 
 				//	...
-				const updatedContact : ContactType | null = await contactService.update( walletObj.address, contactToBeUpdated, contactToBeUpdated.sig );
-				expect( null !== updatedContact ).toBeTruthy();
-				if ( requiredKeys && updatedContact )
+				try
 				{
-					for ( const key of requiredKeys )
-					{
-						expect( updatedContact ).toHaveProperty( key );
-					}
-
-					expect( Types.ObjectId.createFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
-					expect( updatedContact.sig ).toBe( contactToBeUpdated.sig );
-					expect( updatedContact.name ).toBe( contactToBeUpdated.name );
-					expect( updatedContact.avatar ).toBe( contactToBeUpdated.avatar );
-					expect( updatedContact.remark ).toBe( contactToBeUpdated.remark );
+					const updatedContact : FollowerType | null = await followerService.update( walletObj.address, followerToBeUpdated, followerToBeUpdated.sig );
+					expect( null === updatedContact ).toBeTruthy();
 				}
-
-				//	...
-				const findContactAgain : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
-				expect( null !== findContactAgain ).toBeTruthy();
-				if ( requiredKeys && findContactAgain )
+				catch ( err )
 				{
-					for ( const key of requiredKeys )
-					{
-						expect( findContactAgain ).toHaveProperty( key );
-					}
-
-					expect( Types.ObjectId.createFromTime( 0 ).equals( findContactAgain.deleted ) ).toBeTruthy();
-					expect( findContactAgain.sig ).toBe( contactToBeUpdated.sig );
-					expect( findContactAgain.name ).toBe( contactToBeUpdated.name );
-					expect( findContactAgain.avatar ).toBe( contactToBeUpdated.avatar );
-					expect( findContactAgain.remark ).toBe( contactToBeUpdated.remark );
-				}
-
-			}
-
-			//	wait for a while
-			await TestUtil.sleep(5 * 1000 );
-
-		}, 60 * 10e3 );
-
-		it( "should only be able to update keys that are allowed to be updated", async () =>
-		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
-			const contactService = new ContactService();
-			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
-			expect( findContact ).toBeDefined();
-			if ( findContact )
-			{
-				let contactToBeUpdated : ContactType = { ...findContact,
-					//	deleted key is not allowed to be updated, will be ignored ...
-					deleted : Types.ObjectId.createFromTime( 1 ),
-
-					//	keys that are allowed to be updated
-					name : `name-${ new Date().toLocaleString() }`,
-					avatar : `https://avatar-${ new Date().toLocaleString() }`,
-					remark : `remark .... ${ new Date().toLocaleString() }`,
-				};
-				contactToBeUpdated.sig = await Web3Signer.signObject( walletObj.privateKey, contactToBeUpdated );
-				expect( contactToBeUpdated.sig ).toBeDefined();
-				expect( typeof contactToBeUpdated.sig ).toBe( 'string' );
-				expect( contactToBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
-
-				//	...
-				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
-				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
-
-				//	...
-				const updatedContact : ContactType | null = await contactService.update( walletObj.address, contactToBeUpdated, contactToBeUpdated.sig );
-				expect( null !== updatedContact ).toBeTruthy();
-				if ( requiredKeys && updatedContact )
-				{
-					for ( const key of requiredKeys )
-					{
-						expect( updatedContact ).toHaveProperty( key );
-					}
-
-					expect( Types.ObjectId.createFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
-					expect( updatedContact.sig ).toBe( contactToBeUpdated.sig );
-					expect( updatedContact.name ).toBe( contactToBeUpdated.name );
-					expect( updatedContact.avatar ).toBe( contactToBeUpdated.avatar );
-					expect( updatedContact.remark ).toBe( contactToBeUpdated.remark );
-
-					//	check the result according to the keys that are not allowed to be updated
-					expect( Types.ObjectId.createFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
+					expect( err ).toBe( `updating is banned` );
 				}
 			}
 
@@ -469,24 +393,24 @@ describe( "ContactService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const contactService = new ContactService();
+			const followerService = new FollowerService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+			const findContact : FollowerType | null = await followerService.queryOneByWalletAndAddress( walletObj.address, address );
 			if ( findContact )
 			{
-				let contactToBeDeleted : ContactType = { ...findContact,
+				let followerToBeDeleted : FollowerType = { ...findContact,
 					deleted : Types.ObjectId.createFromTime( 1 ),
 				};
-				contactToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, contactToBeDeleted );
-				expect( contactToBeDeleted.sig ).toBeDefined();
-				expect( typeof contactToBeDeleted.sig ).toBe( 'string' );
-				expect( contactToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
+				followerToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, followerToBeDeleted );
+				expect( followerToBeDeleted.sig ).toBeDefined();
+				expect( typeof followerToBeDeleted.sig ).toBe( 'string' );
+				expect( followerToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				//	...
-				const result : number = await contactService.delete( walletObj.address, contactToBeDeleted, contactToBeDeleted.sig );
+				const result : number = await followerService.delete( walletObj.address, followerToBeDeleted, followerToBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findContactAgain : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+				const findContactAgain : FollowerType | null = await followerService.queryOneByWalletAndAddress( walletObj.address, address );
 				expect( findContactAgain ).toBe( null );
 			}
 

@@ -3,6 +3,7 @@ import { TypeUtil } from "chaintalk-utils";
 import { TQueueListResult } from "../models/TQuery";
 import { MBaseEntity } from "../models/MBaseEntity";
 import { EtherWallet } from "web3id";
+import { MRemarkEntity } from "../models/MRemarkEntity";
 
 /**
  * 	Contact
@@ -28,10 +29,7 @@ export const contactSchema = new Schema( {
 		type : String,
 		required : false
 	},
-	remark : {
-		type : String,
-		required : false
-	},
+	...MRemarkEntity
 }, {
 	timestamps: true,
 	query: {

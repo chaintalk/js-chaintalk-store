@@ -4,6 +4,7 @@ import { TQueueListResult } from "../models/TQuery";
 import { MBaseEntity } from "../models/MBaseEntity";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { MStatisticEntity } from "../models/MStatisticEntity";
+import { MRemarkEntity } from "../models/MRemarkEntity";
 
 
 /**
@@ -47,8 +48,17 @@ export const commentSchema = new Schema( {
 		},
 		required: false
 	},
+	postSnippet : {
+		//	post body snippet
+		type : String,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
+			message: ( props: any ) => `invalid postSnippet. (should be less than 2048 characters)`
+		},
+		required: [ true, 'postSnippet required' ]
+	},
 	body : {
-		//	post body/content
+		//	comment body/content
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
@@ -106,10 +116,7 @@ export const commentSchema = new Schema( {
 		required : false
 	},
 	...MStatisticEntity,
-	remark : {
-		type : String,
-		required : false
-	},
+	...MRemarkEntity
 }, {
 	timestamps: true,
 	query: {

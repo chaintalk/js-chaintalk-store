@@ -3,6 +3,7 @@ import { TypeUtil } from "chaintalk-utils";
 import { TQueueListResult } from "../models/TQuery";
 import { MBaseEntity } from "../models/MBaseEntity";
 import { MStatisticEntity } from "../models/MStatisticEntity";
+import { MRemarkEntity } from "../models/MRemarkEntity";
 
 
 /**
@@ -85,10 +86,7 @@ export const postSchema = new Schema( {
 		required : false
 	},
 	...MStatisticEntity,
-	remark : {
-		type : String,
-		required : false
-	},
+	...MRemarkEntity
 }, {
 	timestamps: true,
 	query: {

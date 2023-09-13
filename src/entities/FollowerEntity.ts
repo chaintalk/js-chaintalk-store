@@ -1,0 +1,146 @@
+import { model, Schema, InferSchemaType, Types, Document, CallbackError } from 'mongoose';
+import { TypeUtil } from "chaintalk-utils";
+import { TQueueListResult } from "../models/TQuery";
+import { MBaseEntity } from "../models/MBaseEntity";
+import { EtherWallet } from "web3id";
+import { MRemarkEntity } from "../models/MRemarkEntity";
+
+/**
+ * 	Follower
+ */
+export const followerSchema = new Schema( {
+	...MBaseEntity,
+	address : {
+		//	follower's wallet address, CASE SENSITIVE
+		//	e.g.: `0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357`
+		type : String,
+		validate : {
+			validator : ( v : string ) => TypeUtil.isNotEmptyString( v ) && EtherWallet.isValidAddress( v ),
+			message : ( props : any ) => `invalid address`
+		},
+		required : [ true, 'address required' ]
+	},
+	name : {
+		//	follower's name
+		type : String,
+		validate : {
+			validator : ( v : any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
+			message : ( props : any ) => `invalid name. (should be less than 128 characters)`
+		},
+		required : false
+	},
+	avatar : {
+		//	follower's avatar
+		type : String,
+		validate : {
+			validator : ( v : any ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
+			message : ( props : any ) => `invalid avatar. (should be less than 256 characters)`
+		},
+		required : false
+	},
+	...MRemarkEntity
+}, {
+	timestamps : true,
+	query : {
+		byWalletAndAddress( wallet : string, address ? : string )
+		{
+			if ( undefined !== address )
+			{
+				return this.find( {
+					deleted : Types.ObjectId.createFromTime( 0 ),
+					wallet : wallet,
+					address : address
+				} );
+			}
+			else
+			{
+				return this.find( {
+					deleted : Types.ObjectId.createFromTime( 0 ),
+					wallet : wallet
+				} );
+			}
+		},
+		byAddress( address : string )
+		{
+			return this.find( {
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				address : address
+			} );
+		},
+		byWalletAndHash( wallet : string, hash : string )
+		{
+			return this.findOne( {
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				wallet : wallet,
+				hash : hash,
+			} );
+		}
+	}
+} );
+
+/**
+ * 	united unique index
+ * 	 1 represents ascending index,
+ * 	-1 represents descending index
+ */
+followerSchema.index( { deleted : 1, wallet : 1, address : 1 }, { unique : true } );
+
+followerSchema.method( 'getUniqueKey', function getUniqueKey()
+{
+	return `${ this.wallet }-${ this.address }`;
+} );
+
+export type FollowerType = InferSchemaType<typeof followerSchema> & Document<Types.ObjectId>;
+// InferSchemaType will determine the type as follows:
+// type ContactsType = {
+//	version : string;
+//	wallet : string;
+//	sig : string;
+//	name ?: string;
+//	address : string;
+//	avatar ?: string;
+//	remark ?: string;
+// }
+
+export type FollowerListResult = TQueueListResult &
+	{
+		list : Array<FollowerType>;
+	}
+
+
+export const FollowerModel = model( 'Follower', followerSchema );
+
+
+followerSchema.pre( 'save', ( next ) =>
+{
+	console.log( `########## followerSchema.pre self : ` );
+	next();
+
+	// const self : FollowerType = this;
+	//
+	// if ( self )
+	// {
+	// 	FollowerModel.findOne( {
+	// 		deleted : Types.ObjectId.createFromTime( 0 ),
+	// 		wallet : self.wallet,
+	// 		address : self.address },
+	// 		( err : CallbackError | undefined, doc: any ) =>
+	// 	{
+	// 		if ( err )
+	// 		{
+	// 			return next( err );
+	// 		}
+	// 		if ( doc )
+	// 		{
+	// 			//	If matching records are found, duplicate data already exists
+	// 			return next( new Error( 'wallet, address must be unique' ) );
+	// 		}
+	//
+	// 		next();
+	// 	});
+	// }
+	// else
+	// {
+	// 	next();
+	// }
+});
