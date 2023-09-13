@@ -110,37 +110,37 @@ export type FollowerListResult = TQueueListResult &
 
 export const FollowerModel = model( 'Follower', followerSchema );
 
-
-followerSchema.pre( 'save', ( next ) =>
-{
-	console.log( `########## followerSchema.pre self : ` );
-	next();
-
-	// const self : FollowerType = this;
-	//
-	// if ( self )
-	// {
-	// 	FollowerModel.findOne( {
-	// 		deleted : Types.ObjectId.createFromTime( 0 ),
-	// 		wallet : self.wallet,
-	// 		address : self.address },
-	// 		( err : CallbackError | undefined, doc: any ) =>
-	// 	{
-	// 		if ( err )
-	// 		{
-	// 			return next( err );
-	// 		}
-	// 		if ( doc )
-	// 		{
-	// 			//	If matching records are found, duplicate data already exists
-	// 			return next( new Error( 'wallet, address must be unique' ) );
-	// 		}
-	//
-	// 		next();
-	// 	});
-	// }
-	// else
-	// {
-	// 	next();
-	// }
-});
+//
+// followerSchema.pre( 'save', ( next ) =>
+// {
+// 	console.log( `########## followerSchema.pre self : ` );
+// 	next();
+//
+// 	// const self : FollowerType = this;
+// 	//
+// 	// if ( self )
+// 	// {
+// 	// 	FollowerModel.findOne( {
+// 	// 		deleted : Types.ObjectId.createFromTime( 0 ),
+// 	// 		wallet : self.wallet,
+// 	// 		address : self.address },
+// 	// 		( err : CallbackError | undefined, doc: any ) =>
+// 	// 	{
+// 	// 		if ( err )
+// 	// 		{
+// 	// 			return next( err );
+// 	// 		}
+// 	// 		if ( doc )
+// 	// 		{
+// 	// 			//	If matching records are found, duplicate data already exists
+// 	// 			return next( new Error( 'wallet, address must be unique' ) );
+// 	// 		}
+// 	//
+// 	// 		next();
+// 	// 	});
+// 	// }
+// 	// else
+// 	// {
+// 	// 	next();
+// 	// }
+// });

@@ -8,7 +8,7 @@ import { MRemarkEntity } from "../models/MRemarkEntity";
 /**
  * 	define favType enum
  */
-enum FavoriteFavTypes {
+export enum FavoriteFavTypes {
 	post = 'post'
 }
 
@@ -75,6 +75,15 @@ export const favoriteSchema = new Schema( {
 					wallet : wallet
 				} );
 			}
+		},
+		byWalletAndFavTypeAndFavHash( wallet : string, favType : FavoriteFavTypes, favHash : string )
+		{
+			return this.findOne( {
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				wallet : wallet,
+				favType : favType,
+				favHash : favHash,
+			} );
 		}
 	}
 } );
