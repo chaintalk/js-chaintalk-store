@@ -1,17 +1,18 @@
 import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
-import { EtherWallet, Web3Encoder, Web3Validator } from "web3id";
-import { FavoriteFavTypes, FavoriteListResult, FavoriteModel, FavoriteType } from "../../entities/FavoriteEntity";
-import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
+import { EtherWallet, Web3Validator } from "web3id";
+import { LikeLikeTypes, LikeListResult, LikeModel, LikeType } from "../entities/LikeEntity";
+import { IWeb3StoreService } from "../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
 import { Document, Error, SortOrder, Types } from "mongoose";
-import { TQueueListOptions } from "../../models/TQuery";
-import { QueryUtil } from "../../utils/QueryUtil";
-import { SchemaUtil } from "../../utils/SchemaUtil";
+import { TQueueListOptions } from "../models/TQuery";
+import { QueryUtil } from "../utils/QueryUtil";
+import { SchemaUtil } from "../utils/SchemaUtil";
+import { resultErrors } from "../constants/ResultErrors";
 
 /**
- * 	@class FavoriteService
+ * 	@class LikeService
  */
-export class FavoriteService extends BaseService implements IWeb3StoreService<FavoriteType>
+export class LikeService extends BaseService implements IWeb3StoreService<LikeType>
 {
 	constructor()
 	{
@@ -20,11 +21,11 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param data	{FavoriteType}
+	 *	@param data	{LikeType}
 	 *	@param sig	{string}
-	 *	@returns {Promise< FavoriteType | null >}
+	 *	@returns {Promise< LikeType | null >}
 	 */
-	public add( wallet : string, data : FavoriteType, sig : string ) : Promise< FavoriteType | null >
+	public add( wallet : string, data : LikeType, sig : string ) : Promise< LikeType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -36,15 +37,15 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 				}
 				if ( ! await Web3Validator.validateObject( wallet, data, sig ) )
 				{
-					return reject( `failed to validate` );
+					return reject( resultErrors.failedValidate );
 				}
 
 				//	...
-				const followerModel : Document = new FavoriteModel( {
+				const likeModel : Document = new LikeModel( {
 					...data,
 					deleted : Types.ObjectId.createFromTime( 0 ),
 				} );
-				let error : Error.ValidationError | null = followerModel.validateSync();
+				let error : Error.ValidationError | null = likeModel.validateSync();
 				if ( error )
 				{
 					return reject( error );
@@ -53,23 +54,23 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 				//	throat checking
 				if ( ! TestUtil.isTestEnv() )
 				{
-					const latestElapsedMillisecond = await this.queryLatestElapsedMillisecondByCreatedAt<FavoriteType>( FavoriteModel, wallet );
+					const latestElapsedMillisecond = await this.queryLatestElapsedMillisecondByCreatedAt<LikeType>( LikeModel, wallet );
 					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 30 * 1000 )
 					{
-						return reject( `operate too frequently, please try again later.` );
+						return reject( resultErrors.operateFrequently );
 					}
 				}
 
 				//	check duplicate
-				const findFollower : FavoriteType = await this.queryOneByWalletAndFavTypeAndFavHash( data.wallet, data.favType, data.favHash );
-				if ( findFollower )
+				const find : LikeType = await this.queryOneByWalletAndLikeTypeAndLikeHash( data.wallet, data.likeType, data.likeHash );
+				if ( find )
 				{
-					return reject( `duplicate key error` );
+					return reject( resultErrors.duplicateKeyError );
 				}
 
 				//	...
 				await this.connect();
-				const savedDoc : Document<FavoriteType> = await followerModel.save();
+				const savedDoc : Document<LikeType> = await likeModel.save();
 
 				//	...
 				resolve( savedDoc.toObject() );
@@ -83,17 +84,17 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param data	{FavoriteType}
+	 *	@param data	{LikeType}
 	 *	@param sig	{string}
-	 *	@returns {Promise< FavoriteType | null >}
+	 *	@returns {Promise< LikeType | null >}
 	 */
-	public update( wallet : string, data : FavoriteType, sig : string ) : Promise< FavoriteType | null >
+	public update( wallet : string, data : LikeType, sig : string ) : Promise< LikeType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
 			try
 			{
-				return reject( `updating is banned` );
+				return reject( resultErrors.updatingBanned );
 			}
 			catch ( err )
 			{
@@ -104,11 +105,11 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param data	{FavoriteType}
+	 *	@param data	{LikeType}
 	 *	@param sig	{string}
 	 *	@returns {Promise<number>}
 	 */
-	public delete( wallet : string, data : FavoriteType, sig : string ) : Promise<number>
+	public delete( wallet : string, data : LikeType, sig : string ) : Promise<number>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -120,7 +121,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 				}
 				if ( ! await Web3Validator.validateObject( wallet, data, sig ) )
 				{
-					return reject( `failed to validate` );
+					return reject( resultErrors.failedValidate );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
 					! Types.ObjectId.createFromTime( 1 ).equals( data.deleted ) )
@@ -130,19 +131,19 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<FavoriteType>( FavoriteModel, wallet );
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<LikeType>( LikeModel, wallet );
 				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
 				{
-					return reject( `operate too frequently.` );
+					return reject( resultErrors.operateFrequently );
 				}
 
 				//	...
 				await this.connect();
-				const findContact : FavoriteType | null = await this.queryOneByWalletAndFavTypeAndFavHash( wallet, data.favType, data.favHash );
-				if ( findContact )
+				const find : LikeType | null = await this.queryOneByWalletAndLikeTypeAndLikeHash( wallet, data.likeType, data.likeHash );
+				if ( find )
 				{
-					const update = { deleted : findContact._id };
-					const newDoc = await FavoriteModel.findOneAndUpdate( findContact, update, { new : true } );
+					const update = { deleted : find._id };
+					const newDoc = await LikeModel.findOneAndUpdate( find, update, { new : true } );
 					return resolve( 1 );
 				}
 
@@ -157,11 +158,11 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 
 	/**
 	 *	@param wallet	{string}	wallet address
-	 *	@param favType	{FavoriteFavTypes}
-	 *	@param favHash	{string}
-	 *	@returns {Promise< FavoriteType | null >}
+	 *	@param likeType	{LikeLikeTypes}
+	 *	@param likeHash	{string}
+	 *	@returns {Promise< LikeType | null >}
 	 */
-	public queryOneByWalletAndFavTypeAndFavHash( wallet : string, favType : FavoriteFavTypes, favHash : string ) : Promise<FavoriteType | null>
+	public queryOneByWalletAndLikeTypeAndLikeHash( wallet : string, likeType : LikeLikeTypes, likeHash : string ) : Promise<LikeType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -171,20 +172,20 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 				{
 					return reject( `invalid wallet` );
 				}
-				if ( ! Object.values( FavoriteFavTypes ).includes( favType ) )
+				if ( ! Object.values( LikeLikeTypes ).includes( likeType ) )
 				{
-					return reject( `invalid favType` );
+					return reject( `invalid likeType` );
 				}
-				if ( ! SchemaUtil.isValidKeccak256Hash( favHash ) )
+				if ( ! SchemaUtil.isValidKeccak256Hash( likeHash ) )
 				{
-					return reject( `invalid favHash` );
+					return reject( `invalid likeHash` );
 				}
 
 				await this.connect();
-				const favorite = await FavoriteModel
+				const favorite = await LikeModel
 					.findOne()
-					.byWalletAndFavTypeAndFavHash( wallet, favType, favHash )
-					.lean<FavoriteType>()
+					.byWalletAndLikeTypeAndLikeHash( wallet, likeType, likeHash )
+					.lean<LikeType>()
 					.exec();
 				if ( favorite )
 				{
@@ -202,11 +203,11 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 
 	/**
 	 *	@param wallet		{string}	wallet address
-	 *	@param favType		{FavoriteFavTypes}
+	 *	@param likeType		{LikeLikeTypes}
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	public queryListByWalletAndFavType( wallet : string, favType ?: FavoriteFavTypes, options ?: TQueueListOptions ) : Promise<FavoriteListResult>
+	public queryListByWalletAndLikeType( wallet : string, likeType ?: LikeLikeTypes, options ?: TQueueListOptions ) : Promise<LikeListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -222,7 +223,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 				const skip = ( pageNo - 1 ) * pageSize;
 				const sortBy : { [ key : string ] : SortOrder } = QueryUtil.getSafeSortBy( options?.sort );
 
-				let result : FavoriteListResult = {
+				let result : LikeListResult = {
 					total : 0,
 					pageNo : pageNo,
 					pageSize : pageSize,
@@ -230,22 +231,19 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 				};
 
 				await this.connect();
-				const contacts : Array<FavoriteType> = await FavoriteModel
+				const contacts : Array<LikeType> = await LikeModel
 					.find()
-					.byWalletAndFavType( wallet, favType )
+					.byWalletAndLikeType( wallet, likeType )
 					.sort( sortBy )
 					.skip( skip )
 					.limit( pageSize )
-					.lean<Array<FavoriteType>>()
+					.lean<Array<LikeType>>()
 					.exec();
 				if ( Array.isArray( contacts ) )
 				{
 					result.list = contacts;
 					result.total = contacts.length;
 				}
-
-				//	TODO
-				//	pagination
 
 				//	...
 				resolve( result );
@@ -262,6 +260,6 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 	 */
 	public clearAll() : Promise<void>
 	{
-		return super.clearAll<FavoriteType>( FavoriteModel );
+		return super.clearAll<LikeType>( LikeModel );
 	}
 }

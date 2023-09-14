@@ -1,16 +1,19 @@
 import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
 import { EtherWallet, Web3Encoder, Web3Validator } from "web3id";
-import { FollowerListResult, FollowerModel, FollowerType } from "../../entities/FollowerEntity";
-import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
+import { ContactListResult, ContactModel, ContactType } from "../entities/ContactEntity";
+import { IWeb3StoreService } from "../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
-import { Document, Error, SortOrder, Types } from "mongoose";
-import { TQueueListOptions } from "../../models/TQuery";
-import { QueryUtil } from "../../utils/QueryUtil";
+import { connection, Document, Error, SortOrder, Types } from "mongoose";
+import { TQueueListOptions } from "../models/TQuery";
+import { QueryUtil } from "../utils/QueryUtil";
+import { PostModel, PostType } from "../entities/PostEntity";
+import { FollowerType } from "../entities/FollowerEntity";
+import { resultErrors } from "../constants/ResultErrors";
 
 /**
- * 	class FollowerService
+ * 	class ContactsService
  */
-export class FollowerService extends BaseService implements IWeb3StoreService<FollowerType>
+export class ContactService extends BaseService implements IWeb3StoreService<ContactType>
 {
 	constructor()
 	{
@@ -19,11 +22,11 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param data	{FollowerType}
+	 *	@param data	{ContactType}
 	 *	@param sig	{string}
-	 *	@returns {Promise< FollowerType | null >}
+	 *	@returns {Promise< ContactType | null >}
 	 */
-	public add( wallet : string, data : FollowerType, sig : string ) : Promise< FollowerType | null >
+	public add( wallet : string, data : ContactType, sig : string ) : Promise< ContactType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -35,7 +38,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				}
 				if ( ! await Web3Validator.validateObject( wallet, data, sig ) )
 				{
-					return reject( `failed to validate` );
+					return reject( resultErrors.failedValidate );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'address' ] ) ||
 					! TypeUtil.isNotEmptyString( data.address ) )
@@ -44,11 +47,11 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				}
 
 				//	...
-				const followerModel : Document = new FollowerModel( {
+				const contactModel : Document = new ContactModel( {
 					...data,
 					deleted : Types.ObjectId.createFromTime( 0 ),
 				} );
-				let error : Error.ValidationError | null = followerModel.validateSync();
+				let error : Error.ValidationError | null = contactModel.validateSync();
 				if ( error )
 				{
 					return reject( error );
@@ -57,22 +60,22 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				//	throat checking
 				if ( ! TestUtil.isTestEnv() )
 				{
-					const latestElapsedMillisecond = await this.queryLatestElapsedMillisecondByCreatedAt<FollowerType>( FollowerModel, wallet );
+					const latestElapsedMillisecond = await this.queryLatestElapsedMillisecondByCreatedAt<ContactType>( ContactModel, wallet );
 					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 30 * 1000 )
 					{
-						return reject( `operate too frequently, please try again later.` );
+						return reject( resultErrors.operateFrequently );
 					}
 				}
 
-				const findFollower : FollowerType = await this.queryOneByWalletAndAddress( data.wallet, data.address );
-				if ( findFollower )
+				const findContact : ContactType = await this.queryOneByWalletAndAddress( data.wallet, data.address );
+				if ( findContact )
 				{
-					return reject( `duplicate key error` );
+					return reject( resultErrors.duplicateKeyError );
 				}
 
 				//	...
 				await this.connect();
-				const savedDoc : Document<FollowerType> = await followerModel.save();
+				const savedDoc : Document<ContactType> = await contactModel.save();
 
 				//	...
 				resolve( savedDoc.toObject() );
@@ -86,32 +89,11 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param data	{FollowerType}
+	 *	@param data	{ContactType}
 	 *	@param sig	{string}
-	 *	@returns {Promise< FollowerType | null >}
+	 *	@returns {Promise< ContactType | null >}
 	 */
-	public update( wallet : string, data : FollowerType, sig : string ) : Promise< FollowerType | null >
-	{
-		return new Promise( async ( resolve, reject ) =>
-		{
-			try
-			{
-				return reject( `updating is banned` );
-			}
-			catch ( err )
-			{
-				reject( err );
-			}
-		} );
-	}
-
-	/**
-	 *	@param wallet	{string}
-	 *	@param data	{FollowerType}
-	 *	@param sig	{string}
-	 *	@returns {Promise<number>}
-	 */
-	public delete( wallet : string, data : FollowerType, sig : string ) : Promise<number>
+	public update( wallet : string, data : ContactType, sig : string ) : Promise< ContactType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -123,7 +105,61 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				}
 				if ( ! await Web3Validator.validateObject( wallet, data, sig ) )
 				{
-					return reject( `failed to validate` );
+					return reject( resultErrors.failedValidate );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'address' ] ) ||
+					! TypeUtil.isNotEmptyString( data.address ) )
+				{
+					return reject( `invalid data.address` );
+				}
+
+				//	throat checking
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<ContactType>( ContactModel, wallet );
+				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				{
+					return reject( resultErrors.operateFrequently );
+				}
+
+				await this.connect();
+				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
+				if ( ! findContact )
+				{
+					return reject( resultErrors.notFound );
+				}
+
+				const allowUpdatedKeys : Array<string> = [ 'version', 'name', 'avatar', 'remark' ];
+				const update : Record<string, any> = { ...Web3Encoder.reserveObjectKeys( data, allowUpdatedKeys ), sig : sig };
+				const newContact : ContactType | null = await ContactModel.findOneAndUpdate( findContact, update, { new : true } ).lean<ContactType>();
+
+				//	...
+				return resolve( newContact );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{ContactType}
+	 *	@param sig	{string}
+	 *	@returns {Promise<number>}
+	 */
+	public delete( wallet : string, data : ContactType, sig : string ) : Promise<number>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! await Web3Validator.validateObject( wallet, data, sig ) )
+				{
+					return reject( resultErrors.failedValidate );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'address' ] ) ||
 					! TypeUtil.isNotEmptyString( data.address ) )
@@ -138,19 +174,19 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<FollowerType>( FollowerModel, wallet );
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<ContactType>( ContactModel, wallet );
 				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
 				{
-					return reject( `operate too frequently.` );
+					return reject( resultErrors.operateFrequently );
 				}
 
 				//	...
 				await this.connect();
-				const findContact : FollowerType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
+				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
 				if ( findContact )
 				{
 					const update = { deleted : findContact._id };
-					const newDoc = await FollowerModel.findOneAndUpdate( findContact, update, { new : true } );
+					const newDoc = await ContactModel.findOneAndUpdate( findContact, update, { new : true } );
 					return resolve( 1 );
 				}
 
@@ -166,9 +202,9 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	/**
 	 *	@param wallet	{string}	wallet address
 	 *	@param address	{string}	contact wallet address
-	 *	@returns {Promise< FollowerType | null >}
+	 *	@returns {Promise< ContactType | null >}
 	 */
-	public queryOneByWalletAndAddress( wallet : string, address : string ) : Promise<FollowerType | null>
+	public queryOneByWalletAndAddress( wallet : string, address : string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -184,14 +220,14 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				}
 
 				await this.connect();
-				const followers = await FollowerModel
+				const contacts = await ContactModel
 					.findOne()
 					.byWalletAndAddress( wallet, address )
-					.lean<FollowerType>()
+					.lean<ContactType>()
 					.exec();
-				if ( Array.isArray( followers ) && 1 === followers.length )
+				if ( Array.isArray( contacts ) && 1 === contacts.length )
 				{
-					return resolve( followers[ 0 ] );
+					return resolve( contacts[ 0 ] );
 				}
 
 				resolve( null );
@@ -206,9 +242,9 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	/**
 	 *	@param wallet	{string}	wallet address
 	 * 	@param hash	{string}	a 66-character hexadecimal string
-	 *	@returns {Promise< FollowerType | null >}
+	 *	@returns {Promise< ContactType | null >}
 	 */
-	public queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<FollowerType | null>
+	public queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -224,10 +260,10 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				}
 
 				await this.connect();
-				const contact = await FollowerModel
+				const contact = await ContactModel
 					.findOne()
 					.byWalletAndHash( wallet, hash )
-					.lean<FollowerType>()
+					.lean<PostType>()
 					.exec();
 				if ( contact )
 				{
@@ -249,7 +285,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	public queryListByWalletAndAddress( wallet : string, address ? : string, options ?: TQueueListOptions ) : Promise<FollowerListResult>
+	public queryListByWalletAndAddress( wallet : string, address ? : string, options ?: TQueueListOptions ) : Promise<ContactListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -265,7 +301,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				const skip = ( pageNo - 1 ) * pageSize;
 				const sortBy : { [ key : string ] : SortOrder } = QueryUtil.getSafeSortBy( options?.sort );
 
-				let result : FollowerListResult = {
+				let result : ContactListResult = {
 					total : 0,
 					pageNo : pageNo,
 					pageSize : pageSize,
@@ -273,22 +309,19 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				};
 
 				await this.connect();
-				const contacts : Array<FollowerType> = await FollowerModel
+				const contacts : Array<ContactType> = await ContactModel
 					.find()
 					.byWalletAndAddress( wallet, address )
 					.sort( sortBy )
 					.skip( skip )
 					.limit( pageSize )
-					.lean<Array<FollowerType>>()
+					.lean<Array<ContactType>>()
 					.exec();
 				if ( Array.isArray( contacts ) )
 				{
 					result.list = contacts;
 					result.total = contacts.length;
 				}
-
-				//	TODO
-				//	pagination
 
 				//	...
 				resolve( result );
@@ -305,6 +338,6 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	 */
 	public clearAll() : Promise<void>
 	{
-		return super.clearAll<FollowerType>( FollowerModel );
+		return super.clearAll<ContactType>( ContactModel );
 	}
 }

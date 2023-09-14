@@ -7,7 +7,8 @@ import { Types } from "mongoose";
 import { TQueueListOptions } from "../../../src/models/TQuery";
 import { TestUtil } from "chaintalk-utils";
 import { SchemaUtil } from "../../../src/utils/SchemaUtil";
-import { FollowerService } from "../../../src/services/store/FollowerService";
+import { FollowerService } from "../../../src/services/FollowerService";
+import { resultErrors } from "../../../src/constants/ResultErrors";
 
 
 
@@ -117,7 +118,7 @@ describe( "FollowerService", () =>
 				//	err: {"index":0,"code":11000,"keyPattern":{"deleted":1,"wallet":1,"address":1},"keyValue":{"deleted":"000000000000000000000000","wallet":"0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357","address":"0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"}}
 				expect( JSON.stringify( err ).includes( `"code":11000,` )
 					||
-					JSON.stringify( err ).includes( `duplicate key error` )  ).toBeTruthy();
+					JSON.stringify( err ).includes( resultErrors.duplicateKeyError )  ).toBeTruthy();
 			}
 
 			//	wait for a while
@@ -373,7 +374,7 @@ describe( "FollowerService", () =>
 				}
 				catch ( err )
 				{
-					expect( err ).toBe( `updating is banned` );
+					expect( err ).toBe( resultErrors.updatingBanned );
 				}
 			}
 

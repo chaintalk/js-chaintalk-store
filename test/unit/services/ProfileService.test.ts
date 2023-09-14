@@ -1,25 +1,25 @@
 import { describe, expect } from '@jest/globals';
 import {
-	FavoriteFavTypes,
-	FavoriteListResult,
-	favoriteSchema,
-	FavoriteType
-} from "../../../src/entities/FavoriteEntity";
+	ProfileListResult,
+	profileSchema,
+	ProfileType
+} from "../../../src/entities/ProfileEntity";
 import { EtherWallet, TWalletBaseItem, Web3Digester, Web3Signer } from "web3id";
 import { ethers } from "ethers";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 import { TestUtil } from "chaintalk-utils";
 import { SchemaUtil } from "../../../src/utils/SchemaUtil";
-import { FavoriteService } from "../../../src/services/FavoriteService";
+import { ProfileService } from "../../../src/services/ProfileService";
 import { TQueueListOptions } from "../../../src/models/TQuery";
 import { resultErrors } from "../../../src/constants/ResultErrors";
+import { ContactType } from "../../../src/entities/ContactEntity";
 
 
 /**
  *	unit test
  */
-describe( "FavoriteService", () =>
+describe( "ProfileService", () =>
 {
 	beforeAll( async () =>
 	{
@@ -33,7 +33,7 @@ describe( "FavoriteService", () =>
 	} );
 
 	//	...
-	const oneFavHash : string = `0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4ea`;
+	const oneProfileKey : string = `key1`;
 
 	describe( "Add record", () =>
 	{
@@ -54,38 +54,37 @@ describe( "FavoriteService", () =>
 			expect( walletObj.path ).toBe( ethers.defaultPath );
 
 			//
-			//	create a new favorite with ether signature
+			//	create a new like with ether signature
 			//
-			let favorite : FavoriteType = {
+			let profile : ProfileType = {
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
 				deleted : Types.ObjectId.createFromTime( 0 ),
 				wallet : walletObj.address,
-				favType : FavoriteFavTypes.post,
-				favHash : '0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4ea',
-				//favBody : '',
-				sig : ``,
+				key : oneProfileKey,
+				value : 'value1',
 				remark : 'no remark',
+				sig : ``,
 				createdAt: new Date(),
 				updatedAt: new Date()
 			};
-			favorite.sig = await Web3Signer.signObject( walletObj.privateKey, favorite );
-			favorite.hash = await Web3Digester.hashObject( favorite );
-			expect( favorite.sig ).toBeDefined();
-			expect( typeof favorite.sig ).toBe( 'string' );
-			expect( favorite.sig.length ).toBeGreaterThanOrEqual( 0 );
+			profile.sig = await Web3Signer.signObject( walletObj.privateKey, profile );
+			profile.hash = await Web3Digester.hashObject( profile );
+			expect( profile.sig ).toBeDefined();
+			expect( typeof profile.sig ).toBe( 'string' );
+			expect( profile.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 			//
 			//	try to save the record to database
 			//
-			const favoriteService = new FavoriteService();
-			await favoriteService.clearAll();
+			const profileService = new ProfileService();
+			await profileService.clearAll();
 
-			const result = await favoriteService.add( walletObj.address, favorite, favorite.sig );
+			const result = await profileService.add( walletObj.address, profile, profile.sig );
 			expect( result ).toBeDefined();
 
-			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( favoriteSchema );
+			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( profileSchema );
 			expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 			if ( requiredKeys )
 			{
@@ -98,12 +97,12 @@ describe( "FavoriteService", () =>
 
 			try
 			{
-				const resultDup = await favoriteService.add( walletObj.address, favorite, favorite.sig );
+				const resultDup = await profileService.add( walletObj.address, profile, profile.sig );
 				expect( resultDup ).toBe( null );
 			}
 			catch ( err )
 			{
-				//	MongoServerError: E11000 duplicate key error collection: chaintalk.favorites index: deleted_1_wallet_1_address_1 dup key: { deleted: ObjectId('000000000000000000000000'), wallet: "0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357", address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" }
+				//	MongoServerError: E11000 duplicate key error collection: chaintalk.likes index: deleted_1_wallet_1_address_1 dup key: { deleted: ObjectId('000000000000000000000000'), wallet: "0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357", address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" }
 				//         at /Users/xing/Documents/wwwroot/chaintalk/js-chaintalk-store/node_modules/mongodb/src/operations/insert.ts:85:25
 				//         at /Users/xing/Documents/wwwroot/chaintalk/js-chaintalk-store/node_modules/mongodb/src/operations/command.ts:173:14
 				//         at processTicksAndRejections (node:internal/process/task_queues:95:5) {
@@ -141,8 +140,8 @@ describe( "FavoriteService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const favoriteService = new FavoriteService();
-			const result : FavoriteType | null = await favoriteService.queryOneByWalletAndFavTypeAndFavHash( walletObj.address, FavoriteFavTypes.post, oneFavHash );
+			const profileService = new ProfileService();
+			const result : ProfileType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
 			expect( result ).not.toBe( null );
 			expect( result ).toBeDefined();
 			//
@@ -166,7 +165,7 @@ describe( "FavoriteService", () =>
 			//
 			if ( result )
 			{
-				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( favoriteSchema );
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( profileSchema );
 				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 				if ( requiredKeys )
 				{
@@ -190,34 +189,99 @@ describe( "FavoriteService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const favoriteService = new FavoriteService();
-			const findFavorite : FavoriteType | null = await favoriteService.queryOneByWalletAndFavTypeAndFavHash( walletObj.address, FavoriteFavTypes.post, oneFavHash );
+			const profileService = new ProfileService();
+			const findFavorite : ProfileType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
 			expect( findFavorite ).toBeDefined();
 			if ( findFavorite )
 			{
-				let favoriteToBeUpdated : FavoriteType = { ...findFavorite,
-					name : `name-${ new Date().toLocaleString() }`,
-					avatar : `https://avatar-${ new Date().toLocaleString() }`,
+				let toBeUpdated : ProfileType = { ...findFavorite,
+					key : oneProfileKey,
+					value : `https://avatar-${ new Date().toLocaleString() }`,
 					remark : `remark .... ${ new Date().toLocaleString() }`,
 				};
-				favoriteToBeUpdated.sig = await Web3Signer.signObject( walletObj.privateKey, favoriteToBeUpdated );
-				expect( favoriteToBeUpdated.sig ).toBeDefined();
-				expect( typeof favoriteToBeUpdated.sig ).toBe( 'string' );
-				expect( favoriteToBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
+				toBeUpdated.sig = await Web3Signer.signObject( walletObj.privateKey, toBeUpdated );
+				expect( toBeUpdated.sig ).toBeDefined();
+				expect( typeof toBeUpdated.sig ).toBe( 'string' );
+				expect( toBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				//	...
-				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( favoriteSchema );
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( profileSchema );
+				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
+
+				//	...
+				const updated : ProfileType | null = await profileService.update( walletObj.address, toBeUpdated, toBeUpdated.sig );
+				expect( null !== updated ).toBeTruthy();
+				if ( requiredKeys && updated )
+				{
+					for ( const key of requiredKeys )
+					{
+						expect( updated ).toHaveProperty( key );
+					}
+
+					expect( Types.ObjectId.createFromTime( 0 ).equals( updated.deleted ) ).toBeTruthy();
+					expect( updated.sig ).toBe( toBeUpdated.sig );
+					expect( updated.value ).toBe( toBeUpdated.value );
+					expect( updated.remark ).toBe( toBeUpdated.remark );
+				}
+
+				//	...
+				const findAgain : ContactType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
+				expect( null !== findAgain ).toBeTruthy();
+				if ( requiredKeys && findAgain )
+				{
+					for ( const key of requiredKeys )
+					{
+						expect( findAgain ).toHaveProperty( key );
+					}
+
+					expect( Types.ObjectId.createFromTime( 0 ).equals( findAgain.deleted ) ).toBeTruthy();
+					expect( findAgain.sig ).toBe( toBeUpdated.sig );
+					expect( findAgain.value ).toBe( toBeUpdated.value );
+					expect( findAgain.remark ).toBe( toBeUpdated.remark );
+				}
+			}
+
+			//	wait for a while
+			await TestUtil.sleep(5 * 1000 );
+
+		}, 60 * 10e3 );
+
+		it( "should throw an not found error", async () =>
+		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
+
+			const profileService = new ProfileService();
+			const findFavorite : ProfileType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
+			expect( findFavorite ).toBeDefined();
+			if ( findFavorite )
+			{
+				let toBeUpdated : ProfileType = { ...findFavorite,
+					key : `not-found-key-${ new Date().getTime() }`,
+					value : `https://avatar-${ new Date().toLocaleString() }`,
+					remark : `remark .... ${ new Date().toLocaleString() }`,
+				};
+				toBeUpdated.sig = await Web3Signer.signObject( walletObj.privateKey, toBeUpdated );
+				expect( toBeUpdated.sig ).toBeDefined();
+				expect( typeof toBeUpdated.sig ).toBe( 'string' );
+				expect( toBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+				//	...
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( profileSchema );
 				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 
 				//	...
 				try
 				{
-					const updatedContact : FavoriteType | null = await favoriteService.update( walletObj.address, favoriteToBeUpdated, favoriteToBeUpdated.sig );
-					expect( null === updatedContact ).toBeTruthy();
+					const updated : ProfileType | null = await profileService.update( walletObj.address, toBeUpdated, toBeUpdated.sig );
+					expect( updated ).toBe( null );
 				}
 				catch ( err )
 				{
-					expect( err ).toBe( resultErrors.updatingBanned );
+					expect( err ).toBe( resultErrors.notFound );
 				}
 			}
 
@@ -237,24 +301,24 @@ describe( "FavoriteService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const favoriteService = new FavoriteService();
-			const findFavorite : FavoriteType | null = await favoriteService.queryOneByWalletAndFavTypeAndFavHash( walletObj.address, FavoriteFavTypes.post, oneFavHash );
-			if ( findFavorite )
+			const profileService = new ProfileService();
+			const find : ProfileType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
+			if ( find )
 			{
-				let favoriteToBeDeleted : FavoriteType = { ...findFavorite,
+				let toBeDeleted : ProfileType = { ...find,
 					deleted : Types.ObjectId.createFromTime( 1 ),
 				};
-				favoriteToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, favoriteToBeDeleted );
-				expect( favoriteToBeDeleted.sig ).toBeDefined();
-				expect( typeof favoriteToBeDeleted.sig ).toBe( 'string' );
-				expect( favoriteToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
+				toBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, toBeDeleted );
+				expect( toBeDeleted.sig ).toBeDefined();
+				expect( typeof toBeDeleted.sig ).toBe( 'string' );
+				expect( toBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				//	...
-				const result : number = await favoriteService.delete( walletObj.address, favoriteToBeDeleted, favoriteToBeDeleted.sig );
+				const result : number = await profileService.delete( walletObj.address, toBeDeleted, toBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findFavoriteAgain : FavoriteType | null = await favoriteService.queryOneByWalletAndFavTypeAndFavHash( walletObj.address, FavoriteFavTypes.post, oneFavHash );
-				expect( findFavoriteAgain ).toBe( null );
+				const findAgain : ProfileType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
+				expect( findAgain ).toBe( null );
 			}
 
 		}, 60 * 10e3 );
@@ -271,8 +335,8 @@ describe( "FavoriteService", () =>
 			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
-			const favoriteService = new FavoriteService();
-			const results : FavoriteListResult = await favoriteService.queryListByWalletAndFavType( walletObj.address, FavoriteFavTypes.post );
+			const profileService = new ProfileService();
+			const results : ProfileListResult = await profileService.queryListByWallet( walletObj.address );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -290,8 +354,8 @@ describe( "FavoriteService", () =>
 			//           deleted: new ObjectId("000000000000000000000000"),
 			//           wallet: '0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357',
 			//           sig: '0xc16b915fc3cfdafd7d9a3cc08a2d7f071dbddd89745c95437cc63605f01886e40e4f4a91c7fe36f069f0fce1611e7510b00d1112cf521a4a54dbfad2ec07043f1c',
-			//           favType: 'post',
-			//           favHash: '0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4ea',
+			//           likeType: 'post',
+			//           likeHash: '0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4ea',
 			//           remark: 'no remark',
 			//           createdAt: 2023-09-13T22:39:30.290Z,
 			//           updatedAt: 2023-09-13T22:39:30.290Z,
@@ -300,15 +364,15 @@ describe( "FavoriteService", () =>
 			//       ]
 			//     }
 			//
-			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( favoriteSchema );
+			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( profileSchema );
 			expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 			if ( requiredKeys )
 			{
-				for ( const favorite of results.list )
+				for ( const like of results.list )
 				{
 					for ( const key of requiredKeys )
 					{
-						expect( favorite ).toHaveProperty( key );
+						expect( like ).toHaveProperty( key );
 					}
 				}
 			}
@@ -328,10 +392,10 @@ describe( "FavoriteService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			//
-			//	create many favorites
+			//	create many likes
 			//
-			const favoriteService = new FavoriteService();
-			await favoriteService.clearAll();
+			const profileService = new ProfileService();
+			await profileService.clearAll();
 
 			let walletObjNew : TWalletBaseItem = walletObj;
 			for ( let i = 0; i < 100; i ++ )
@@ -339,27 +403,26 @@ describe( "FavoriteService", () =>
 				const NoStr : string = Number(i).toString().padStart( 2, '0' );
 
 				walletObjNew = EtherWallet.createNewAddress( walletObjNew );
-				let favorite : FavoriteType = {
+				let like : ProfileType = {
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
 					deleted : Types.ObjectId.createFromTime( 0 ),
 					wallet : walletObj.address,
-					favType : FavoriteFavTypes.post,
-					favHash : `0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4${ NoStr }`,
-					//favBody : '',
-					sig : ``,
+					key : `key${ NoStr }`,
+					value : `value${ NoStr }`,
 					remark : `no remark ${ NoStr }`,
+					sig : ``,
 					createdAt: new Date(),
 					updatedAt: new Date()
 				};
-				favorite.sig = await Web3Signer.signObject( walletObj.privateKey, favorite );
-				favorite.hash = await Web3Digester.hashObject( favorite );
-				expect( favorite.sig ).toBeDefined();
-				expect( typeof favorite.sig ).toBe( 'string' );
-				expect( favorite.sig.length ).toBeGreaterThanOrEqual( 0 );
+				like.sig = await Web3Signer.signObject( walletObj.privateKey, like );
+				like.hash = await Web3Digester.hashObject( like );
+				expect( like.sig ).toBeDefined();
+				expect( typeof like.sig ).toBe( 'string' );
+				expect( like.sig.length ).toBeGreaterThanOrEqual( 0 );
 
-				const result = await favoriteService.add( walletObj.address, favorite, favorite.sig );
+				const result = await profileService.add( walletObj.address, like, like.sig );
 			}
 
 			//
@@ -371,7 +434,7 @@ describe( "FavoriteService", () =>
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : FavoriteListResult = await favoriteService.queryListByWalletAndFavType( walletObj.address, FavoriteFavTypes.post, options );
+				const results : ProfileListResult = await profileService.queryListByWallet( walletObj.address, options );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );
@@ -402,15 +465,15 @@ describe( "FavoriteService", () =>
 				//       ]
 				//     }
 				//
-				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( favoriteSchema );
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( profileSchema );
 				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 				if ( requiredKeys )
 				{
-					for ( const favorite of results.list )
+					for ( const like of results.list )
 					{
 						for ( const key of requiredKeys )
 						{
-							expect( favorite ).toHaveProperty( key );
+							expect( like ).toHaveProperty( key );
 						}
 					}
 				}
@@ -421,9 +484,5 @@ describe( "FavoriteService", () =>
 
 		}, 60 * 10e3 );
 	} );
-
-
-
-
 
 } );

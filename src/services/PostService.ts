@@ -1,18 +1,19 @@
 import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
 import { EtherWallet, Web3Validator } from "web3id";
-import { IWeb3StoreService } from "../../interfaces/IWeb3StoreService";
+import { IWeb3StoreService } from "../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
 import { Document, Error, SortOrder, Types } from "mongoose";
-import { TQueueListOptions } from "../../models/TQuery";
-import { CommentListResult, CommentModel, commentSchema, CommentType } from "../../entities/CommentEntity";
-import { QueryUtil } from "../../utils/QueryUtil";
-import { SchemaUtil } from "../../utils/SchemaUtil";
-import { postSchema } from "../../entities/PostEntity";
+import { TQueueListOptions } from "../models/TQuery";
+import { PostListResult, PostModel, postSchema, PostType } from "../entities/PostEntity";
+import { QueryUtil } from "../utils/QueryUtil";
+import { SchemaUtil } from "../utils/SchemaUtil";
+import { FollowerType } from "../entities/FollowerEntity";
+import { resultErrors } from "../constants/ResultErrors";
 
 /**
- * 	class CommentService
+ * 	class PostService
  */
-export class CommentService extends BaseService implements IWeb3StoreService<CommentType>
+export class PostService extends BaseService implements IWeb3StoreService<PostType>
 {
 	constructor()
 	{
@@ -25,7 +26,7 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 	 *	@param sig	{string}
 	 *	@returns {Promise<PostType>}
 	 */
-	public add( wallet : string, data : CommentType, sig : string ) : Promise< CommentType | null >
+	public add( wallet : string, data : PostType, sig : string ) : Promise< PostType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -48,15 +49,15 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				}
 				if ( ! await Web3Validator.validateObject( wallet, data, sig, statisticKeys ) )
 				{
-					return reject( `failed to validate` );
+					return reject( resultErrors.failedValidate );
 				}
 
 				//	...
-				const commentModel : Document = new CommentModel( {
+				const postModel : Document = new PostModel( {
 					...data,
 					deleted : Types.ObjectId.createFromTime( 0 ),
 				} );
-				let error : Error.ValidationError | null = commentModel.validateSync();
+				let error : Error.ValidationError | null = postModel.validateSync();
 				if ( error )
 				{
 					return reject( error );
@@ -65,16 +66,16 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				//	throat check
 				if ( ! TestUtil.isTestEnv() )
 				{
-					const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByCreatedAt<CommentType>( CommentModel, wallet );
+					const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByCreatedAt<PostType>( PostModel, wallet );
 					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 30 * 1000 )
 					{
-						return reject( `operate too frequently, please try again later.` );
+						return reject( resultErrors.operateFrequently );
 					}
 				}
 
 				//	...
 				await this.connect();
-				const savedDoc : Document<CommentType> = await commentModel.save();
+				const savedDoc : Document<PostType> = await postModel.save();
 
 				//	...
 				resolve( savedDoc.toObject() );
@@ -88,17 +89,59 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param data	{CommentType}
+	 *	@param data	{PostType}
 	 *	@param sig	{string}
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	public update( wallet : string, data : CommentType, sig : string ) : Promise< CommentType | null >
+	public update( wallet : string, data : PostType, sig : string ) : Promise< PostType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
 			try
 			{
-				return reject( `updating is banned` );
+				return reject( resultErrors.updatingBanned );
+				// if ( ! EtherWallet.isValidAddress( wallet ) )
+				// {
+				// 	return reject( `invalid wallet` );
+				// }
+				// if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'hexId' ] ) ||
+				// 	! TypeUtil.isNotEmptyString( data.hexId ) )
+				// {
+				// 	return reject( `invalid data.hexId` );
+				// }
+				// if ( ! await Web3Validator.validateObject( wallet, data, sig ) )
+				// {
+				// 	return reject( `failed to validate` );
+				// }
+				//
+				//
+				// //	throat checking
+				// const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
+				// if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				// {
+				// 	return reject( `operate too frequently.` );
+				// }
+				//
+				// await this.connect();
+				// const findContact : PostType | null = await this.queryOneByWalletAndHexId( wallet, data.hexId );
+				// if ( findContact )
+				// {
+				// 	const allowUpdatedKeys : Array<string> = [
+				// 		'version',
+				// 		`authorName`, `authorAvatar`,
+				// 		`body`,
+				// 		`pictures`, `videos`,
+				// 		`statisticView`, `statisticRepost`, `statisticQuote`, `statisticLike`, `statisticFavorite`, `statisticReply`,
+				// 		`remark`
+				// 	];
+				// 	const update : Record<string, any> = { ...Web3Encoder.reserveObjectKeys( data, allowUpdatedKeys ), sig : sig };
+				// 	const savedPost : PostType | null = await PostModel.findOneAndUpdate( findContact, update, { new : true } ).lean<PostType>();
+				//
+				// 	//	...
+				// 	return resolve( savedPost );
+				// }
+				//
+				// resolve( null );
 			}
 			catch ( err )
 			{
@@ -111,9 +154,9 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 	 *	@param wallet	{string}
 	 *	@param hash	{string}
 	 *	@param key	{string} statisticView, statisticRepost, statisticQuote, ...
-	 *	@returns {Promise< CommentType | null >}
+	 *	@returns {Promise< PostType | null >}
 	 */
-	public increaseStatistics( wallet : string, hash : string, key : string ) : Promise< CommentType | null >
+	public increaseStatistics( wallet : string, hash : string, key : string ) : Promise< PostType | null >
 	{
 		return this.updateStatistics( wallet, hash, key, 1 );
 	}
@@ -122,9 +165,9 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 	 *	@param wallet	{string}
 	 *	@param hash	{string}
 	 *	@param key	{string} statisticView, statisticRepost, statisticQuote, ...
-	 *	@returns {Promise< CommentType | null >}
+	 *	@returns {Promise< PostType | null >}
 	 */
-	public decreaseStatistics( wallet : string, hash : string, key : string ) : Promise< CommentType | null >
+	public decreaseStatistics( wallet : string, hash : string, key : string ) : Promise< PostType | null >
 	{
 		return this.updateStatistics( wallet, hash, key, -1 );
 	}
@@ -134,9 +177,9 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 	 *	@param hash	{string}
 	 *	@param key	{string} statisticView, statisticRepost, statisticQuote, ...
 	 *	@param value	{number} 1 or -1
-	 *	@returns {Promise< CommentType | null >}
+	 *	@returns {Promise< PostType | null >}
 	 */
-	public updateStatistics( wallet : string, hash : string, key : string, value : 1 | -1 ) : Promise< CommentType | null >
+	public updateStatistics( wallet : string, hash : string, key : string, value : 1 | -1 ) : Promise< PostType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -151,7 +194,7 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 					return reject( `invalid hash` );
 				}
 
-				const statisticKeys : Array<string> | null = SchemaUtil.getPrefixedKeys( commentSchema, 'statistic' );
+				const statisticKeys : Array<string> | null = SchemaUtil.getPrefixedKeys( postSchema, 'statistic' );
 				if ( ! Array.isArray( statisticKeys ) || 0 === statisticKeys.length )
 				{
 					return reject( `failed to calculate statistic prefixed keys` );
@@ -162,19 +205,19 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<CommentType>( CommentModel, wallet );
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
 				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
 				{
-					return reject( `operate too frequently.` );
+					return reject( resultErrors.operateFrequently );
 				}
 
 				await this.connect();
-				const findComment : CommentType | null = await this.queryOneByWalletAndHash( wallet, hash );
-				if ( findComment )
+				const findPost : PostType | null = await this.queryOneByWalletAndHash( wallet, hash );
+				if ( findPost )
 				{
-					const newValue : number = findComment[ key ] + ( 1 === value ? 1 : -1 );
+					const newValue : number = findPost[ key ] + ( 1 === value ? 1 : -1 );
 					const update : Record<string, any> = { [ key ] : newValue >= 0 ? newValue : 0 };
-					const savedPost : CommentType | null = await CommentModel.findOneAndUpdate( findComment, update, { new : true } ).lean<CommentType>();
+					const savedPost : PostType | null = await PostModel.findOneAndUpdate( findPost, update, { new : true } ).lean<PostType>();
 
 					//	...
 					return resolve( savedPost );
@@ -191,11 +234,11 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param data	{CommentType}
+	 *	@param data	{PostType}
 	 *	@param sig	{string}
 	 *	@returns {Promise<number>}
 	 */
-	public delete( wallet : string, data : CommentType, sig : string ) : Promise<number>
+	public delete( wallet : string, data : PostType, sig : string ) : Promise<number>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -212,7 +255,7 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				}
 				if ( ! await Web3Validator.validateObject( wallet, data, sig ) )
 				{
-					return reject( `failed to validate` );
+					return reject( resultErrors.failedValidate );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
 					! Types.ObjectId.createFromTime( 1 ).equals( data.deleted ) )
@@ -222,19 +265,19 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<CommentType>( CommentModel, wallet );
+				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
 				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
 				{
-					return reject( `operate too frequently.` );
+					return reject( resultErrors.operateFrequently );
 				}
 
 				//	...
 				await this.connect();
-				const findComment : CommentType | null = await this.queryOneByWalletAndHash( wallet, data.hash );
-				if ( findComment )
+				const findPost : PostType | null = await this.queryOneByWalletAndHash( wallet, data.hash );
+				if ( findPost )
 				{
-					const update = { deleted : findComment._id };
-					const newDoc = await CommentModel.findOneAndUpdate( findComment, update, { new : true } );
+					const update = { deleted : findPost._id };
+					const newDoc = await PostModel.findOneAndUpdate( findPost, update, { new : true } );
 					return resolve( 1 );
 				}
 
@@ -250,9 +293,9 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 	/**
 	 *	@param wallet	{string}	wallet address
 	 *	@param hash	{string}	a 66-character hexadecimal string
-	 *	@returns {Promise< CommentType | null >}
+	 *	@returns {Promise< PostType | null >}
 	 */
-	public queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<CommentType | null>
+	public queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -268,10 +311,10 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				}
 
 				await this.connect();
-				const post = await CommentModel
+				const post = await PostModel
 					.findOne()
 					.byWalletAndHash( wallet, hash )
-					.lean<CommentType>()
+					.lean<PostType>()
 					.exec();
 				if ( post )
 				{
@@ -279,94 +322,6 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				}
 
 				resolve( null );
-			}
-			catch ( err )
-			{
-				reject( err );
-			}
-		} );
-	}
-
-	/**
-	 *	@param hash	{string}	a 66-character hexadecimal string
-	 *	@returns {Promise< CommentType | null >}
-	 */
-	public queryOneByHash( hash : string ) : Promise<CommentType | null>
-	{
-		return new Promise( async ( resolve, reject ) =>
-		{
-			try
-			{
-				if ( ! TypeUtil.isNotEmptyString( hash ) )
-				{
-					return reject( `invalid hash` );
-				}
-
-				await this.connect();
-				const post = await CommentModel
-					.findOne()
-					.byHash( hash )
-					.lean<CommentType>()
-					.exec();
-				if ( post )
-				{
-					return resolve( post );
-				}
-
-				resolve( null );
-			}
-			catch ( err )
-			{
-				reject( err );
-			}
-		} );
-	}
-
-	/**
-	 *	@param postHash		{string}		post hash
-	 *	@param options		{TQueueListOptions}
-	 *	@returns {Promise<CommentListResult>}
-	 */
-	public queryListByPostHash( postHash : string, options ?: TQueueListOptions ) : Promise<CommentListResult>
-	{
-		return new Promise( async ( resolve, reject ) =>
-		{
-			try
-			{
-				if ( ! SchemaUtil.isValidKeccak256Hash( postHash ) )
-				{
-					return reject( `invalid postHash` );
-				}
-
-				const pageNo = PageUtil.getSafePageNo( options?.pageNo );
-				const pageSize = PageUtil.getSafePageSize( options?.pageSize );
-				const skip = ( pageNo - 1 ) * pageSize;
-				const sortBy : { [ key : string ] : SortOrder } = QueryUtil.getSafeSortBy( options?.sort );
-
-				let result : CommentListResult = {
-					total : 0,
-					pageNo : pageNo,
-					pageSize : pageSize,
-					list : [],
-				};
-
-				await this.connect();
-				const comments : Array<CommentType> = await CommentModel
-					.find()
-					.byPostHash( postHash )
-					.sort( sortBy )
-					.skip( skip )
-					.limit( pageSize )
-					.lean<Array<CommentType>>()
-					.exec();
-				if ( Array.isArray( comments ) )
-				{
-					result.list = comments;
-					result.total = comments.length;
-				}
-
-				//	...
-				resolve( result );
 			}
 			catch ( err )
 			{
@@ -377,11 +332,10 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 
 	/**
 	 *	@param wallet		{string}	wallet address
-	 *	@param postHash		{string}	post hash
 	 *	@param options	{TQueueListOptions}
-	 *	@returns {Promise<CommentListResult>}
+	 *	@returns {Promise<PostListResult>}
 	 */
-	public queryListByWalletAndPostHash( wallet : string, postHash ?: string, options ?: TQueueListOptions ) : Promise<CommentListResult>
+	public queryListByWallet( wallet : string, options ?: TQueueListOptions ) : Promise<PostListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -391,18 +345,13 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				{
 					return reject( `invalid wallet` );
 				}
-				if ( postHash &&
-					! SchemaUtil.isValidKeccak256Hash( postHash ) )
-				{
-					return reject( `invalid postHash` );
-				}
 
 				const pageNo = PageUtil.getSafePageNo( options?.pageNo );
 				const pageSize = PageUtil.getSafePageSize( options?.pageSize );
 				const skip = ( pageNo - 1 ) * pageSize;
 				const sortBy : { [ key : string ] : SortOrder } = QueryUtil.getSafeSortBy( options?.sort );
 
-				let result : CommentListResult = {
+				let result : PostListResult = {
 					total : 0,
 					pageNo : pageNo,
 					pageSize : pageSize,
@@ -410,18 +359,18 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				};
 
 				await this.connect();
-				const comments : Array<CommentType> = await CommentModel
+				const contacts : Array<PostType> = await PostModel
 					.find()
-					.byWalletAndPostHash( wallet, postHash )
+					.byWallet( wallet )
 					.sort( sortBy )
 					.skip( skip )
 					.limit( pageSize )
-					.lean<Array<CommentType>>()
+					.lean<Array<PostType>>()
 					.exec();
-				if ( Array.isArray( comments ) )
+				if ( Array.isArray( contacts ) )
 				{
-					result.list = comments;
-					result.total = comments.length;
+					result.list = contacts;
+					result.total = contacts.length;
 				}
 
 				//	...
@@ -439,6 +388,6 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 	 */
 	public clearAll() : Promise<void>
 	{
-		return super.clearAll<CommentType>( CommentModel );
+		return super.clearAll<PostType>( PostModel );
 	}
 }

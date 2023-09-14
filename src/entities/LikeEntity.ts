@@ -3,13 +3,12 @@ import { TQueueListResult } from "../models/TQuery";
 import { MBaseEntity } from "../models/MBaseEntity";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { TypeUtil } from "chaintalk-utils";
-import { favoriteSchema } from "./FavoriteEntity";
 import { MRemarkEntity } from "../models/MRemarkEntity";
 
 /**
  * 	define likeType enum
  */
-enum LikeLikeTypes {
+export enum LikeLikeTypes {
 	post = 'post',
 	comment = 'comment'
 }
@@ -77,6 +76,15 @@ export const likeSchema = new Schema( {
 					wallet : wallet
 				} );
 			}
+		},
+		byWalletAndLikeTypeAndLikeHash( wallet : string, likeType : LikeLikeTypes, likeHash : string )
+		{
+			return this.findOne( {
+				deleted : Types.ObjectId.createFromTime( 0 ),
+				wallet : wallet,
+				likeType : likeType,
+				likeHash : likeHash,
+			} );
 		}
 	}
 } );

@@ -2,12 +2,13 @@ import { describe, expect } from '@jest/globals';
 import { ContactListResult, contactSchema, ContactType } from "../../../src/entities/ContactEntity";
 import { EtherWallet, Web3Signer, TWalletBaseItem, Web3Digester } from "web3id";
 import { ethers } from "ethers";
-import { ContactService } from "../../../src/services/store/ContactService";
+import { ContactService } from "../../../src/services/ContactService";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 import { TQueueListOptions } from "../../../src/models/TQuery";
 import { TestUtil } from "chaintalk-utils";
 import { SchemaUtil } from "../../../src/utils/SchemaUtil";
+import { resultErrors } from "../../../src/constants/ResultErrors";
 
 
 
@@ -113,7 +114,7 @@ describe( "ContactService", () =>
 				//	err: {"index":0,"code":11000,"keyPattern":{"deleted":1,"wallet":1,"address":1},"keyValue":{"deleted":"000000000000000000000000","wallet":"0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357","address":"0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"}}
 				expect( JSON.stringify( err ).includes( `"code":11000,` )
 					||
-					JSON.stringify( err ).includes( `duplicate key error` )  ).toBeTruthy();
+					JSON.stringify( err ).includes( resultErrors.duplicateKeyError )  ).toBeTruthy();
 			}
 
 			//	wait for a while
@@ -450,6 +451,54 @@ describe( "ContactService", () =>
 
 					//	check the result according to the keys that are not allowed to be updated
 					expect( Types.ObjectId.createFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
+				}
+			}
+
+			//	wait for a while
+			await TestUtil.sleep(5 * 1000 );
+
+		}, 60 * 10e3 );
+
+
+		it( "should throw an not found error", async () =>
+		{
+			//
+			//	create a wallet by mnemonic
+			//
+			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
+
+			const contactService = new ContactService();
+			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+			const find : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+			expect( find ).toBeDefined();
+			if ( find )
+			{
+				let toBeUpdated : ContactType = { ...find,
+					//	not found address
+					address : `0xeBec795c9c8bBD61FFc14A6662944748F299cAcf`,
+					name : `name-${ new Date().toLocaleString() }`,
+					avatar : `https://avatar-${ new Date().toLocaleString() }`,
+					remark : `remark .... ${ new Date().toLocaleString() }`,
+				};
+				toBeUpdated.sig = await Web3Signer.signObject( walletObj.privateKey, toBeUpdated );
+				expect( toBeUpdated.sig ).toBeDefined();
+				expect( typeof toBeUpdated.sig ).toBe( 'string' );
+				expect( toBeUpdated.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+				//	...
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( contactSchema );
+				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
+
+				//	...
+				try
+				{
+					const updated : ContactType | null = await contactService.update( walletObj.address, toBeUpdated, toBeUpdated.sig );
+					expect( updated ).toBe( null );
+				}
+				catch ( err )
+				{
+					expect( err ).toBe( resultErrors.notFound );
 				}
 			}
 

@@ -6,8 +6,9 @@ import { Types } from "mongoose";
 import { TestUtil } from "chaintalk-utils";
 import { SchemaUtil } from "../../../src/utils/SchemaUtil";
 import { PostListResult, postSchema, PostType } from "../../../src/entities/PostEntity";
-import { PostService } from "../../../src/services/store/PostService";
+import { PostService } from "../../../src/services/PostService";
 import { TQueueListOptions } from "../../../src/models/TQuery";
+import { resultErrors } from "../../../src/constants/ResultErrors";
 
 
 
@@ -478,7 +479,7 @@ describe( "PostService", () =>
 				catch ( err )
 				{
 					//
-					expect( err ).toBe( `updating is banned` );
+					expect( err ).toBe( resultErrors.updatingBanned );
 				}
 
 			}
