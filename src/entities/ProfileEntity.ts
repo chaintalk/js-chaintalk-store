@@ -13,7 +13,7 @@ export const profileSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
-			message: ( props: any ) => `invalid key`
+			message: ( /* props: any */ ) : string => `invalid key`
 		},
 		required: [ true, 'key required' ]
 	},
@@ -21,7 +21,7 @@ export const profileSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
-			message: ( props: any ) => `invalid value`
+			message: ( /* props: any */ ) : string => `invalid value`
 		},
 		required: [ true, 'value required' ]
 	},

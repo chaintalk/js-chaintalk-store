@@ -273,6 +273,7 @@ describe( "FollowerService", () =>
 				expect( follower.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				const result = await followerService.add( walletObj.address, follower, follower.sig );
+				expect( result ).toBeDefined();
 			}
 
 			//

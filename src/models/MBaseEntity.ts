@@ -11,7 +11,7 @@ export const MBaseEntity : any = {
 		type : Number,
 		validate: {
 			validator : ( v: number ) => v > 0,
-			message: ( props: any ) => `invalid timestamp`
+			message: ( /* props: any */ ) : string => `invalid timestamp`
 		},
 		required: [ true, 'timestamp required' ],
 		default : new Date().getTime(),
@@ -23,7 +23,7 @@ export const MBaseEntity : any = {
 		validate: {
 			//	Starts with "0x" (case-insensitive)
 			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
-			message: ( props: any ) => `invalid hash, must be 66 lowercase hex characters`
+			message: ( /* props: any */ ) : string => `invalid hash, must be 66 lowercase hex characters`
 		},
 		required: [ true, 'hash required' ]
 	},
@@ -32,7 +32,7 @@ export const MBaseEntity : any = {
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 16,
-			message: ( props: any ) => `invalid version`
+			message: ( /* props: any */ ) : string => `invalid version`
 		},
 		required: [ true, 'version required' ]
 	},
@@ -48,7 +48,7 @@ export const MBaseEntity : any = {
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && EtherWallet.isValidAddress( v ),
-			message: ( props: any ) => `invalid wallet`
+			message: ( /* props: any */ ) : string => `invalid wallet`
 		},
 		required: [ true, 'wallet required' ]
 	},
@@ -60,7 +60,7 @@ export const MBaseEntity : any = {
 		unique: true,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && 132 === v.length && /^0x[0-9a-f]{130}$/.test( v ),
-			message: ( props: any ) => `invalid sig, must be 132 lowercase hex characters`
+			message: ( /* props: any */ ) : string => `invalid sig, must be 132 lowercase hex characters`
 		},
 		required: [ true, 'sig required' ]
 	},

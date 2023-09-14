@@ -423,6 +423,7 @@ describe( "ProfileService", () =>
 				expect( like.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				const result = await profileService.add( walletObj.address, like, like.sig );
+				expect( result ).toBeDefined();
 			}
 
 			//

@@ -475,6 +475,7 @@ describe( "CommentService", () =>
 				expect( comment.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				const result : PostType | null = await commentService.add( walletObj.address, comment, comment.sig );
+				expect( result ).toBeDefined();
 			}
 
 			//

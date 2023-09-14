@@ -15,7 +15,7 @@ export const postSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
-			message: ( props: any ) => `invalid authorName. (should be less than 128 characters)`
+			message: ( /* props: any */ ) : string => `invalid authorName. (should be less than 128 characters)`
 		},
 		required: [ true, 'authorName required' ]
 	},
@@ -23,7 +23,7 @@ export const postSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
-			message: ( props: any ) => `invalid authorAvatar. (should be less than 256 characters)`
+			message: ( /* props: any */ ) : string => `invalid authorAvatar. (should be less than 256 characters)`
 		},
 		required: [ true, 'authorAvatar required' ]
 	},
@@ -32,7 +32,7 @@ export const postSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
-			message: ( props: any ) => `invalid body. (should be less than 2048 characters)`
+			message: ( /* props: any */ ) : string => `invalid body. (should be less than 2048 characters)`
 		},
 		required: [ true, 'body required' ]
 	},
@@ -54,7 +54,7 @@ export const postSchema = new Schema( {
 				}
 				return true;
 			},
-			message: ( props: any ) => `invalid pictures. (each element should be less than 256 characters)`
+			message: ( /* props: any */ ) : string => `invalid pictures. (each element should be less than 256 characters)`
 		},
 		required: false
 	},
@@ -76,7 +76,7 @@ export const postSchema = new Schema( {
 				}
 				return true;
 			},
-			message: ( props: any ) => `invalid videos. (each element should be less than 256 characters)`
+			message: ( /* props: any */ ) : string => `invalid videos. (each element should be less than 256 characters)`
 		},
 		required: false
 	},

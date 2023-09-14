@@ -172,7 +172,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService<Pro
 				{
 					const update = { deleted : find._id };
 					const newDoc = await ProfileModel.findOneAndUpdate( find, update, { new : true } );
-					return resolve( 1 );
+					return resolve( newDoc ? 1 : 0 );
 				}
 
 				resolve( 0 );

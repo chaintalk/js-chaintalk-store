@@ -277,7 +277,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				{
 					const update = { deleted : findPost._id };
 					const newDoc = await PostModel.findOneAndUpdate( findPost, update, { new : true } );
-					return resolve( 1 );
+					return resolve( newDoc ? 1 : 0 );
 				}
 
 				resolve( 0 );

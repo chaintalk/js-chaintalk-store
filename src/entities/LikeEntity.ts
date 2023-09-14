@@ -22,7 +22,7 @@ export const likeSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: LikeLikeTypes ) => Object.values( LikeLikeTypes ).includes( v ),
-			message: ( props: any ) => `invalid likeType`
+			message: ( /* props: any */ ) : string => `invalid likeType`
 		},
 		enum: Object.values( LikeLikeTypes ),
 		required: [ true, 'likeType required' ]
@@ -34,7 +34,7 @@ export const likeSchema = new Schema( {
 		validate: {
 			//	Starts with "0x" (case-insensitive)
 			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
-			message: ( props: any ) => `invalid likeHash, must be 66 lowercase hex characters`
+			message: ( /* props: any */ ) : string => `invalid likeHash, must be 66 lowercase hex characters`
 		},
 		required: [ true, 'likeHash required' ]
 	},
@@ -51,7 +51,7 @@ export const likeSchema = new Schema( {
 				}
 				return true;
 			},
-			message: ( props: any ) => `invalid likeBody, must be less than 2048 characters`
+			message: ( /* props: any */ ) : string => `invalid likeBody, must be less than 2048 characters`
 		},
 		required : false
 	},

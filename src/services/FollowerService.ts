@@ -152,7 +152,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				{
 					const update = { deleted : find._id };
 					const newDoc = await FollowerModel.findOneAndUpdate( find, update, { new : true } );
-					return resolve( 1 );
+					return resolve( newDoc ? 1 : 0 );
 				}
 
 				resolve( 0 );

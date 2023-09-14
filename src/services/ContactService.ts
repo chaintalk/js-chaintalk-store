@@ -186,7 +186,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				{
 					const update = { deleted : findContact._id };
 					const newDoc = await ContactModel.findOneAndUpdate( findContact, update, { new : true } );
-					return resolve( 1 );
+					return resolve( newDoc ? 1 : 0 );
 				}
 
 				resolve( 0 );

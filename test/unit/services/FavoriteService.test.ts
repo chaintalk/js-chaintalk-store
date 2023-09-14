@@ -360,6 +360,7 @@ describe( "FavoriteService", () =>
 				expect( favorite.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				const result = await favoriteService.add( walletObj.address, favorite, favorite.sig );
+				expect( result ).toBeDefined();
 			}
 
 			//

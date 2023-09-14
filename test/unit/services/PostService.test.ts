@@ -290,6 +290,7 @@ describe( "PostService", () =>
 				expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				const result : PostType | null = await contactsService.add( walletObj.address, post, post.sig );
+				expect( result ).toBeDefined();
 			}
 
 			//

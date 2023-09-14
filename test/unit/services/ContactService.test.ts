@@ -92,6 +92,7 @@ describe( "ContactService", () =>
 			try
 			{
 				const resultDup = await contactService.add( walletObj.address, contact, contact.sig );
+				expect( resultDup ).not.toBeDefined();
 			}
 			catch ( err )
 			{
@@ -267,6 +268,7 @@ describe( "ContactService", () =>
 				expect( contact.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				const result = await contactService.add( walletObj.address, contact, contact.sig );
+				expect( result ).toBeDefined();
 			}
 
 			//

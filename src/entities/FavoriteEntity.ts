@@ -21,7 +21,7 @@ export const favoriteSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: FavoriteFavTypes ) => Object.values( FavoriteFavTypes ).includes( v ),
-			message: ( props: any ) => `invalid favType`
+			message: ( /* props: any */ ) : string => `invalid favType`
 		},
 		enum: Object.values( FavoriteFavTypes ),
 		required: [ true, 'favType required' ]
@@ -33,7 +33,7 @@ export const favoriteSchema = new Schema( {
 		validate: {
 			//	Starts with "0x" (case-insensitive)
 			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
-			message: ( props: any ) => `invalid favHash, must be 66 lowercase hex characters`
+			message: ( /* props: any */ ) : string => `invalid favHash, must be 66 lowercase hex characters`
 		},
 		required: [ true, 'favHash required' ]
 	},
@@ -50,7 +50,7 @@ export const favoriteSchema = new Schema( {
 				}
 				return true;
 			},
-			message: ( props: any ) => `invalid favBody, must be less than 2048 characters`
+			message: ( /* props: any */ ) : string => `invalid favBody, must be less than 2048 characters`
 		},
 		required : false
 	},

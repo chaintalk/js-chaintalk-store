@@ -8,7 +8,7 @@ export const MStatisticEntity : any = {
 		type : Number,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
-			message: ( props: any ) => `invalid statisticView. (should be greater than or equal to 0)`
+			message: ( /* props: any */ ) : string => `invalid statisticView. (should be greater than or equal to 0)`
 		},
 		required: [ true, 'statisticView required' ]
 	},
@@ -16,7 +16,7 @@ export const MStatisticEntity : any = {
 		type : Number,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
-			message: ( props: any ) => `invalid statisticRepost. (should be greater than or equal to 0)`
+			message: ( /* props: any */ ) : string => `invalid statisticRepost. (should be greater than or equal to 0)`
 		},
 		required: [ true, 'statisticRepost required' ]
 	},
@@ -24,7 +24,7 @@ export const MStatisticEntity : any = {
 		type : Number,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
-			message: ( props: any ) => `invalid statisticQuote. (should be greater than or equal to 0)`
+			message: ( /* props: any */ ) : string => `invalid statisticQuote. (should be greater than or equal to 0)`
 		},
 		required: [ true, 'statisticQuote required' ]
 	},
@@ -32,7 +32,7 @@ export const MStatisticEntity : any = {
 		type : Number,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
-			message: ( props: any ) => `invalid statisticLike. (should be greater than or equal to 0)`
+			message: ( /* props: any */ ) : string => `invalid statisticLike. (should be greater than or equal to 0)`
 		},
 		required: [ true, 'statisticLike required' ]
 	},
@@ -40,7 +40,7 @@ export const MStatisticEntity : any = {
 		type : Number,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
-			message: ( props: any ) => `invalid statisticFavorite. (should be greater than or equal to 0)`
+			message: ( /* props: any */ ) : string => `invalid statisticFavorite. (should be greater than or equal to 0)`
 		},
 		required: [ true, 'statisticFavorite required' ]
 	},
@@ -48,7 +48,7 @@ export const MStatisticEntity : any = {
 		type : Number,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNumeric( v ) && v >= 0,
-			message: ( props: any ) => `invalid statisticReply. (should be greater than or equal to 0)`
+			message: ( /* props: any */ ) : string => `invalid statisticReply. (should be greater than or equal to 0)`
 		},
 		required: [ true, 'statisticReply required' ]
 	},

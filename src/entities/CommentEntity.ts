@@ -19,7 +19,7 @@ export const commentSchema = new Schema( {
 		validate: {
 			//	Starts with "0x" (case-insensitive)
 			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
-			message: ( props: any ) => `invalid postHash, must be 66 lowercase hex characters`
+			message: ( /* props: any */ ) : string => `invalid postHash, must be 66 lowercase hex characters`
 		},
 		required: [ true, 'postHash required' ]
 	},
@@ -27,7 +27,7 @@ export const commentSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
-			message: ( props: any ) => `invalid authorName. (should be less than 128 characters)`
+			message: ( /* props: any */ ) : string => `invalid authorName. (should be less than 128 characters)`
 		},
 		required: [ true, 'authorName required' ]
 	},
@@ -35,7 +35,7 @@ export const commentSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
-			message: ( props: any ) => `invalid authorAvatar. (should be less than 256 characters)`
+			message: ( /* props: any */ ) : string => `invalid authorAvatar. (should be less than 256 characters)`
 		},
 		required: [ true, 'authorAvatar required' ]
 	},
@@ -44,7 +44,7 @@ export const commentSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
-			message: ( props: any ) => `invalid replyTo. (should be less than 128 characters)`
+			message: ( /* props: any */ ) : string => `invalid replyTo. (should be less than 128 characters)`
 		},
 		required: false
 	},
@@ -53,7 +53,7 @@ export const commentSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
-			message: ( props: any ) => `invalid postSnippet. (should be less than 2048 characters)`
+			message: ( /* props: any */ ) : string => `invalid postSnippet. (should be less than 2048 characters)`
 		},
 		required: [ true, 'postSnippet required' ]
 	},
@@ -62,7 +62,7 @@ export const commentSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
-			message: ( props: any ) => `invalid body. (should be less than 2048 characters)`
+			message: ( /* props: any */ ) : string => `invalid body. (should be less than 2048 characters)`
 		},
 		required: [ true, 'body required' ]
 	},
@@ -84,7 +84,7 @@ export const commentSchema = new Schema( {
 				}
 				return true;
 			},
-			message: ( props: any ) => `invalid pictures. (each element should be less than 256 characters)`
+			message: ( /* props: any */ ) : string => `invalid pictures. (each element should be less than 256 characters)`
 		},
 		required: false
 	},
@@ -106,7 +106,7 @@ export const commentSchema = new Schema( {
 				}
 				return true;
 			},
-			message: ( props: any ) => `invalid videos. (each element should be less than 256 characters)`
+			message: ( /* props: any */ ) : string => `invalid videos. (each element should be less than 256 characters)`
 		},
 		required: false
 	},

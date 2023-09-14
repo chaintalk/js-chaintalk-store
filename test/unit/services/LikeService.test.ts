@@ -360,6 +360,7 @@ describe( "LikeService", () =>
 				expect( like.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 				const result = await likeService.add( walletObj.address, like, like.sig );
+				expect( result ).toBeDefined();
 			}
 
 			//

@@ -144,7 +144,7 @@ export class LikeService extends BaseService implements IWeb3StoreService<LikeTy
 				{
 					const update = { deleted : find._id };
 					const newDoc = await LikeModel.findOneAndUpdate( find, update, { new : true } );
-					return resolve( 1 );
+					return resolve( newDoc ? 1 : 0 );
 				}
 
 				resolve( 0 );

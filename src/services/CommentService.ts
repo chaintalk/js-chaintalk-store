@@ -236,7 +236,7 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				{
 					const update = { deleted : find._id };
 					const newDoc = await CommentModel.findOneAndUpdate( find, update, { new : true } );
-					return resolve( 1 );
+					return resolve( newDoc ? 1 : 0 );
 				}
 
 				resolve( 0 );
