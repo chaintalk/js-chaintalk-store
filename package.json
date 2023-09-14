@@ -2,8 +2,11 @@
 	"name": "chaintalk-store",
 	"version": "1.0.0",
 	"description": "ChainTalk Store Unit",
+	"keywords": [
+		"web3 store"
+	],
 	"leadMaintainer": "Chain Talk, Team.",
-	"main": "src/index.js",
+	"main": "dist/index.js",
 	"browser": "dist/index.js",
 	"license": "MIT",
 	"files": [
