@@ -4,16 +4,16 @@ import {
 	LikeListResult,
 	likeSchema,
 	LikeType
-} from "../../../src/entities/LikeEntity";
+} from "../../../src";
 import { EtherWallet, TWalletBaseItem, Web3Digester, Web3Signer } from "web3id";
 import { ethers } from "ethers";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 import { TestUtil } from "chaintalk-utils";
-import { SchemaUtil } from "../../../src/utils/SchemaUtil";
-import { LikeService } from "../../../src/services/LikeService";
+import { SchemaUtil } from "../../../src";
+import { LikeService } from "../../../src";
 import { TQueueListOptions } from "../../../src/models/TQuery";
-import { resultErrors } from "../../../src/constants/ResultErrors";
+import { resultErrors } from "../../../src";
 
 
 /**

@@ -3,11 +3,10 @@ import { EtherWallet, Web3Encoder, Web3Validator } from "web3id";
 import { ContactListResult, ContactModel, ContactType } from "../entities/ContactEntity";
 import { IWeb3StoreService } from "../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
-import { connection, Document, Error, SortOrder, Types } from "mongoose";
+import { Document, Error, SortOrder, Types } from "mongoose";
 import { TQueueListOptions } from "../models/TQuery";
 import { QueryUtil } from "../utils/QueryUtil";
-import { PostModel, PostType } from "../entities/PostEntity";
-import { FollowerType } from "../entities/FollowerEntity";
+import { PostType } from "../entities/PostEntity";
 import { resultErrors } from "../constants/ResultErrors";
 
 /**

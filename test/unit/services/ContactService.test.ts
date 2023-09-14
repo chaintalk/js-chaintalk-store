@@ -1,14 +1,14 @@
 import { describe, expect } from '@jest/globals';
-import { ContactListResult, contactSchema, ContactType } from "../../../src/entities/ContactEntity";
+import { ContactListResult, contactSchema, ContactType } from "../../../src";
 import { EtherWallet, Web3Signer, TWalletBaseItem, Web3Digester } from "web3id";
 import { ethers } from "ethers";
-import { ContactService } from "../../../src/services/ContactService";
+import { ContactService } from "../../../src";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 import { TQueueListOptions } from "../../../src/models/TQuery";
 import { TestUtil } from "chaintalk-utils";
-import { SchemaUtil } from "../../../src/utils/SchemaUtil";
-import { resultErrors } from "../../../src/constants/ResultErrors";
+import { SchemaUtil } from "../../../src";
+import { resultErrors } from "../../../src";
 
 
 

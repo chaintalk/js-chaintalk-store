@@ -1,4 +1,4 @@
-import { model, Schema, InferSchemaType, Types, Document, CallbackError } from 'mongoose';
+import { model, Schema, InferSchemaType, Types, Document } from 'mongoose';
 import { TypeUtil } from "chaintalk-utils";
 import { TQueueListResult } from "../models/TQuery";
 import { MBaseEntity } from "../models/MBaseEntity";

@@ -1,6 +1,6 @@
 import { DatabaseConnection } from "../connections/DatabaseConnection";
 import { connection, Model, Types } from "mongoose";
-import { PostModel } from "../entities/PostEntity";
+
 
 export abstract class BaseService extends DatabaseConnection
 {

@@ -4,16 +4,16 @@ import {
 	FavoriteListResult,
 	favoriteSchema,
 	FavoriteType
-} from "../../../src/entities/FavoriteEntity";
+} from "../../../src";
 import { EtherWallet, TWalletBaseItem, Web3Digester, Web3Signer } from "web3id";
 import { ethers } from "ethers";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 import { TestUtil } from "chaintalk-utils";
-import { SchemaUtil } from "../../../src/utils/SchemaUtil";
-import { FavoriteService } from "../../../src/services/FavoriteService";
+import { SchemaUtil } from "../../../src";
+import { FavoriteService } from "../../../src";
 import { TQueueListOptions } from "../../../src/models/TQuery";
-import { resultErrors } from "../../../src/constants/ResultErrors";
+import { resultErrors } from "../../../src";
 
 
 /**

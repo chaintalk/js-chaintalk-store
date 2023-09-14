@@ -7,7 +7,6 @@ import { TQueueListOptions } from "../models/TQuery";
 import { PostListResult, PostModel, postSchema, PostType } from "../entities/PostEntity";
 import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
-import { FollowerType } from "../entities/FollowerEntity";
 import { resultErrors } from "../constants/ResultErrors";
 
 /**

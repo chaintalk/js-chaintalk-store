@@ -28,7 +28,8 @@ export { ContactType, ContactListResult };
 
 
 import { favoriteSchema, FavoriteModel } from "./entities/FavoriteEntity";
-import type { FavoriteType, FavoriteListResult, FavoriteFavTypes } from "./entities/FavoriteEntity";
+import type { FavoriteType, FavoriteListResult } from "./entities/FavoriteEntity";
+import { FavoriteFavTypes } from "./entities/FavoriteEntity";
 export { favoriteSchema, FavoriteModel };
 export { FavoriteType, FavoriteListResult, FavoriteFavTypes };
 
@@ -40,7 +41,8 @@ export { FollowerType, FollowerListResult };
 
 
 import { likeSchema, LikeModel } from "./entities/LikeEntity";
-import type { LikeType, LikeListResult, LikeLikeTypes } from "./entities/LikeEntity";
+import type { LikeType, LikeListResult } from "./entities/LikeEntity";
+import { LikeLikeTypes } from "./entities/LikeEntity";
 export { likeSchema, LikeModel };
 export { LikeType, LikeListResult, LikeLikeTypes };
 

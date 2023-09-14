@@ -1,5 +1,5 @@
 import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
-import { EtherWallet, Web3Encoder, Web3Validator } from "web3id";
+import { EtherWallet, Web3Validator } from "web3id";
 import { FollowerListResult, FollowerModel, FollowerType } from "../entities/FollowerEntity";
 import { IWeb3StoreService } from "../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";

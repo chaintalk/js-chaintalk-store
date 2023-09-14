@@ -4,13 +4,13 @@ import { ethers } from "ethers";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 import { TestUtil } from "chaintalk-utils";
-import { SchemaUtil } from "../../../src/utils/SchemaUtil";
-import { PostListResult, postSchema, PostType } from "../../../src/entities/PostEntity";
-import { PostService } from "../../../src/services/PostService";
+import { SchemaUtil } from "../../../src";
+import { PostListResult, postSchema, PostType } from "../../../src";
+import { PostService } from "../../../src";
 import { TQueueListOptions } from "../../../src/models/TQuery";
-import { commentSchema, CommentType } from "../../../src/entities/CommentEntity";
-import { CommentService } from "../../../src/services/CommentService";
-import { resultErrors } from "../../../src/constants/ResultErrors";
+import { commentSchema, CommentType } from "../../../src";
+import { CommentService } from "../../../src";
+import { resultErrors } from "../../../src";
 
 
 

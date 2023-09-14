@@ -3,17 +3,17 @@ import {
 	ProfileListResult,
 	profileSchema,
 	ProfileType
-} from "../../../src/entities/ProfileEntity";
+} from "../../../src";
 import { EtherWallet, TWalletBaseItem, Web3Digester, Web3Signer } from "web3id";
 import { ethers } from "ethers";
 import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
 import { Types } from "mongoose";
 import { TestUtil } from "chaintalk-utils";
-import { SchemaUtil } from "../../../src/utils/SchemaUtil";
-import { ProfileService } from "../../../src/services/ProfileService";
+import { SchemaUtil } from "../../../src";
+import { ProfileService } from "../../../src";
 import { TQueueListOptions } from "../../../src/models/TQuery";
-import { resultErrors } from "../../../src/constants/ResultErrors";
-import { ContactType } from "../../../src/entities/ContactEntity";
+import { resultErrors } from "../../../src";
+import { ContactType } from "../../../src";
 
 
 /**
