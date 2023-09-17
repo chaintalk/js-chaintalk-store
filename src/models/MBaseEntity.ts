@@ -59,7 +59,8 @@ export const MBaseEntity : any = {
 		type : String,
 		unique: true,
 		validate: {
-			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && 132 === v.length && /^0x[0-9a-f]{130}$/.test( v ),
+			//validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && 132 === v.length && /^0x[0-9a-f]{130}$/.test( v ),
+			validator : ( v: string ) => EtherWallet.isValidSignatureString( v ),
 			message: ( /* props: any */ ) : string => `invalid sig, must be 132 lowercase hex characters`
 		},
 		required: [ true, 'sig required' ]
