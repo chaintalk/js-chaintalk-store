@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals';
-import { ServiceUtil } from "../../../src/utils/ServiceUtil";
+import { ServiceUtil } from "../../../src";
 
 
 
