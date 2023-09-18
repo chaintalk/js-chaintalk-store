@@ -1,6 +1,6 @@
 import { DatabaseConnection } from "../connections/DatabaseConnection";
 import { connection, Model, Types } from "mongoose";
-import { PageUtil } from "chaintalk-utils";
+import { PageUtil, TestUtil } from "chaintalk-utils";
 
 
 export abstract class BaseService extends DatabaseConnection
@@ -14,7 +14,7 @@ export abstract class BaseService extends DatabaseConnection
 	 *	@param data	{any}
 	 *	@returns {any}
 	 */
-	public getListResultDefaultValue<T>( data : any ) : T
+	public getListResultDefaultValue<T>( data ?: any ) : T
 	{
 		let result : any = {
 			total : 0,
@@ -133,6 +133,10 @@ export abstract class BaseService extends DatabaseConnection
 		{
 			try
 			{
+				if ( ! TestUtil.isTestEnv() )
+				{
+					return reject( `only allowed to run in test environment` );
+				}
 				if ( ! model )
 				{
 					return reject( `invalid model` );

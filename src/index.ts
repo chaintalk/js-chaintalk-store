@@ -79,7 +79,8 @@ export { BaseService, CommentService, ContactService, FavoriteService, FollowerS
  */
 import { QueryUtil } from "./utils/QueryUtil";
 import { SchemaUtil } from "./utils/SchemaUtil";
-export { QueryUtil, SchemaUtil };
+import { ServiceUtil } from "./utils/ServiceUtil";
+export { QueryUtil, SchemaUtil, ServiceUtil };
 
 
 /**

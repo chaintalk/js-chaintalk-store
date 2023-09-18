@@ -24,7 +24,7 @@ export class CommentService extends BaseService implements IWeb3StoreService< Co
 	 *	@param wallet	{string}
 	 *	@param data	{PostType}
 	 *	@param sig	{string}
-	 *	@returns {Promise<PostType>}
+	 *	@returns {Promise<CommentType | null>}
 	 */
 	public add( wallet : string, data : CommentType, sig : string ) : Promise< CommentType | null >
 	{
@@ -91,7 +91,7 @@ export class CommentService extends BaseService implements IWeb3StoreService< Co
 	 *	@param wallet	{string}
 	 *	@param data	{CommentType}
 	 *	@param sig	{string}
-	 *	@returns {Promise< ContactType | null >}
+	 *	@returns {Promise< CommentType | null >}
 	 */
 	public update( wallet : string, data : CommentType, sig : string ) : Promise< CommentType | null >
 	{
