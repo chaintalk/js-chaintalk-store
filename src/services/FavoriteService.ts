@@ -8,8 +8,7 @@ import { TQueueListOptions } from "../models/TQuery";
 import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { resultErrors } from "../constants/ResultErrors";
-import { CommentListResult, CommentType } from "../entities/CommentEntity";
-import { ContactListResult, ContactType } from "../entities/ContactEntity";
+import { CommentListResult } from "../entities/CommentEntity";
 
 /**
  * 	@class FavoriteService

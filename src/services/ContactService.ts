@@ -8,7 +8,6 @@ import { TQueueListOptions } from "../models/TQuery";
 import { QueryUtil } from "../utils/QueryUtil";
 import { PostType } from "../entities/PostEntity";
 import { resultErrors } from "../constants/ResultErrors";
-import { CommentListResult, CommentType } from "../entities/CommentEntity";
 
 /**
  * 	class ContactsService

@@ -1,8 +1,6 @@
 import { DatabaseConnection } from "../connections/DatabaseConnection";
 import { connection, Model, Types } from "mongoose";
-import { CommentListResult } from "../entities/CommentEntity";
 import { PageUtil } from "chaintalk-utils";
-import { TQueueListResult } from "../models/TQuery";
 
 
 export abstract class BaseService extends DatabaseConnection
