@@ -142,7 +142,7 @@ describe( "FavoriteService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const favoriteService = new FavoriteService();
-			const result : FavoriteType | null = await favoriteService.queryOneByWalletAndFavTypeAndFavHash( walletObj.address, FavoriteFavTypes.post, oneFavHash );
+			const result : FavoriteType | null = await favoriteService.queryOne( walletObj.address, { by : 'walletAndFavTypeAndFavHash', favType : FavoriteFavTypes.post, favHash : oneFavHash } );
 			expect( result ).not.toBe( null );
 			expect( result ).toBeDefined();
 			//
@@ -191,7 +191,7 @@ describe( "FavoriteService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const favoriteService = new FavoriteService();
-			const findFavorite : FavoriteType | null = await favoriteService.queryOneByWalletAndFavTypeAndFavHash( walletObj.address, FavoriteFavTypes.post, oneFavHash );
+			const findFavorite : FavoriteType | null = await favoriteService.queryOne( walletObj.address, { by : 'walletAndFavTypeAndFavHash', favType : FavoriteFavTypes.post, favHash : oneFavHash } );
 			expect( findFavorite ).toBeDefined();
 			if ( findFavorite )
 			{
@@ -238,7 +238,7 @@ describe( "FavoriteService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const favoriteService = new FavoriteService();
-			const findFavorite : FavoriteType | null = await favoriteService.queryOneByWalletAndFavTypeAndFavHash( walletObj.address, FavoriteFavTypes.post, oneFavHash );
+			const findFavorite : FavoriteType | null = await favoriteService.queryOne( walletObj.address, { by : 'walletAndFavTypeAndFavHash', favType : FavoriteFavTypes.post, favHash : oneFavHash } );
 			if ( findFavorite )
 			{
 				let favoriteToBeDeleted : FavoriteType = { ...findFavorite,
@@ -253,7 +253,7 @@ describe( "FavoriteService", () =>
 				const result : number = await favoriteService.delete( walletObj.address, favoriteToBeDeleted, favoriteToBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findFavoriteAgain : FavoriteType | null = await favoriteService.queryOneByWalletAndFavTypeAndFavHash( walletObj.address, FavoriteFavTypes.post, oneFavHash );
+				const findFavoriteAgain : FavoriteType | null = await favoriteService.queryOne( walletObj.address, { by : 'walletAndFavTypeAndFavHash', favType : FavoriteFavTypes.post, favHash : oneFavHash } );
 				expect( findFavoriteAgain ).toBe( null );
 			}
 
@@ -272,7 +272,7 @@ describe( "FavoriteService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const favoriteService = new FavoriteService();
-			const results : FavoriteListResult = await favoriteService.queryListByWalletAndFavType( walletObj.address, FavoriteFavTypes.post );
+			const results : FavoriteListResult = await favoriteService.queryList( walletObj.address, { by : 'walletAndFavType', favType : FavoriteFavTypes.post } );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -372,7 +372,7 @@ describe( "FavoriteService", () =>
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : FavoriteListResult = await favoriteService.queryListByWalletAndFavType( walletObj.address, FavoriteFavTypes.post, options );
+				const results : FavoriteListResult = await favoriteService.queryList( walletObj.address, { by : 'walletAndFavType', favType : FavoriteFavTypes.post, options : options } );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );

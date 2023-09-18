@@ -138,7 +138,7 @@ describe( "FollowerService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const followerService = new FollowerService();
-			const result : FollowerType | null = await followerService.queryOneByWalletAndAddress( walletObj.address, oneFollowerAddress );
+			const result : FollowerType | null = await followerService.queryOne( walletObj.address, { by : 'walletAndAddress', address : oneFollowerAddress } );
 			expect( result ).not.toBe( null );
 			expect( result ).toBeDefined();
 			//
@@ -188,7 +188,7 @@ describe( "FollowerService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const followerService = new FollowerService();
-			const results : FollowerListResult = await followerService.queryListByWalletAndAddress( walletObj.address, oneFollowerAddress );
+			const results : FollowerListResult = await followerService.queryList( walletObj.address, { by : 'walletAndAddress', address : oneFollowerAddress } );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -285,7 +285,7 @@ describe( "FollowerService", () =>
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : FollowerListResult = await followerService.queryListByWalletAndAddress( walletObj.address, undefined, options );
+				const results : FollowerListResult = await followerService.queryList( walletObj.address, { by : 'walletAndAddress', address : undefined, options : options } );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );
@@ -349,7 +349,7 @@ describe( "FollowerService", () =>
 
 			const followerService = new FollowerService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : FollowerType | null = await followerService.queryOneByWalletAndAddress( walletObj.address, address );
+			const findContact : FollowerType | null = await followerService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
 			expect( findContact ).toBeDefined();
 			if ( findContact )
 			{
@@ -397,7 +397,7 @@ describe( "FollowerService", () =>
 
 			const followerService = new FollowerService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : FollowerType | null = await followerService.queryOneByWalletAndAddress( walletObj.address, address );
+			const findContact : FollowerType | null = await followerService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
 			if ( findContact )
 			{
 				let followerToBeDeleted : FollowerType = { ...findContact,
@@ -412,7 +412,7 @@ describe( "FollowerService", () =>
 				const result : number = await followerService.delete( walletObj.address, followerToBeDeleted, followerToBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findContactAgain : FollowerType | null = await followerService.queryOneByWalletAndAddress( walletObj.address, address );
+				const findContactAgain : FollowerType | null = await followerService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
 				expect( findContactAgain ).toBe( null );
 			}
 

@@ -184,7 +184,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 	 *	@param sig	{string}
 	 * 	@returns {Promise< FavoriteType | null >}
 	 */
-	public queryOne( wallet : string, data : any, sig : string ) : Promise<FavoriteType | null>
+	public queryOne( wallet : string, data : any, sig ?: string ) : Promise<FavoriteType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -220,7 +220,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 	 *	@param sig	{string}
 	 *	@returns { Promise<FavoriteListResult> }
 	 */
-	public queryList( wallet : string, data : any, sig : string ) : Promise<FavoriteListResult>
+	public queryList( wallet : string, data : any, sig ?: string ) : Promise<FavoriteListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -258,7 +258,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 	 *	@param favHash	{string}
 	 *	@returns {Promise< FavoriteType | null >}
 	 */
-	public queryOneByWalletAndFavTypeAndFavHash( wallet : string, favType : FavoriteFavTypes, favHash : string ) : Promise<FavoriteType | null>
+	private queryOneByWalletAndFavTypeAndFavHash( wallet : string, favType : FavoriteFavTypes, favHash : string ) : Promise<FavoriteType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -303,7 +303,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	public queryListByWalletAndFavType( wallet : string, favType ?: FavoriteFavTypes, options ?: TQueueListOptions ) : Promise<FavoriteListResult>
+	private queryListByWalletAndFavType( wallet : string, favType ?: FavoriteFavTypes, options ?: TQueueListOptions ) : Promise<FavoriteListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

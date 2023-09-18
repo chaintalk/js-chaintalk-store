@@ -136,7 +136,7 @@ describe( "ContactService", () =>
 
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const result : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+			const result : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
 			//
 			//    console.log( result );
 			//    {
@@ -183,7 +183,7 @@ describe( "ContactService", () =>
 
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const results : ContactListResult = await contactService.queryListByWalletAndAddress( walletObj.address, address );
+			const results : ContactListResult = await contactService.queryList( walletObj.address, { by : 'walletAndAddress', address : address } );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -280,7 +280,7 @@ describe( "ContactService", () =>
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : ContactListResult = await contactService.queryListByWalletAndAddress( walletObj.address, undefined, options );
+				const results : ContactListResult = await contactService.queryList( walletObj.address, { by : 'walletAndAddress', address : undefined, options : options } );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );
@@ -344,7 +344,7 @@ describe( "ContactService", () =>
 
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+			const findContact : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
 			expect( findContact ).toBeDefined();
 			if ( findContact )
 			{
@@ -380,7 +380,7 @@ describe( "ContactService", () =>
 				}
 
 				//	...
-				const findContactAgain : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+				const findContactAgain : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
 				expect( null !== findContactAgain ).toBeTruthy();
 				if ( requiredKeys && findContactAgain )
 				{
@@ -413,7 +413,7 @@ describe( "ContactService", () =>
 
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+			const findContact : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
 			expect( findContact ).toBeDefined();
 			if ( findContact )
 			{
@@ -472,7 +472,7 @@ describe( "ContactService", () =>
 
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const find : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+			const find : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
 			expect( find ).toBeDefined();
 			if ( find )
 			{
@@ -522,7 +522,7 @@ describe( "ContactService", () =>
 
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-			const findContact : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+			const findContact : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
 			if ( findContact )
 			{
 				let contactToBeDeleted : ContactType = { ...findContact,
@@ -537,7 +537,7 @@ describe( "ContactService", () =>
 				const result : number = await contactService.delete( walletObj.address, contactToBeDeleted, contactToBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findContactAgain : ContactType | null = await contactService.queryOneByWalletAndAddress( walletObj.address, address );
+				const findContactAgain : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
 				expect( findContactAgain ).toBe( null );
 			}
 

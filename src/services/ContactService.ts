@@ -149,7 +149,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param sig	{string}
 	 *	@returns { Promise< ContactType | null > }
 	 */
-	updateFor( wallet: string, data : any, sig : string )  : Promise< ContactType | null >
+	public updateFor( wallet: string, data : any, sig : string )  : Promise< ContactType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -228,7 +228,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param sig	{string}
 	 * 	@returns {Promise< ContactType | null >}
 	 */
-	public queryOne( wallet : string, data : any, sig : string ) : Promise<ContactType | null>
+	public queryOne( wallet : string, data : any, sig ?: string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -266,7 +266,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param sig	{string}
 	 *	@returns { Promise<ContactListResult> }
 	 */
-	public queryList( wallet : string, data : any, sig : string ) : Promise<ContactListResult>
+	public queryList( wallet : string, data : any, sig ?: string ) : Promise<ContactListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -304,7 +304,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param address	{string}	contact wallet address
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	public queryOneByWalletAndAddress( wallet : string, address : string ) : Promise<ContactType | null>
+	private queryOneByWalletAndAddress( wallet : string, address : string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -344,7 +344,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 * 	@param hash	{string}	a 66-character hexadecimal string
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	public queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<ContactType | null>
+	private queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -385,7 +385,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	public queryListByWalletAndAddress( wallet : string, address ? : string, options ? : TQueueListOptions ) : Promise<ContactListResult>
+	private queryListByWalletAndAddress( wallet : string, address ? : string, options ? : TQueueListOptions ) : Promise<ContactListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

@@ -134,7 +134,7 @@ describe( "PostService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const postService = new PostService();
-			const result : PostType | null = await postService.queryOneByWalletAndHash( walletObj.address, savedPost.hash );
+			const result : PostType | null = await postService.queryOne( walletObj.address, { by : 'walletAndHash', hash : savedPost.hash } );
 			//
 			//    console.log( result );
 			//    {
@@ -189,7 +189,7 @@ describe( "PostService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const contactsService = new PostService();
-			const results : PostListResult = await contactsService.queryListByWallet( walletObj.address );
+			const results : PostListResult = await contactsService.queryList( walletObj.address, { by : 'wallet' } );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -302,7 +302,7 @@ describe( "PostService", () =>
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : PostListResult = await contactsService.queryListByWallet( walletObj.address, options );
+				const results : PostListResult = await contactsService.queryList( walletObj.address, { by : 'wallet', options : options } );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );
@@ -417,7 +417,7 @@ describe( "PostService", () =>
 			//
 			//	....
 			//
-			const findPost : PostType | null = await postService.queryOneByWalletAndHash( walletObj.address, post.hash );
+			const findPost : PostType | null = await postService.queryOne( walletObj.address, { by : 'walletAndHash', hash : post.hash } );
 			expect( findPost ).toBeDefined();
 			if ( findPost )
 			{
@@ -546,7 +546,7 @@ describe( "PostService", () =>
 			expect( increasePost ).toBeDefined();
 			expect( increasePost.statisticView ).toBe( 1 );
 
-			const findPost : PostType | null = await postService.queryOneByWalletAndHash( walletObj.address, post.hash );
+			const findPost : PostType | null = await postService.queryOne( walletObj.address, { by : 'walletAndHash', hash : post.hash } );
 			expect( findPost ).toBeDefined();
 			expect( findPost.statisticView ).toBe( 1 );
 
@@ -615,7 +615,7 @@ describe( "PostService", () =>
 			await TestUtil.sleep(5 * 1000 );
 
 			//	...
-			const findPost : PostType | null = await postService.queryOneByWalletAndHash( walletObj.address, post.hash );
+			const findPost : PostType | null = await postService.queryOne( walletObj.address, { by : 'walletAndHash', hash : post.hash } );
 			if ( findPost )
 			{
 				let toBeDeleted : PostType = { ...findPost,
@@ -630,7 +630,7 @@ describe( "PostService", () =>
 				const result : number = await postService.delete( walletObj.address, toBeDeleted, toBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findPostAgain : PostType | null = await postService.queryOneByWalletAndHash( walletObj.address, post.hash );
+				const findPostAgain : PostType | null = await postService.queryOne( walletObj.address, { by : 'walletAndHash', hash : post.hash } );
 				expect( findPostAgain ).toBe( null );
 			}
 

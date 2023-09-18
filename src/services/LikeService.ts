@@ -184,7 +184,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 	 *	@param sig	{string}
 	 * 	@returns {Promise< LikeType | null >}
 	 */
-	public queryOne( wallet : string, data : any, sig : string ) : Promise<LikeType | null>
+	public queryOne( wallet : string, data : any, sig ?: string ) : Promise<LikeType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -220,7 +220,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 	 *	@param sig	{string}
 	 *	@returns { Promise<LikeListResult> }
 	 */
-	public queryList( wallet : string, data : any, sig : string ) : Promise<LikeListResult>
+	public queryList( wallet : string, data : any, sig ?: string ) : Promise<LikeListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -257,7 +257,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 	 *	@param likeHash	{string}
 	 *	@returns {Promise< LikeType | null >}
 	 */
-	public queryOneByWalletAndLikeTypeAndLikeHash( wallet : string, likeType : LikeLikeTypes, likeHash : string ) : Promise<LikeType | null>
+	private queryOneByWalletAndLikeTypeAndLikeHash( wallet : string, likeType : LikeLikeTypes, likeHash : string ) : Promise<LikeType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -302,7 +302,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	public queryListByWalletAndLikeType( wallet : string, likeType ?: LikeLikeTypes, options ?: TQueueListOptions ) : Promise<LikeListResult>
+	private queryListByWalletAndLikeType( wallet : string, likeType ?: LikeLikeTypes, options ?: TQueueListOptions ) : Promise<LikeListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

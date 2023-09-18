@@ -141,7 +141,7 @@ describe( "ProfileService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const profileService = new ProfileService();
-			const result : ProfileType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
+			const result : ProfileType | null = await profileService.queryOne( walletObj.address, { by : 'walletAndKey', key : oneProfileKey } );
 			expect( result ).not.toBe( null );
 			expect( result ).toBeDefined();
 			//
@@ -190,7 +190,7 @@ describe( "ProfileService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const profileService = new ProfileService();
-			const findFavorite : ProfileType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
+			const findFavorite : ProfileType | null = await profileService.queryOne( walletObj.address, { by : 'walletAndKey', key : oneProfileKey } );
 			expect( findFavorite ).toBeDefined();
 			if ( findFavorite )
 			{
@@ -225,7 +225,7 @@ describe( "ProfileService", () =>
 				}
 
 				//	...
-				const findAgain : ContactType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
+				const findAgain : ContactType | null = await profileService.queryOne( walletObj.address, { by : 'walletAndKey', key : oneProfileKey } );
 				expect( null !== findAgain ).toBeTruthy();
 				if ( requiredKeys && findAgain )
 				{
@@ -255,7 +255,7 @@ describe( "ProfileService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const profileService = new ProfileService();
-			const findFavorite : ProfileType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
+			const findFavorite : ProfileType | null = await profileService.queryOne( walletObj.address, { by : 'walletAndKey', key : oneProfileKey } );
 			expect( findFavorite ).toBeDefined();
 			if ( findFavorite )
 			{
@@ -302,7 +302,7 @@ describe( "ProfileService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const profileService = new ProfileService();
-			const find : ProfileType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
+			const find : ProfileType | null = await profileService.queryOne( walletObj.address, { by : 'walletAndKey', key : oneProfileKey } );
 			if ( find )
 			{
 				let toBeDeleted : ProfileType = { ...find,
@@ -317,7 +317,7 @@ describe( "ProfileService", () =>
 				const result : number = await profileService.delete( walletObj.address, toBeDeleted, toBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findAgain : ProfileType | null = await profileService.queryOneByWalletAndKey( walletObj.address, oneProfileKey );
+				const findAgain : ProfileType | null = await profileService.queryOne( walletObj.address, { by : 'walletAndKey', key : oneProfileKey } );
 				expect( findAgain ).toBe( null );
 			}
 
@@ -336,7 +336,7 @@ describe( "ProfileService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const profileService = new ProfileService();
-			const results : ProfileListResult = await profileService.queryListByWallet( walletObj.address );
+			const results : ProfileListResult = await profileService.queryList( walletObj.address, { by : 'wallet' } );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -435,7 +435,7 @@ describe( "ProfileService", () =>
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : ProfileListResult = await profileService.queryListByWallet( walletObj.address, options );
+				const results : ProfileListResult = await profileService.queryList( walletObj.address, { by : 'wallet', options : options } );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );

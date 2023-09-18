@@ -193,7 +193,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	 *	@param sig	{string}
 	 * 	@returns {Promise< FollowerType | null >}
 	 */
-	public queryOne( wallet : string, data : any, sig : string ) : Promise<FollowerType | null>
+	public queryOne( wallet : string, data : any, sig ?: string ) : Promise<FollowerType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -231,7 +231,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	 *	@param sig	{string}
 	 *	@returns { Promise<FollowerListResult> }
 	 */
-	public queryList( wallet : string, data : any, sig : string ) : Promise<FollowerListResult>
+	public queryList( wallet : string, data : any, sig ?: string ) : Promise<FollowerListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -267,7 +267,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	 *	@param address	{string}	contact wallet address
 	 *	@returns {Promise< FollowerType | null >}
 	 */
-	public queryOneByWalletAndAddress( wallet : string, address : string ) : Promise<FollowerType | null>
+	private queryOneByWalletAndAddress( wallet : string, address : string ) : Promise<FollowerType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -307,7 +307,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	 * 	@param hash	{string}	a 66-character hexadecimal string
 	 *	@returns {Promise< FollowerType | null >}
 	 */
-	public queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<FollowerType | null>
+	private queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<FollowerType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -348,7 +348,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	public queryListByWalletAndAddress( wallet : string, address ? : string, options ? : TQueueListOptions ) : Promise<FollowerListResult>
+	private queryListByWalletAndAddress( wallet : string, address ? : string, options ? : TQueueListOptions ) : Promise<FollowerListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

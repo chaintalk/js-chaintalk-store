@@ -212,7 +212,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 	 *	@param sig	{string}
 	 * 	@returns {Promise< ProfileType | null >}
 	 */
-	public queryOne( wallet : string, data : any, sig : string ) : Promise<ProfileType | null>
+	public queryOne( wallet : string, data : any, sig ?: string ) : Promise<ProfileType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -248,7 +248,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 	 *	@param sig	{string}
 	 *	@returns { Promise<ProfileListResult> }
 	 */
-	public queryList( wallet : string, data : any, sig : string ) : Promise<ProfileListResult>
+	public queryList( wallet : string, data : any, sig ?: string ) : Promise<ProfileListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -284,7 +284,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 	 *	@param key	{string}
 	 *	@returns {Promise< ProfileType | null >}
 	 */
-	public queryOneByWalletAndKey( wallet : string, key : string ) : Promise<ProfileType | null>
+	private queryOneByWalletAndKey( wallet : string, key : string ) : Promise<ProfileType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -324,7 +324,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	public queryListByWallet( wallet : string, options ?: TQueueListOptions ) : Promise<ProfileListResult>
+	private queryListByWallet( wallet : string, options ?: TQueueListOptions ) : Promise<ProfileListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

@@ -13,7 +13,7 @@ import { commentSchema, CommentType } from "../entities/CommentEntity";
 /**
  * 	class PostService
  */
-export class PostService extends BaseService implements IWeb3StoreService< PostType, PostListResult >
+export class PostService extends BaseService implements IWeb3StoreService<PostType, PostListResult>
 {
 	constructor()
 	{
@@ -26,7 +26,7 @@ export class PostService extends BaseService implements IWeb3StoreService< PostT
 	 *	@param sig	{string}
 	 *	@returns {Promise<PostType>}
 	 */
-	public add( wallet : string, data : PostType, sig : string ) : Promise< PostType | null >
+	public add( wallet : string, data : PostType, sig : string ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -93,7 +93,7 @@ export class PostService extends BaseService implements IWeb3StoreService< PostT
 	 *	@param sig	{string}
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	public update( wallet : string, data : PostType, sig : string ) : Promise< PostType | null >
+	public update( wallet : string, data : PostType, sig : string ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -156,7 +156,7 @@ export class PostService extends BaseService implements IWeb3StoreService< PostT
 	 *	@param sig	{string}
 	 *	@returns { Promise< PostType | null > }
 	 */
-	updateFor( wallet: string, data : any, sig ?: string )  : Promise< PostType | null >
+	updateFor( wallet : string, data : any, sig ? : string ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -200,7 +200,7 @@ export class PostService extends BaseService implements IWeb3StoreService< PostT
 			{
 				reject( err );
 			}
-		});
+		} );
 	}
 
 	/**
@@ -210,7 +210,7 @@ export class PostService extends BaseService implements IWeb3StoreService< PostT
 	 *	@param value	{number} 1 or -1
 	 *	@returns {Promise< PostType | null >}
 	 */
-	public updateStatistics( wallet : string, hash : string, key : string, value : 1 | -1 ) : Promise< PostType | null >
+	private updateStatistics( wallet : string, hash : string, key : string, value : 1 | -1 ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -322,14 +322,13 @@ export class PostService extends BaseService implements IWeb3StoreService< PostT
 	}
 
 
-
 	/**
 	 *	@param wallet	{string}
 	 *	@param data	{any}
 	 *	@param sig	{string}
 	 * 	@returns {Promise< PostType | null >}
 	 */
-	public queryOne( wallet : string, data : any, sig : string ) : Promise<PostType | null>
+	public queryOne( wallet : string, data : any, sig ? : string ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -365,7 +364,7 @@ export class PostService extends BaseService implements IWeb3StoreService< PostT
 	 *	@param sig	{string}
 	 *	@returns { Promise<PostListResult> }
 	 */
-	public queryList( wallet : string, data : any, sig : string ) : Promise<PostListResult>
+	public queryList( wallet : string, data : any, sig ? : string ) : Promise<PostListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -401,7 +400,7 @@ export class PostService extends BaseService implements IWeb3StoreService< PostT
 	 *	@param hash	{string}	a 66-character hexadecimal string
 	 *	@returns {Promise< PostType | null >}
 	 */
-	public queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<PostType | null>
+	private queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -441,7 +440,7 @@ export class PostService extends BaseService implements IWeb3StoreService< PostT
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<PostListResult>}
 	 */
-	public queryListByWallet( wallet : string, options ?: TQueueListOptions ) : Promise<PostListResult>
+	private queryListByWallet( wallet : string, options ? : TQueueListOptions ) : Promise<PostListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -455,7 +454,9 @@ export class PostService extends BaseService implements IWeb3StoreService< PostT
 				const pageNo = PageUtil.getSafePageNo( options?.pageNo );
 				const pageSize = PageUtil.getSafePageSize( options?.pageSize );
 				const skip = ( pageNo - 1 ) * pageSize;
-				const sortBy : { [ key : string ] : SortOrder } = QueryUtil.getSafeSortBy( options?.sort );
+				const sortBy : {
+					[ key : string ] : SortOrder
+				} = QueryUtil.getSafeSortBy( options?.sort );
 
 				let result : PostListResult = {
 					total : 0,

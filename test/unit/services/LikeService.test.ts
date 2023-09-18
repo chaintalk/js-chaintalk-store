@@ -142,7 +142,7 @@ describe( "LikeService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const likeService = new LikeService();
-			const result : LikeType | null = await likeService.queryOneByWalletAndLikeTypeAndLikeHash( walletObj.address, LikeLikeTypes.post, oneLikeHash );
+			const result : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndLikeTypeAndLikeHash', likeType : LikeLikeTypes.post, likeHash : oneLikeHash } );
 			expect( result ).not.toBe( null );
 			expect( result ).toBeDefined();
 			//
@@ -191,7 +191,7 @@ describe( "LikeService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const likeService = new LikeService();
-			const findFavorite : LikeType | null = await likeService.queryOneByWalletAndLikeTypeAndLikeHash( walletObj.address, LikeLikeTypes.post, oneLikeHash );
+			const findFavorite : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndLikeTypeAndLikeHash', likeType : LikeLikeTypes.post, likeHash : oneLikeHash } );
 			expect( findFavorite ).toBeDefined();
 			if ( findFavorite )
 			{
@@ -238,7 +238,7 @@ describe( "LikeService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const likeService = new LikeService();
-			const findFavorite : LikeType | null = await likeService.queryOneByWalletAndLikeTypeAndLikeHash( walletObj.address, LikeLikeTypes.post, oneLikeHash );
+			const findFavorite : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndLikeTypeAndLikeHash', likeType : LikeLikeTypes.post, likeHash : oneLikeHash } );
 			if ( findFavorite )
 			{
 				let likeToBeDeleted : LikeType = { ...findFavorite,
@@ -253,7 +253,7 @@ describe( "LikeService", () =>
 				const result : number = await likeService.delete( walletObj.address, likeToBeDeleted, likeToBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findFavoriteAgain : LikeType | null = await likeService.queryOneByWalletAndLikeTypeAndLikeHash( walletObj.address, LikeLikeTypes.post, oneLikeHash );
+				const findFavoriteAgain : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndLikeTypeAndLikeHash', likeType : LikeLikeTypes.post, likeHash : oneLikeHash } );
 				expect( findFavoriteAgain ).toBe( null );
 			}
 
@@ -272,7 +272,7 @@ describe( "LikeService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const likeService = new LikeService();
-			const results : LikeListResult = await likeService.queryListByWalletAndLikeType( walletObj.address, LikeLikeTypes.post );
+			const results : LikeListResult = await likeService.queryList( walletObj.address, { by : 'walletAndLikeType', likeType : LikeLikeTypes.post } );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -372,7 +372,7 @@ describe( "LikeService", () =>
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : LikeListResult = await likeService.queryListByWalletAndLikeType( walletObj.address, LikeLikeTypes.post, options );
+				const results : LikeListResult = await likeService.queryList( walletObj.address, { by : 'walletAndLikeType', likeType : LikeLikeTypes.post, options : options } );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );
