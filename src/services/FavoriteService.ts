@@ -8,11 +8,13 @@ import { TQueueListOptions } from "../models/TQuery";
 import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { resultErrors } from "../constants/ResultErrors";
+import { CommentListResult, CommentType } from "../entities/CommentEntity";
+import { ContactListResult, ContactType } from "../entities/ContactEntity";
 
 /**
  * 	@class FavoriteService
  */
-export class FavoriteService extends BaseService implements IWeb3StoreService<FavoriteType>
+export class FavoriteService extends BaseService implements IWeb3StoreService< FavoriteType, FavoriteListResult >
 {
 	constructor()
 	{
@@ -105,6 +107,27 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 
 	/**
 	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise< FavoriteType | null > }
+	 */
+	updateFor( wallet: string, data : any, sig : string )  : Promise< FavoriteType | null >
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
+	}
+
+	/**
+	 *	@param wallet	{string}
 	 *	@param data	{FavoriteType}
 	 *	@param sig	{string}
 	 *	@returns {Promise<number>}
@@ -155,6 +178,80 @@ export class FavoriteService extends BaseService implements IWeb3StoreService<Fa
 			}
 		} );
 	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 * 	@returns {Promise< FavoriteType | null >}
+	 */
+	public queryOne( wallet : string, data : any, sig : string ) : Promise<FavoriteType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndFavTypeAndFavHash' :
+						return resolve( await this.queryOneByWalletAndFavTypeAndFavHash( wallet, data.favType, data.favHash ) );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise<FavoriteListResult> }
+	 */
+	public queryList( wallet : string, data : any, sig : string ) : Promise<FavoriteListResult>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndFavType' :
+						return resolve( await this.queryListByWalletAndFavType( wallet, data.favType, data.options ) );
+				}
+
+				//	...
+				resolve( this.getListResultDefaultValue<CommentListResult>( data ) );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
 
 	/**
 	 *	@param wallet	{string}	wallet address

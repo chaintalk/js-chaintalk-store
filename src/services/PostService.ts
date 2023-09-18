@@ -8,11 +8,12 @@ import { PostListResult, PostModel, postSchema, PostType } from "../entities/Pos
 import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { resultErrors } from "../constants/ResultErrors";
+import { commentSchema, CommentType } from "../entities/CommentEntity";
 
 /**
  * 	class PostService
  */
-export class PostService extends BaseService implements IWeb3StoreService<PostType>
+export class PostService extends BaseService implements IWeb3StoreService< PostType, PostListResult >
 {
 	constructor()
 	{
@@ -151,24 +152,55 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param hash	{string}
-	 *	@param key	{string} statisticView, statisticRepost, statisticQuote, ...
-	 *	@returns {Promise< PostType | null >}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise< PostType | null > }
 	 */
-	public increaseStatistics( wallet : string, hash : string, key : string ) : Promise< PostType | null >
+	updateFor( wallet: string, data : any, sig ?: string )  : Promise< PostType | null >
 	{
-		return this.updateStatistics( wallet, hash, key, 1 );
-	}
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObject( data ) )
+				{
+					return reject( `invalid data` );
+				}
+				if ( ! SchemaUtil.isValidKeccak256Hash( data.hash ) )
+				{
+					return reject( `invalid data.hash` );
+				}
+				if ( ! TypeUtil.isNotEmptyString( data.key ) )
+				{
+					return reject( `invalid data.key` );
+				}
 
-	/**
-	 *	@param wallet	{string}
-	 *	@param hash	{string}
-	 *	@param key	{string} statisticView, statisticRepost, statisticQuote, ...
-	 *	@returns {Promise< PostType | null >}
-	 */
-	public decreaseStatistics( wallet : string, hash : string, key : string ) : Promise< PostType | null >
-	{
-		return this.updateStatistics( wallet, hash, key, -1 );
+				//
+				//	update statistics
+				//
+				const statisticKeys : Array<string> | null = SchemaUtil.getPrefixedKeys( commentSchema, 'statistic' );
+				if ( ! Array.isArray( statisticKeys ) || 0 === statisticKeys.length )
+				{
+					return reject( `failed to calculate statistic prefixed keys` );
+				}
+				if ( statisticKeys.includes( data.key ) )
+				{
+					const result : CommentType | null = await this.updateStatistics( wallet, data.hash, data.key, data.value );
+					return resolve( result );
+				}
+
+				//	...
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
 	}
 
 	/**
@@ -281,6 +313,81 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				}
 
 				resolve( 0 );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 * 	@returns {Promise< PostType | null >}
+	 */
+	public queryOne( wallet : string, data : any, sig : string ) : Promise<PostType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndHash' :
+						return resolve( await this.queryOneByWalletAndHash( wallet, data.hash ) );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise<PostListResult> }
+	 */
+	public queryList( wallet : string, data : any, sig : string ) : Promise<PostListResult>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'wallet' :
+						return resolve( await this.queryListByWallet( wallet, data.options ) );
+				}
+
+				//	...
+				resolve( this.getListResultDefaultValue<PostListResult>( data ) );
 			}
 			catch ( err )
 			{

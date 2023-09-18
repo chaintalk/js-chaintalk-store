@@ -1,5 +1,8 @@
 import { DatabaseConnection } from "../connections/DatabaseConnection";
 import { connection, Model, Types } from "mongoose";
+import { CommentListResult } from "../entities/CommentEntity";
+import { PageUtil } from "chaintalk-utils";
+import { TQueueListResult } from "../models/TQuery";
 
 
 export abstract class BaseService extends DatabaseConnection
@@ -7,6 +10,21 @@ export abstract class BaseService extends DatabaseConnection
 	protected constructor()
 	{
 		super();
+	}
+
+	/**
+	 *	@param data	{any}
+	 *	@returns {any}
+	 */
+	public getListResultDefaultValue<T>( data : any ) : T
+	{
+		let result : any = {
+			total : 0,
+			pageNo : PageUtil.getSafePageNo( data?.options?.pageNo ),
+			pageSize : PageUtil.getSafePageSize( data?.options?.pageSize ),
+			list : [],
+		};
+		return result as T;
 	}
 
 	/**

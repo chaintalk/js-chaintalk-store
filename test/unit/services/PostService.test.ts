@@ -542,7 +542,7 @@ describe( "PostService", () =>
 			//
 			//	try to increase statistic
 			//
-			const increasePost : PostType | null = await postService.increaseStatistics( walletObj.address, post.hash, `statisticView` );
+			const increasePost : PostType | null = await postService.updateFor( walletObj.address, { hash : post.hash, key : `statisticView`, value: 1 } );
 			expect( increasePost ).toBeDefined();
 			expect( increasePost.statisticView ).toBe( 1 );
 
@@ -553,7 +553,7 @@ describe( "PostService", () =>
 			//	wait for a while
 			await TestUtil.sleep(5 * 1000 );
 
-			const decreasePost : PostType | null = await postService.decreaseStatistics( walletObj.address, post.hash, `statisticView` );
+			const decreasePost : PostType | null = await postService.updateFor( walletObj.address, { hash : post.hash, key : `statisticView`, value : -1 } );
 			expect( decreasePost ).toBeDefined();
 			expect( decreasePost.statisticView ).toBe( 0 );
 

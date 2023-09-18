@@ -8,11 +8,12 @@ import { TQueueListOptions } from "../models/TQuery";
 import { QueryUtil } from "../utils/QueryUtil";
 import { PostType } from "../entities/PostEntity";
 import { resultErrors } from "../constants/ResultErrors";
+import { CommentListResult, CommentType } from "../entities/CommentEntity";
 
 /**
  * 	class ContactsService
  */
-export class ContactService extends BaseService implements IWeb3StoreService<ContactType>
+export class ContactService extends BaseService implements IWeb3StoreService<ContactType, ContactListResult>
 {
 	constructor()
 	{
@@ -25,7 +26,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param sig	{string}
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	public add( wallet : string, data : ContactType, sig : string ) : Promise< ContactType | null >
+	public add( wallet : string, data : ContactType, sig : string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -92,7 +93,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param sig	{string}
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	public update( wallet : string, data : ContactType, sig : string ) : Promise< ContactType | null >
+	public update( wallet : string, data : ContactType, sig : string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -127,7 +128,10 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				}
 
 				const allowUpdatedKeys : Array<string> = [ 'version', 'name', 'avatar', 'remark' ];
-				const update : Record<string, any> = { ...Web3Encoder.reserveObjectKeys( data, allowUpdatedKeys ), sig : sig };
+				const update : Record<string, any> = {
+					...Web3Encoder.reserveObjectKeys( data, allowUpdatedKeys ),
+					sig : sig
+				};
 				const newContact : ContactType | null = await ContactModel.findOneAndUpdate( findContact, update, { new : true } ).lean<ContactType>();
 
 				//	...
@@ -138,6 +142,27 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				reject( err );
 			}
 		} );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise< ContactType | null > }
+	 */
+	updateFor( wallet: string, data : any, sig : string )  : Promise< ContactType | null >
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
 	}
 
 	/**
@@ -197,6 +222,83 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 			}
 		} );
 	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 * 	@returns {Promise< ContactType | null >}
+	 */
+	public queryOne( wallet : string, data : any, sig : string ) : Promise<ContactType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndAddress' :
+						return resolve( await this.queryOneByWalletAndAddress( wallet, data.address ) );
+					case 'walletAndHash' :
+						return resolve( await this.queryOneByWalletAndHash( wallet, data.hash ) );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise<ContactListResult> }
+	 */
+	public queryList( wallet : string, data : any, sig : string ) : Promise<ContactListResult>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndAddress' :
+						return resolve( await this.queryListByWalletAndAddress( wallet, data.address, data.options ) );
+				}
+
+				//	...
+				resolve( this.getListResultDefaultValue<ContactListResult>( data ) );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+
 
 	/**
 	 *	@param wallet	{string}	wallet address
@@ -284,7 +386,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	public queryListByWalletAndAddress( wallet : string, address ? : string, options ?: TQueueListOptions ) : Promise<ContactListResult>
+	public queryListByWalletAndAddress( wallet : string, address ? : string, options ? : TQueueListOptions ) : Promise<ContactListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -298,7 +400,9 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				const pageNo = PageUtil.getSafePageNo( options?.pageNo );
 				const pageSize = PageUtil.getSafePageSize( options?.pageSize );
 				const skip = ( pageNo - 1 ) * pageSize;
-				const sortBy : { [ key : string ] : SortOrder } = QueryUtil.getSafeSortBy( options?.sort );
+				const sortBy : {
+					[ key : string ] : SortOrder
+				} = QueryUtil.getSafeSortBy( options?.sort );
 
 				let result : ContactListResult = {
 					total : 0,

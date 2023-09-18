@@ -186,7 +186,7 @@ describe( "CommentService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const commentService = new CommentService();
-			const result : CommentType | null = await commentService.queryOneByWalletAndHash( walletObj.address, savedComment.hash );
+			const result : CommentType | null = await commentService.queryOne( walletObj.address, { by : `walletAndHash`, hash : savedComment.hash } );
 			//
 			//    console.log( result );
 			//    {
@@ -239,7 +239,7 @@ describe( "CommentService", () =>
 		it( "should return a list by postHash", async () =>
 		{
 			const commentService = new CommentService();
-			const results : PostListResult = await commentService.queryListByPostHash( savedPost.hash );
+			const results : PostListResult = await commentService.queryList( '', { by : 'postHash', postHash : savedPost.hash } );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -303,7 +303,7 @@ describe( "CommentService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const commentService = new CommentService();
-			const results : PostListResult = await commentService.queryListByWalletAndPostHash( walletObj.address );
+			const results : PostListResult = await commentService.queryList( walletObj.address, { by : 'walletAndPostHash', address : walletObj.address } );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -367,7 +367,7 @@ describe( "CommentService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const commentService = new CommentService();
-			const results : PostListResult = await commentService.queryListByWalletAndPostHash( walletObj.address, savedPost.hash );
+			const results : PostListResult = await commentService.queryList( walletObj.address, { by : 'walletAndPostHash', address : walletObj.address, postHash : savedPost.hash } );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -487,7 +487,7 @@ describe( "CommentService", () =>
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : PostListResult = await commentService.queryListByPostHash( savedPost.hash, options );
+				const results : PostListResult = await commentService.queryList( '', { by : 'postHash', postHash : savedPost.hash, options : options } );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );
@@ -609,7 +609,7 @@ describe( "CommentService", () =>
 			//
 			//	....
 			//
-			const findComment : CommentType | null = await commentService.queryOneByWalletAndHash( walletObj.address, comment.hash );
+			const findComment : CommentType | null = await commentService.queryOne( walletObj.address, { by : 'walletAndHash', hash : comment.hash } );
 			expect( findComment ).toBeDefined();
 			if ( findComment )
 			{
@@ -735,18 +735,18 @@ describe( "CommentService", () =>
 			//
 			//	try to increase statistic
 			//
-			const increasePost : CommentType | null = await commentService.increaseStatistics( walletObj.address, comment.hash, `statisticView` );
+			const increasePost : CommentType | null = await commentService.updateFor( walletObj.address, { hash : comment.hash, key : `statisticView`, value : 1 } );
 			expect( increasePost ).toBeDefined();
 			expect( increasePost.statisticView ).toBe( 1 );
 
-			const findComment : CommentType | null = await commentService.queryOneByWalletAndHash( walletObj.address, comment.hash );
+			const findComment : CommentType | null = await commentService.queryOne( walletObj.address, { by : 'walletAndHash', hash : comment.hash } );
 			expect( findComment ).toBeDefined();
 			expect( findComment.statisticView ).toBe( 1 );
 
 			//	wait for a while
 			await TestUtil.sleep(5 * 1000 );
 
-			const decreasedComment : CommentType | null = await commentService.decreaseStatistics( walletObj.address, comment.hash, `statisticView` );
+			const decreasedComment : CommentType | null = await commentService.updateFor( walletObj.address, { hash : comment.hash, key : `statisticView`, value : -1 } );
 			expect( decreasedComment ).toBeDefined();
 			expect( decreasedComment.statisticView ).toBe( 0 );
 
@@ -812,7 +812,7 @@ describe( "CommentService", () =>
 			await TestUtil.sleep(5 * 1000 );
 
 			//	...
-			const findComment : CommentType | null = await commentService.queryOneByWalletAndHash( walletObj.address, savedNewComment.hash );
+			const findComment : CommentType | null = await commentService.queryOne( walletObj.address, { by : `walletAndHash`, hash : savedNewComment.hash } );
 			if ( findComment )
 			{
 				let toBeDeleted : CommentType = { ...findComment,
@@ -827,7 +827,7 @@ describe( "CommentService", () =>
 				const result : number = await commentService.delete( walletObj.address, toBeDeleted, toBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findCommentAgain : PostType | null = await commentService.queryOneByWalletAndHash( walletObj.address, savedNewComment.hash );
+				const findCommentAgain : PostType | null = await commentService.queryOne( walletObj.address, { by : 'walletAndHash', hash : savedNewComment.hash } );
 				expect( findCommentAgain ).toBe( null );
 			}
 

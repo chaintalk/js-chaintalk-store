@@ -12,7 +12,7 @@ import { resultErrors } from "../constants/ResultErrors";
 /**
  * 	@class LikeService
  */
-export class LikeService extends BaseService implements IWeb3StoreService<LikeType>
+export class LikeService extends BaseService implements IWeb3StoreService< LikeType, LikeListResult >
 {
 	constructor()
 	{
@@ -105,6 +105,27 @@ export class LikeService extends BaseService implements IWeb3StoreService<LikeTy
 
 	/**
 	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise< LikeType | null > }
+	 */
+	updateFor( wallet: string, data : any, sig : string )  : Promise< LikeType | null >
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
+	}
+
+	/**
+	 *	@param wallet	{string}
 	 *	@param data	{LikeType}
 	 *	@param sig	{string}
 	 *	@returns {Promise<number>}
@@ -148,6 +169,80 @@ export class LikeService extends BaseService implements IWeb3StoreService<LikeTy
 				}
 
 				resolve( 0 );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 * 	@returns {Promise< LikeType | null >}
+	 */
+	public queryOne( wallet : string, data : any, sig : string ) : Promise<LikeType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndLikeTypeAndLikeHash' :
+						return resolve( await this.queryOneByWalletAndLikeTypeAndLikeHash( wallet, data.likeType, data.likeHash ) );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise<LikeListResult> }
+	 */
+	public queryList( wallet : string, data : any, sig : string ) : Promise<LikeListResult>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndLikeType' :
+						return resolve( await this.queryListByWalletAndLikeType( wallet, data.address, data.options ) );
+				}
+
+				//	...
+				resolve( this.getListResultDefaultValue<LikeListResult>( data ) );
 			}
 			catch ( err )
 			{

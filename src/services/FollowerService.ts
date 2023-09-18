@@ -11,7 +11,7 @@ import { resultErrors } from "../constants/ResultErrors";
 /**
  * 	class FollowerService
  */
-export class FollowerService extends BaseService implements IWeb3StoreService<FollowerType>
+export class FollowerService extends BaseService implements IWeb3StoreService<FollowerType, FollowerListResult>
 {
 	constructor()
 	{
@@ -24,7 +24,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	 *	@param sig	{string}
 	 *	@returns {Promise< FollowerType | null >}
 	 */
-	public add( wallet : string, data : FollowerType, sig : string ) : Promise< FollowerType | null >
+	public add( wallet : string, data : FollowerType, sig : string ) : Promise<FollowerType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -91,7 +91,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	 *	@param sig	{string}
 	 *	@returns {Promise< FollowerType | null >}
 	 */
-	public update( wallet : string, data : FollowerType, sig : string ) : Promise< FollowerType | null >
+	public update( wallet : string, data : FollowerType, sig : string ) : Promise<FollowerType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -105,6 +105,28 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 			}
 		} );
 	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise< FollowerType | null > }
+	 */
+	updateFor( wallet : string, data : any, sig : string ) : Promise<FollowerType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
 
 	/**
 	 *	@param wallet	{string}
@@ -156,6 +178,82 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				}
 
 				resolve( 0 );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 * 	@returns {Promise< FollowerType | null >}
+	 */
+	public queryOne( wallet : string, data : any, sig : string ) : Promise<FollowerType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndAddress' :
+						return resolve( await this.queryOneByWalletAndAddress( wallet, data.address ) );
+					case 'walletAndHash' :
+						return resolve( await this.queryOneByWalletAndHash( wallet, data.hash ) );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise<FollowerListResult> }
+	 */
+	public queryList( wallet : string, data : any, sig : string ) : Promise<FollowerListResult>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndFavType' :
+						return resolve( await this.queryListByWalletAndAddress( wallet, data.address, data.options ) );
+				}
+
+				//	...
+				resolve( this.getListResultDefaultValue<FollowerListResult>( data ) );
 			}
 			catch ( err )
 			{
@@ -250,7 +348,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	public queryListByWalletAndAddress( wallet : string, address ? : string, options ?: TQueueListOptions ) : Promise<FollowerListResult>
+	public queryListByWalletAndAddress( wallet : string, address ? : string, options ? : TQueueListOptions ) : Promise<FollowerListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -264,7 +362,9 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				const pageNo = PageUtil.getSafePageNo( options?.pageNo );
 				const pageSize = PageUtil.getSafePageSize( options?.pageSize );
 				const skip = ( pageNo - 1 ) * pageSize;
-				const sortBy : { [ key : string ] : SortOrder } = QueryUtil.getSafeSortBy( options?.sort );
+				const sortBy : {
+					[ key : string ] : SortOrder
+				} = QueryUtil.getSafeSortBy( options?.sort );
 
 				let result : FollowerListResult = {
 					total : 0,

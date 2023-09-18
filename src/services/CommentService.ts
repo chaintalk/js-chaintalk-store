@@ -13,7 +13,7 @@ import { resultErrors } from "../constants/ResultErrors";
 /**
  * 	class CommentService
  */
-export class CommentService extends BaseService implements IWeb3StoreService<CommentType>
+export class CommentService extends BaseService implements IWeb3StoreService< CommentType, CommentListResult >
 {
 	constructor()
 	{
@@ -110,24 +110,55 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 
 	/**
 	 *	@param wallet	{string}
-	 *	@param hash	{string}
-	 *	@param key	{string} statisticView, statisticRepost, statisticQuote, ...
-	 *	@returns {Promise< CommentType | null >}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise< CommentType | null > }
 	 */
-	public increaseStatistics( wallet : string, hash : string, key : string ) : Promise< CommentType | null >
+	public updateFor( wallet: string, data : any, sig ?: string )  : Promise< CommentType | null >
 	{
-		return this.updateStatistics( wallet, hash, key, 1 );
-	}
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObject( data ) )
+				{
+					return reject( `invalid data` );
+				}
+				if ( ! SchemaUtil.isValidKeccak256Hash( data.hash ) )
+				{
+					return reject( `invalid data.hash` );
+				}
+				if ( ! TypeUtil.isNotEmptyString( data.key ) )
+				{
+					return reject( `invalid data.key` );
+				}
 
-	/**
-	 *	@param wallet	{string}
-	 *	@param hash	{string}
-	 *	@param key	{string} statisticView, statisticRepost, statisticQuote, ...
-	 *	@returns {Promise< CommentType | null >}
-	 */
-	public decreaseStatistics( wallet : string, hash : string, key : string ) : Promise< CommentType | null >
-	{
-		return this.updateStatistics( wallet, hash, key, -1 );
+				//
+				//	update statistics
+				//
+				const statisticKeys : Array<string> | null = SchemaUtil.getPrefixedKeys( commentSchema, 'statistic' );
+				if ( ! Array.isArray( statisticKeys ) || 0 === statisticKeys.length )
+				{
+					return reject( `failed to calculate statistic prefixed keys` );
+				}
+				if ( statisticKeys.includes( data.key ) )
+				{
+					const result : CommentType | null = await this._updateStatistics( wallet, data.hash, data.key, data.value );
+					return resolve( result );
+				}
+
+				//	...
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
 	}
 
 	/**
@@ -137,7 +168,7 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 	 *	@param value	{number} 1 or -1
 	 *	@returns {Promise< CommentType | null >}
 	 */
-	public updateStatistics( wallet : string, hash : string, key : string, value : 1 | -1 ) : Promise< CommentType | null >
+	private _updateStatistics( wallet : string, hash : string, key : string, value : 1 | -1 ) : Promise< CommentType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -150,6 +181,10 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				if ( ! SchemaUtil.isValidKeccak256Hash( hash ) )
 				{
 					return reject( `invalid hash` );
+				}
+				if ( ! TypeUtil.isNotEmptyString( key ) )
+				{
+					return reject( `invalid key` );
 				}
 
 				const statisticKeys : Array<string> | null = SchemaUtil.getPrefixedKeys( commentSchema, 'statistic' );
@@ -170,7 +205,7 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 				}
 
 				await this.connect();
-				const find : CommentType | null = await this.queryOneByWalletAndHash( wallet, hash );
+				const find : CommentType | null = await this._queryOneByWalletAndHash( wallet, hash );
 				if ( find )
 				{
 					const newValue : number = find[ key ] + ( 1 === value ? 1 : -1 );
@@ -231,7 +266,7 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 
 				//	...
 				await this.connect();
-				const find : CommentType | null = await this.queryOneByWalletAndHash( wallet, data.hash );
+				const find : CommentType | null = await this._queryOneByWalletAndHash( wallet, data.hash );
 				if ( find )
 				{
 					const update = { deleted : find._id };
@@ -248,12 +283,87 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 		} );
 	}
 
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 * 	@returns {Promise< CommentType | null >}
+	 */
+	public queryOne( wallet : string, data : any, sig ?: string ) : Promise<CommentType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndHash' :
+						return resolve( await this._queryOneByWalletAndHash( wallet, data.hash ) );
+					case 'hash' :
+						return resolve( await this._queryOneByHash( data.hash ) );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise<CommentListResult> }
+	 */
+	public queryList( wallet : string, data : any, sig ?: string ) : Promise<CommentListResult>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndPostHash' :
+						return resolve( await this._queryListByWalletAndPostHash( wallet, data.postHash, data.options ) );
+					case 'postHash' :
+						return resolve( await this._queryListByPostHash( data.postHash, data.options ) );
+				}
+
+				//	...
+				resolve( this.getListResultDefaultValue<CommentListResult>( data ) );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+
 	/**
 	 *	@param wallet	{string}	wallet address
 	 *	@param hash	{string}	a 66-character hexadecimal string
 	 *	@returns {Promise< CommentType | null >}
 	 */
-	public queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<CommentType | null>
+	private _queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<CommentType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -292,7 +402,7 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 	 *	@param hash	{string}	a 66-character hexadecimal string
 	 *	@returns {Promise< CommentType | null >}
 	 */
-	public queryOneByHash( hash : string ) : Promise<CommentType | null>
+	private _queryOneByHash( hash : string ) : Promise<CommentType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -328,7 +438,7 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 	 *	@param options		{TQueueListOptions}
 	 *	@returns {Promise<CommentListResult>}
 	 */
-	public queryListByPostHash( postHash : string, options ?: TQueueListOptions ) : Promise<CommentListResult>
+	private _queryListByPostHash( postHash : string, options ?: TQueueListOptions ) : Promise<CommentListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -382,7 +492,7 @@ export class CommentService extends BaseService implements IWeb3StoreService<Com
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<CommentListResult>}
 	 */
-	public queryListByWalletAndPostHash( wallet : string, postHash ?: string, options ?: TQueueListOptions ) : Promise<CommentListResult>
+	private _queryListByWalletAndPostHash( wallet : string, postHash ?: string, options ?: TQueueListOptions ) : Promise<CommentListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

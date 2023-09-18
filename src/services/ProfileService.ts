@@ -11,7 +11,7 @@ import { resultErrors } from "../constants/ResultErrors";
 /**
  * 	@class ProfileService
  */
-export class ProfileService extends BaseService implements IWeb3StoreService<ProfileType>
+export class ProfileService extends BaseService implements IWeb3StoreService< ProfileType, ProfileListResult >
 {
 	constructor()
 	{
@@ -133,6 +133,27 @@ export class ProfileService extends BaseService implements IWeb3StoreService<Pro
 
 	/**
 	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise< ProfileType | null > }
+	 */
+	updateFor( wallet: string, data : any, sig : string )  : Promise< ProfileType | null >
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
+	}
+
+	/**
+	 *	@param wallet	{string}
 	 *	@param data	{ProfileType}
 	 *	@param sig	{string}
 	 *	@returns {Promise<number>}
@@ -176,6 +197,80 @@ export class ProfileService extends BaseService implements IWeb3StoreService<Pro
 				}
 
 				resolve( 0 );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 * 	@returns {Promise< ProfileType | null >}
+	 */
+	public queryOne( wallet : string, data : any, sig : string ) : Promise<ProfileType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'walletAndKey' :
+						return resolve( await this.queryOneByWalletAndKey( wallet, data.key ) );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param wallet	{string}
+	 *	@param data	{any}
+	 *	@param sig	{string}
+	 *	@returns { Promise<ProfileListResult> }
+	 */
+	public queryList( wallet : string, data : any, sig : string ) : Promise<ProfileListResult>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( wallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'by' ] ) )
+				{
+					return reject( `invalid data, missing key : by` );
+				}
+
+				switch ( data.by )
+				{
+					case 'wallet' :
+						return resolve( await this.queryListByWallet( wallet, data.options ) );
+				}
+
+				//	...
+				resolve( this.getListResultDefaultValue<ProfileListResult>( data ) );
 			}
 			catch ( err )
 			{
