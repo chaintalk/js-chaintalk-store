@@ -62,7 +62,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				}
 
 				//	check duplicate
-				const find : LikeType = await this.queryOneByWalletAndLikeTypeAndLikeHash( data.wallet, data.likeType, data.likeHash );
+				const find : LikeType = await this._queryOneByWalletAndLikeTypeAndLikeHash( data.wallet, data.likeType, data.likeHash );
 				if ( find )
 				{
 					return reject( resultErrors.duplicateKeyError );
@@ -109,7 +109,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 	 *	@param sig	{string}
 	 *	@returns { Promise< LikeType | null > }
 	 */
-	updateFor( wallet: string, data : any, sig : string )  : Promise< LikeType | null >
+	public updateFor( wallet: string, data : any, sig : string )  : Promise< LikeType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -160,7 +160,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 
 				//	...
 				await this.connect();
-				const find : LikeType | null = await this.queryOneByWalletAndLikeTypeAndLikeHash( wallet, data.likeType, data.likeHash );
+				const find : LikeType | null = await this._queryOneByWalletAndLikeTypeAndLikeHash( wallet, data.likeType, data.likeHash );
 				if ( find )
 				{
 					const update = { deleted : find._id };
@@ -202,7 +202,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				switch ( data.by )
 				{
 					case 'walletAndLikeTypeAndLikeHash' :
-						return resolve( await this.queryOneByWalletAndLikeTypeAndLikeHash( wallet, data.likeType, data.likeHash ) );
+						return resolve( await this._queryOneByWalletAndLikeTypeAndLikeHash( wallet, data.likeType, data.likeHash ) );
 				}
 
 				resolve( null );
@@ -238,7 +238,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				switch ( data.by )
 				{
 					case 'walletAndLikeType' :
-						return resolve( await this.queryListByWalletAndLikeType( wallet, data.address, data.options ) );
+						return resolve( await this._queryListByWalletAndLikeType( wallet, data.address, data.options ) );
 				}
 
 				//	...
@@ -257,7 +257,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 	 *	@param likeHash	{string}
 	 *	@returns {Promise< LikeType | null >}
 	 */
-	private queryOneByWalletAndLikeTypeAndLikeHash( wallet : string, likeType : LikeLikeTypes, likeHash : string ) : Promise<LikeType | null>
+	private _queryOneByWalletAndLikeTypeAndLikeHash( wallet : string, likeType : LikeLikeTypes, likeHash : string ) : Promise<LikeType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -302,7 +302,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	private queryListByWalletAndLikeType( wallet : string, likeType ?: LikeLikeTypes, options ?: TQueueListOptions ) : Promise<LikeListResult>
+	private _queryListByWalletAndLikeType( wallet : string, likeType ?: LikeLikeTypes, options ?: TQueueListOptions ) : Promise<LikeListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

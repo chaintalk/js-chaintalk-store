@@ -156,7 +156,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 	 *	@param sig	{string}
 	 *	@returns { Promise< PostType | null > }
 	 */
-	updateFor( wallet : string, data : any, sig ? : string ) : Promise<PostType | null>
+	public updateFor( wallet : string, data : any, sig ? : string ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -189,7 +189,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				}
 				if ( statisticKeys.includes( data.key ) )
 				{
-					const result : CommentType | null = await this.updateStatistics( wallet, data.hash, data.key, data.value );
+					const result : CommentType | null = await this._updateStatistics( wallet, data.hash, data.key, data.value );
 					return resolve( result );
 				}
 
@@ -210,7 +210,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 	 *	@param value	{number} 1 or -1
 	 *	@returns {Promise< PostType | null >}
 	 */
-	private updateStatistics( wallet : string, hash : string, key : string, value : 1 | -1 ) : Promise<PostType | null>
+	private _updateStatistics( wallet : string, hash : string, key : string, value : 1 | -1 ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -243,7 +243,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				}
 
 				await this.connect();
-				const findPost : PostType | null = await this.queryOneByWalletAndHash( wallet, hash );
+				const findPost : PostType | null = await this._queryOneByWalletAndHash( wallet, hash );
 				if ( findPost )
 				{
 					const newValue : number = findPost[ key ] + ( 1 === value ? 1 : -1 );
@@ -304,7 +304,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 
 				//	...
 				await this.connect();
-				const findPost : PostType | null = await this.queryOneByWalletAndHash( wallet, data.hash );
+				const findPost : PostType | null = await this._queryOneByWalletAndHash( wallet, data.hash );
 				if ( findPost )
 				{
 					const update = { deleted : findPost._id };
@@ -346,7 +346,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				switch ( data.by )
 				{
 					case 'walletAndHash' :
-						return resolve( await this.queryOneByWalletAndHash( wallet, data.hash ) );
+						return resolve( await this._queryOneByWalletAndHash( wallet, data.hash ) );
 				}
 
 				resolve( null );
@@ -382,7 +382,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				switch ( data.by )
 				{
 					case 'wallet' :
-						return resolve( await this.queryListByWallet( wallet, data.options ) );
+						return resolve( await this._queryListByWallet( wallet, data.options ) );
 				}
 
 				//	...
@@ -400,7 +400,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 	 *	@param hash	{string}	a 66-character hexadecimal string
 	 *	@returns {Promise< PostType | null >}
 	 */
-	private queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<PostType | null>
+	private _queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<PostType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -440,7 +440,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<PostListResult>}
 	 */
-	private queryListByWallet( wallet : string, options ? : TQueueListOptions ) : Promise<PostListResult>
+	private _queryListByWallet( wallet : string, options ? : TQueueListOptions ) : Promise<PostListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

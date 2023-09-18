@@ -61,7 +61,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 				}
 
 				//	check duplicate
-				const find : ProfileType = await this.queryOneByWalletAndKey( data.wallet, data.key );
+				const find : ProfileType = await this._queryOneByWalletAndKey( data.wallet, data.key );
 				if ( find )
 				{
 					return reject( resultErrors.duplicateKeyError );
@@ -110,7 +110,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 				}
 
 				await this.connect();
-				const find : ProfileType | null = await this.queryOneByWalletAndKey( wallet, data.key );
+				const find : ProfileType | null = await this._queryOneByWalletAndKey( wallet, data.key );
 				if ( ! find )
 				{
 					return reject( resultErrors.notFound );
@@ -137,7 +137,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 	 *	@param sig	{string}
 	 *	@returns { Promise< ProfileType | null > }
 	 */
-	updateFor( wallet: string, data : any, sig : string )  : Promise< ProfileType | null >
+	public updateFor( wallet: string, data : any, sig : string )  : Promise< ProfileType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -188,7 +188,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 
 				//	...
 				await this.connect();
-				const find : ProfileType | null = await this.queryOneByWalletAndKey( wallet, data.key );
+				const find : ProfileType | null = await this._queryOneByWalletAndKey( wallet, data.key );
 				if ( find )
 				{
 					const update = { deleted : find._id };
@@ -230,7 +230,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 				switch ( data.by )
 				{
 					case 'walletAndKey' :
-						return resolve( await this.queryOneByWalletAndKey( wallet, data.key ) );
+						return resolve( await this._queryOneByWalletAndKey( wallet, data.key ) );
 				}
 
 				resolve( null );
@@ -266,7 +266,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 				switch ( data.by )
 				{
 					case 'wallet' :
-						return resolve( await this.queryListByWallet( wallet, data.options ) );
+						return resolve( await this._queryListByWallet( wallet, data.options ) );
 				}
 
 				//	...
@@ -284,7 +284,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 	 *	@param key	{string}
 	 *	@returns {Promise< ProfileType | null >}
 	 */
-	private queryOneByWalletAndKey( wallet : string, key : string ) : Promise<ProfileType | null>
+	private _queryOneByWalletAndKey( wallet : string, key : string ) : Promise<ProfileType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -324,7 +324,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	private queryListByWallet( wallet : string, options ?: TQueueListOptions ) : Promise<ProfileListResult>
+	private _queryListByWallet( wallet : string, options ?: TQueueListOptions ) : Promise<ProfileListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

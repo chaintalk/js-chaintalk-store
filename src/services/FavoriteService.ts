@@ -63,7 +63,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				}
 
 				//	check duplicate
-				const findFollower : FavoriteType = await this.queryOneByWalletAndFavTypeAndFavHash( data.wallet, data.favType, data.favHash );
+				const findFollower : FavoriteType = await this._queryOneByWalletAndFavTypeAndFavHash( data.wallet, data.favType, data.favHash );
 				if ( findFollower )
 				{
 					return reject( resultErrors.duplicateKeyError );
@@ -110,7 +110,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 	 *	@param sig	{string}
 	 *	@returns { Promise< FavoriteType | null > }
 	 */
-	updateFor( wallet: string, data : any, sig : string )  : Promise< FavoriteType | null >
+	public updateFor( wallet: string, data : any, sig : string )  : Promise< FavoriteType | null >
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -161,7 +161,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 
 				//	...
 				await this.connect();
-				const find : FavoriteType | null = await this.queryOneByWalletAndFavTypeAndFavHash( wallet, data.favType, data.favHash );
+				const find : FavoriteType | null = await this._queryOneByWalletAndFavTypeAndFavHash( wallet, data.favType, data.favHash );
 				if ( find )
 				{
 					const update = { deleted : find._id };
@@ -202,7 +202,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				switch ( data.by )
 				{
 					case 'walletAndFavTypeAndFavHash' :
-						return resolve( await this.queryOneByWalletAndFavTypeAndFavHash( wallet, data.favType, data.favHash ) );
+						return resolve( await this._queryOneByWalletAndFavTypeAndFavHash( wallet, data.favType, data.favHash ) );
 				}
 
 				resolve( null );
@@ -238,7 +238,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				switch ( data.by )
 				{
 					case 'walletAndFavType' :
-						return resolve( await this.queryListByWalletAndFavType( wallet, data.favType, data.options ) );
+						return resolve( await this._queryListByWalletAndFavType( wallet, data.favType, data.options ) );
 				}
 
 				//	...
@@ -258,7 +258,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 	 *	@param favHash	{string}
 	 *	@returns {Promise< FavoriteType | null >}
 	 */
-	private queryOneByWalletAndFavTypeAndFavHash( wallet : string, favType : FavoriteFavTypes, favHash : string ) : Promise<FavoriteType | null>
+	private _queryOneByWalletAndFavTypeAndFavHash( wallet : string, favType : FavoriteFavTypes, favHash : string ) : Promise<FavoriteType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -303,7 +303,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	private queryListByWalletAndFavType( wallet : string, favType ?: FavoriteFavTypes, options ?: TQueueListOptions ) : Promise<FavoriteListResult>
+	private _queryListByWalletAndFavType( wallet : string, favType ?: FavoriteFavTypes, options ?: TQueueListOptions ) : Promise<FavoriteListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{

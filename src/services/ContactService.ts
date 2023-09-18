@@ -66,7 +66,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 					}
 				}
 
-				const findContact : ContactType = await this.queryOneByWalletAndAddress( data.wallet, data.address );
+				const findContact : ContactType = await this._queryOneByWalletAndAddress( data.wallet, data.address );
 				if ( findContact )
 				{
 					return reject( resultErrors.duplicateKeyError );
@@ -120,7 +120,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				}
 
 				await this.connect();
-				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
+				const findContact : ContactType | null = await this._queryOneByWalletAndAddress( wallet, data.address );
 				if ( ! findContact )
 				{
 					return reject( resultErrors.notFound );
@@ -205,7 +205,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 
 				//	...
 				await this.connect();
-				const findContact : ContactType | null = await this.queryOneByWalletAndAddress( wallet, data.address );
+				const findContact : ContactType | null = await this._queryOneByWalletAndAddress( wallet, data.address );
 				if ( findContact )
 				{
 					const update = { deleted : findContact._id };
@@ -246,9 +246,9 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				switch ( data.by )
 				{
 					case 'walletAndAddress' :
-						return resolve( await this.queryOneByWalletAndAddress( wallet, data.address ) );
+						return resolve( await this._queryOneByWalletAndAddress( wallet, data.address ) );
 					case 'walletAndHash' :
-						return resolve( await this.queryOneByWalletAndHash( wallet, data.hash ) );
+						return resolve( await this._queryOneByWalletAndHash( wallet, data.hash ) );
 				}
 
 				resolve( null );
@@ -284,7 +284,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				switch ( data.by )
 				{
 					case 'walletAndAddress' :
-						return resolve( await this.queryListByWalletAndAddress( wallet, data.address, data.options ) );
+						return resolve( await this._queryListByWalletAndAddress( wallet, data.address, data.options ) );
 				}
 
 				//	...
@@ -304,7 +304,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param address	{string}	contact wallet address
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	private queryOneByWalletAndAddress( wallet : string, address : string ) : Promise<ContactType | null>
+	private _queryOneByWalletAndAddress( wallet : string, address : string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -344,7 +344,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 * 	@param hash	{string}	a 66-character hexadecimal string
 	 *	@returns {Promise< ContactType | null >}
 	 */
-	private queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<ContactType | null>
+	private _queryOneByWalletAndHash( wallet : string, hash : string ) : Promise<ContactType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -385,7 +385,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	private queryListByWalletAndAddress( wallet : string, address ? : string, options ? : TQueueListOptions ) : Promise<ContactListResult>
+	private _queryListByWalletAndAddress( wallet : string, address ? : string, options ? : TQueueListOptions ) : Promise<ContactListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
