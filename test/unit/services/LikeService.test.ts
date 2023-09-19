@@ -60,7 +60,7 @@ describe( "LikeService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				likeType : LikeLikeTypes.post,
 				likeHash : '0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4ea',
@@ -242,7 +242,7 @@ describe( "LikeService", () =>
 			if ( findFavorite )
 			{
 				let likeToBeDeleted : LikeType = { ...findFavorite,
-					deleted : Types.ObjectId.createFromTime( 1 ),
+					deleted : SchemaUtil.createObjectIdFromTime( 1 ),
 				};
 				likeToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, likeToBeDeleted );
 				expect( likeToBeDeleted.sig ).toBeDefined();
@@ -343,7 +343,7 @@ describe( "LikeService", () =>
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 					wallet : walletObj.address,
 					likeType : LikeLikeTypes.post,
 					likeHash : `0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4${ NoStr }`,

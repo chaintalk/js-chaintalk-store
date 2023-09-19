@@ -61,7 +61,7 @@ describe( "CommentService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				sig : ``,
 				authorName : 'XING',
@@ -134,7 +134,7 @@ describe( "CommentService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				sig : ``,
 				authorName : 'XING',
@@ -447,7 +447,7 @@ describe( "CommentService", () =>
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 					wallet : walletObj.address,
 					sig : ``,
 					authorName : 'XING',
@@ -571,7 +571,7 @@ describe( "CommentService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				sig : ``,
 				authorName : 'XING',
@@ -697,7 +697,7 @@ describe( "CommentService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				sig : ``,
 				authorName : 'XING',
@@ -776,7 +776,7 @@ describe( "CommentService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				sig : ``,
 				authorName : 'XING',
@@ -816,7 +816,7 @@ describe( "CommentService", () =>
 			if ( findComment )
 			{
 				let toBeDeleted : CommentType = { ...findComment,
-					deleted : Types.ObjectId.createFromTime( 1 ),
+					deleted : SchemaUtil.createObjectIdFromTime( 1 ),
 				};
 				toBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, toBeDeleted );
 				expect( toBeDeleted.sig ).toBeDefined();

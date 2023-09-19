@@ -56,7 +56,7 @@ describe( "FollowerService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				address : oneFollowerAddress,
 				sig : ``,
@@ -256,7 +256,7 @@ describe( "FollowerService", () =>
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 					wallet : walletObj.address,
 					address : walletObjNew.address,
 					sig : ``,
@@ -401,7 +401,7 @@ describe( "FollowerService", () =>
 			if ( findContact )
 			{
 				let followerToBeDeleted : FollowerType = { ...findContact,
-					deleted : Types.ObjectId.createFromTime( 1 ),
+					deleted : SchemaUtil.createObjectIdFromTime( 1 ),
 				};
 				followerToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, followerToBeDeleted );
 				expect( followerToBeDeleted.sig ).toBeDefined();

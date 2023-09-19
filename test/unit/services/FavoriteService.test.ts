@@ -60,7 +60,7 @@ describe( "FavoriteService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				favType : FavoriteFavTypes.post,
 				favHash : '0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4ea',
@@ -242,7 +242,7 @@ describe( "FavoriteService", () =>
 			if ( findFavorite )
 			{
 				let favoriteToBeDeleted : FavoriteType = { ...findFavorite,
-					deleted : Types.ObjectId.createFromTime( 1 ),
+					deleted : SchemaUtil.createObjectIdFromTime( 1 ),
 				};
 				favoriteToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, favoriteToBeDeleted );
 				expect( favoriteToBeDeleted.sig ).toBeDefined();
@@ -343,7 +343,7 @@ describe( "FavoriteService", () =>
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : SchemaUtil.createObjectIdFromTime( 0 ),
 					wallet : walletObj.address,
 					favType : FavoriteFavTypes.post,
 					favHash : `0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4${ NoStr }`,

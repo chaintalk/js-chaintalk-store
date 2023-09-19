@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { Schema, Types } from "mongoose";
 import { TypeUtil } from "chaintalk-utils";
 
 /**
@@ -6,6 +6,16 @@ import { TypeUtil } from "chaintalk-utils";
  */
 export class SchemaUtil
 {
+
+	/**
+	 *	@param time	{number}
+	 *	@returns {Types.ObjectId}
+	 */
+	public static createObjectIdFromTime( time: number ) : Types.ObjectId
+	{
+		return Types.ObjectId.createFromTime( time );
+	}
+
 	/**
 	 *	@param v	{any}
 	 *	@returns {boolean}
