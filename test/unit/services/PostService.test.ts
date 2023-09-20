@@ -1,8 +1,7 @@
 import { describe, expect } from '@jest/globals';
 import { EtherWallet, Web3Signer, TWalletBaseItem, Web3Digester } from "web3id";
 import { ethers } from "ethers";
-import { DatabaseConnection } from "../../../src/connections/DatabaseConnection";
-import { Types } from "mongoose";
+import { DatabaseConnection } from "../../../src";
 import { TestUtil } from "chaintalk-utils";
 import { SchemaUtil } from "../../../src";
 import { PostListResult, postSchema, PostType } from "../../../src";
