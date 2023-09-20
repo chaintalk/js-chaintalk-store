@@ -89,6 +89,9 @@ export { QueryUtil, SchemaUtil, ServiceUtil };
 import { getDatabaseUrl, setDatabaseUrl, getDatabaseOptions, setDatabaseOptions } from "./config";
 export { getDatabaseUrl, setDatabaseUrl, getDatabaseOptions, setDatabaseOptions };
 
-
-
+/**
+ * 	@export DatabaseConnection
+ */
+import { DatabaseConnection } from "./connections/DatabaseConnection";
+export { DatabaseConnection };
 
