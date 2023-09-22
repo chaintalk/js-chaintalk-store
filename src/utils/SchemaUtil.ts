@@ -17,6 +17,15 @@ export class SchemaUtil
 	}
 
 	/**
+	 *	@param time	{number}
+	 *	@returns {string}
+	 */
+	public static createHexStringObjectIdFromTime( time: number ) : string
+	{
+		return Types.ObjectId.createFromTime( time ).toHexString();
+	}
+
+	/**
 	 *	@param v	{any}
 	 *	@returns {boolean}
 	 */
