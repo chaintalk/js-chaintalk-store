@@ -123,7 +123,7 @@ export const commentSchema = new Schema( {
 		byPostHash( postHash : string )
 		{
 			return this.find({
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				postHash : postHash,
 			} );
 		},
@@ -132,7 +132,7 @@ export const commentSchema = new Schema( {
 			if ( SchemaUtil.isValidKeccak256Hash( postHash ) )
 			{
 				return this.find({
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet,
 					postHash : postHash,
 				} );
@@ -140,7 +140,7 @@ export const commentSchema = new Schema( {
 			else
 			{
 				return this.find({
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet
 				} );
 			}
@@ -148,7 +148,7 @@ export const commentSchema = new Schema( {
 		byWalletAndId( wallet: string, id : Types.ObjectId )
 		{
 			return this.findOne({
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				_id : id,
 			} );
@@ -156,7 +156,7 @@ export const commentSchema = new Schema( {
 		byWalletAndHexId( wallet: string, hexId : string )
 		{
 			return this.findOne({
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				_id : Types.ObjectId.createFromHexString( hexId ),
 			} );
@@ -164,7 +164,7 @@ export const commentSchema = new Schema( {
 		byWalletAndHash( wallet: string, hash : string )
 		{
 			return this.findOne({
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				hash : hash,
 			} );
@@ -172,7 +172,7 @@ export const commentSchema = new Schema( {
 		byHash( hash : string )
 		{
 			return this.findOne({
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				hash : hash,
 			} );
 		}

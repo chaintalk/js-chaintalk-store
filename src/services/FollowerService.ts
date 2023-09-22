@@ -47,7 +47,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				//	...
 				const followerModel : Document = new FollowerModel( {
 					...data,
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				} );
 				let error : Error.ValidationError | null = followerModel.validateSync();
 				if ( error )
@@ -154,7 +154,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 					return reject( `invalid data.address` );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
-					! Types.ObjectId.createFromTime( 1 ).equals( data.deleted ) )
+					Types.ObjectId.createFromTime( 1 ).toHexString() !== data.deleted )
 				{
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
@@ -172,7 +172,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				const find : FollowerType | null = await this._queryOneByWalletAndAddress( wallet, data.address );
 				if ( find )
 				{
-					const update = { deleted : find._id };
+					const update = { deleted : find._id.toHexString() };
 					const newDoc = await FollowerModel.findOneAndUpdate( find, update, { new : true } );
 					return resolve( newDoc ? 1 : 0 );
 				}

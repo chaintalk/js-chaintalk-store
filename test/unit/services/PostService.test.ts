@@ -57,7 +57,7 @@ describe( "PostService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				sig : ``,
 				authorName : 'XING',
@@ -263,7 +263,7 @@ describe( "PostService", () =>
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
-					deleted : SchemaUtil.createObjectIdFromTime( 0 ),
+					deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 					wallet : walletObj.address,
 					sig : ``,
 					authorName : 'XING',
@@ -380,7 +380,7 @@ describe( "PostService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				sig : ``,
 				authorName : 'XING',
@@ -505,7 +505,7 @@ describe( "PostService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				sig : ``,
 				authorName : 'XING',
@@ -580,7 +580,7 @@ describe( "PostService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				sig : ``,
 				authorName : 'XING',
@@ -618,7 +618,7 @@ describe( "PostService", () =>
 			if ( findPost )
 			{
 				let toBeDeleted : PostType = { ...findPost,
-					deleted : SchemaUtil.createObjectIdFromTime( 1 ),
+					deleted : SchemaUtil.createHexStringObjectIdFromTime( 1 ),
 				};
 				toBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, toBeDeleted );
 				expect( toBeDeleted.sig ).toBeDefined();

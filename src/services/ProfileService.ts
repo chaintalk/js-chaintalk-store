@@ -42,7 +42,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 				//	...
 				const likeModel : Document = new ProfileModel( {
 					...data,
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				} );
 				let error : Error.ValidationError | null = likeModel.validateSync();
 				if ( error )
@@ -173,7 +173,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 					return reject( resultErrors.failedValidate );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
-					! Types.ObjectId.createFromTime( 1 ).equals( data.deleted ) )
+					Types.ObjectId.createFromTime( 1 ).toHexString() !== data.deleted )
 				{
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
@@ -191,7 +191,7 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 				const find : ProfileType | null = await this._queryOneByWalletAndKey( wallet, data.key );
 				if ( find )
 				{
-					const update = { deleted : find._id };
+					const update = { deleted : find._id.toHexString() };
 					const newDoc = await ProfileModel.findOneAndUpdate( find, update, { new : true } );
 					return resolve( newDoc ? 1 : 0 );
 				}

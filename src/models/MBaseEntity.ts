@@ -38,9 +38,13 @@ export const MBaseEntity : any = {
 	},
 	deleted : {
 		//	deleted === _id, normal == 0
-		type : Schema.Types.ObjectId,
+		type : String,
+		validate: {
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 32,
+			message: ( /* props: any */ ) : string => `invalid deleted`
+		},
 		required : [ true, 'deleted required' ],
-		default : Types.ObjectId.createFromTime( 0 ),
+		default : Types.ObjectId.createFromTime( 0 ).toHexString(),
 	},
 	wallet : {
 		//	owner's wallet address, CASE SENSITIVE

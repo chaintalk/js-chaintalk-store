@@ -63,7 +63,7 @@ export const favoriteSchema = new Schema( {
 			if ( undefined !== favType )
 			{
 				return this.find({
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet,
 					favType : favType
 				} );
@@ -71,7 +71,7 @@ export const favoriteSchema = new Schema( {
 			else
 			{
 				return this.find({
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet
 				} );
 			}
@@ -79,7 +79,7 @@ export const favoriteSchema = new Schema( {
 		byWalletAndFavTypeAndFavHash( wallet : string, favType : FavoriteFavTypes, favHash : string )
 		{
 			return this.findOne( {
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				favType : favType,
 				favHash : favHash,

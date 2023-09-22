@@ -52,7 +52,7 @@ describe( "ContactService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				address : '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
 				sig : ``,
@@ -250,7 +250,7 @@ describe( "ContactService", () =>
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
-					deleted : SchemaUtil.createObjectIdFromTime( 0 ),
+					deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 					wallet : walletObj.address,
 					address : walletObjNew.address,
 					sig : ``,
@@ -371,7 +371,7 @@ describe( "ContactService", () =>
 						expect( updatedContact ).toHaveProperty( key );
 					}
 
-					expect( SchemaUtil.createObjectIdFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
+					expect( SchemaUtil.createHexStringObjectIdFromTime( 0 ) === updatedContact.deleted ).toBeTruthy();
 					expect( updatedContact.sig ).toBe( contactToBeUpdated.sig );
 					expect( updatedContact.name ).toBe( contactToBeUpdated.name );
 					expect( updatedContact.avatar ).toBe( contactToBeUpdated.avatar );
@@ -388,7 +388,7 @@ describe( "ContactService", () =>
 						expect( findContactAgain ).toHaveProperty( key );
 					}
 
-					expect( SchemaUtil.createObjectIdFromTime( 0 ).equals( findContactAgain.deleted ) ).toBeTruthy();
+					expect( SchemaUtil.createHexStringObjectIdFromTime( 0 ) === findContactAgain.deleted ).toBeTruthy();
 					expect( findContactAgain.sig ).toBe( contactToBeUpdated.sig );
 					expect( findContactAgain.name ).toBe( contactToBeUpdated.name );
 					expect( findContactAgain.avatar ).toBe( contactToBeUpdated.avatar );
@@ -418,7 +418,7 @@ describe( "ContactService", () =>
 			{
 				let contactToBeUpdated : ContactType = { ...findContact,
 					//	deleted key is not allowed to be updated, will be ignored ...
-					deleted : SchemaUtil.createObjectIdFromTime( 1 ),
+					deleted : SchemaUtil.createHexStringObjectIdFromTime( 1 ),
 
 					//	keys that are allowed to be updated
 					name : `name-${ new Date().toLocaleString() }`,
@@ -444,14 +444,14 @@ describe( "ContactService", () =>
 						expect( updatedContact ).toHaveProperty( key );
 					}
 
-					expect( SchemaUtil.createObjectIdFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
+					expect( SchemaUtil.createHexStringObjectIdFromTime( 0 ) === updatedContact.deleted ).toBeTruthy();
 					expect( updatedContact.sig ).toBe( contactToBeUpdated.sig );
 					expect( updatedContact.name ).toBe( contactToBeUpdated.name );
 					expect( updatedContact.avatar ).toBe( contactToBeUpdated.avatar );
 					expect( updatedContact.remark ).toBe( contactToBeUpdated.remark );
 
 					//	check the result according to the keys that are not allowed to be updated
-					expect( SchemaUtil.createObjectIdFromTime( 0 ).equals( updatedContact.deleted ) ).toBeTruthy();
+					expect( SchemaUtil.createHexStringObjectIdFromTime( 0 ) === updatedContact.deleted ).toBeTruthy();
 				}
 			}
 
@@ -525,7 +525,7 @@ describe( "ContactService", () =>
 			if ( findContact )
 			{
 				let contactToBeDeleted : ContactType = { ...findContact,
-					deleted : SchemaUtil.createObjectIdFromTime( 1 ),
+					deleted : SchemaUtil.createHexStringObjectIdFromTime( 1 ),
 				};
 				contactToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, contactToBeDeleted );
 				expect( contactToBeDeleted.sig ).toBeDefined();

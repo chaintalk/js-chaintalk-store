@@ -38,21 +38,21 @@ export const contactSchema = new Schema( {
 			if ( undefined !== address )
 			{
 				return this.find({
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet,
 					address : address } );
 			}
 			else
 			{
 				return this.find({
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet } );
 			}
 		},
 		byWalletAndHash( wallet: string, hash : string )
 		{
 			return this.findOne({
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				hash : hash,
 			} );

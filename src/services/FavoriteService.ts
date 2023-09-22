@@ -44,7 +44,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				//	...
 				const followerModel : Document = new FavoriteModel( {
 					...data,
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				} );
 				let error : Error.ValidationError | null = followerModel.validateSync();
 				if ( error )
@@ -146,7 +146,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 					return reject( resultErrors.failedValidate );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
-					! Types.ObjectId.createFromTime( 1 ).equals( data.deleted ) )
+					Types.ObjectId.createFromTime( 1 ).toHexString() !== data.deleted )
 				{
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
@@ -164,7 +164,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				const find : FavoriteType | null = await this._queryOneByWalletAndFavTypeAndFavHash( wallet, data.favType, data.favHash );
 				if ( find )
 				{
-					const update = { deleted : find._id };
+					const update = { deleted : find._id.toHexString() };
 					const newDoc = await FavoriteModel.findOneAndUpdate( find, update, { new : true } );
 					return resolve( newDoc ? 1 : 0 );
 				}

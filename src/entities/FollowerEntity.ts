@@ -47,7 +47,7 @@ export const followerSchema = new Schema( {
 			if ( undefined !== address )
 			{
 				return this.find( {
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet,
 					address : address
 				} );
@@ -55,7 +55,7 @@ export const followerSchema = new Schema( {
 			else
 			{
 				return this.find( {
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet
 				} );
 			}
@@ -63,14 +63,14 @@ export const followerSchema = new Schema( {
 		byAddress( address : string )
 		{
 			return this.find( {
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				address : address
 			} );
 		},
 		byWalletAndHash( wallet : string, hash : string )
 		{
 			return this.findOne( {
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				hash : hash,
 			} );
@@ -121,7 +121,7 @@ export const FollowerModel = model( 'Follower', followerSchema );
 // 	// if ( self )
 // 	// {
 // 	// 	FollowerModel.findOne( {
-// 	// 		deleted : Types.ObjectId.createFromTime( 0 ),
+// 	// 		deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 // 	// 		wallet : self.wallet,
 // 	// 		address : self.address },
 // 	// 		( err : CallbackError | undefined, doc: any ) =>

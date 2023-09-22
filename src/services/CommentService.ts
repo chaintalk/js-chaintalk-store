@@ -55,7 +55,7 @@ export class CommentService extends BaseService implements IWeb3StoreService< Co
 				//	...
 				const commentModel : Document = new CommentModel( {
 					...data,
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				} );
 				let error : Error.ValidationError | null = commentModel.validateSync();
 				if ( error )
@@ -251,7 +251,7 @@ export class CommentService extends BaseService implements IWeb3StoreService< Co
 					return reject( resultErrors.failedValidate );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
-					! Types.ObjectId.createFromTime( 1 ).equals( data.deleted ) )
+					Types.ObjectId.createFromTime( 1 ).toHexString() !== data.deleted )
 				{
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
@@ -269,7 +269,7 @@ export class CommentService extends BaseService implements IWeb3StoreService< Co
 				const find : CommentType | null = await this._queryOneByWalletAndHash( wallet, data.hash );
 				if ( find )
 				{
-					const update = { deleted : find._id };
+					const update = { deleted : find._id.toHexString() };
 					const newDoc = await CommentModel.findOneAndUpdate( find, update, { new : true } );
 					return resolve( newDoc ? 1 : 0 );
 				}

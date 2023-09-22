@@ -43,7 +43,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				//	...
 				const likeModel : Document = new LikeModel( {
 					...data,
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				} );
 				let error : Error.ValidationError | null = likeModel.validateSync();
 				if ( error )
@@ -145,7 +145,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 					return reject( resultErrors.failedValidate );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
-					! Types.ObjectId.createFromTime( 1 ).equals( data.deleted ) )
+					Types.ObjectId.createFromTime( 1 ).toHexString() !== data.deleted )
 				{
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
@@ -163,7 +163,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				const find : LikeType | null = await this._queryOneByWalletAndLikeTypeAndLikeHash( wallet, data.likeType, data.likeHash );
 				if ( find )
 				{
-					const update = { deleted : find._id };
+					const update = { deleted : find._id.toHexString() };
 					const newDoc = await LikeModel.findOneAndUpdate( find, update, { new : true } );
 					return resolve( newDoc ? 1 : 0 );
 				}

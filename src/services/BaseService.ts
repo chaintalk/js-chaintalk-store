@@ -101,7 +101,7 @@ export abstract class BaseService extends DatabaseConnection
 				await this.connect();
 				const results : Array<T> = await model
 					.find( {
-						deleted : Types.ObjectId.createFromTime( 0 ),
+						deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 						wallet : wallet
 					})
 					.sort( { createdAt: -1 } )

@@ -64,7 +64,7 @@ export const likeSchema = new Schema( {
 			if ( undefined !== likeType )
 			{
 				return this.find({
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet,
 					likeType : likeType
 				} );
@@ -72,7 +72,7 @@ export const likeSchema = new Schema( {
 			else
 			{
 				return this.find({
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet
 				} );
 			}
@@ -80,7 +80,7 @@ export const likeSchema = new Schema( {
 		byWalletAndLikeTypeAndLikeHash( wallet : string, likeType : LikeLikeTypes, likeHash : string )
 		{
 			return this.findOne( {
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				likeType : likeType,
 				likeHash : likeHash,

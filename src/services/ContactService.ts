@@ -48,7 +48,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				//	...
 				const contactModel : Document = new ContactModel( {
 					...data,
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				} );
 				let error : Error.ValidationError | null = contactModel.validateSync();
 				if ( error )
@@ -190,7 +190,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 					return reject( `invalid data.address` );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
-					! Types.ObjectId.createFromTime( 1 ).equals( data.deleted ) )
+					Types.ObjectId.createFromTime( 1 ).toHexString() !== data.deleted )
 				{
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
@@ -208,7 +208,7 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				const findContact : ContactType | null = await this._queryOneByWalletAndAddress( wallet, data.address );
 				if ( findContact )
 				{
-					const update = { deleted : findContact._id };
+					const update = { deleted : findContact._id.toHexString() };
 					const newDoc = await ContactModel.findOneAndUpdate( findContact, update, { new : true } );
 					return resolve( newDoc ? 1 : 0 );
 				}

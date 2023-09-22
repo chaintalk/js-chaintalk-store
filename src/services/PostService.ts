@@ -55,7 +55,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				//	...
 				const postModel : Document = new PostModel( {
 					...data,
-					deleted : Types.ObjectId.createFromTime( 0 ),
+					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				} );
 				let error : Error.ValidationError | null = postModel.validateSync();
 				if ( error )
@@ -289,7 +289,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 					return reject( resultErrors.failedValidate );
 				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
-					! Types.ObjectId.createFromTime( 1 ).equals( data.deleted ) )
+					Types.ObjectId.createFromTime( 1 ).toHexString() !== data.deleted )
 				{
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
@@ -307,7 +307,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				const findPost : PostType | null = await this._queryOneByWalletAndHash( wallet, data.hash );
 				if ( findPost )
 				{
-					const update = { deleted : findPost._id };
+					const update = { deleted : findPost._id.toHexString() };
 					const newDoc = await PostModel.findOneAndUpdate( findPost, update, { new : true } );
 					return resolve( newDoc ? 1 : 0 );
 				}

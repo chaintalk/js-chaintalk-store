@@ -93,14 +93,14 @@ export const postSchema = new Schema( {
 		byWallet( wallet: string )
 		{
 			return this.find({
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet
 			} );
 		},
 		byWalletAndId( wallet: string, id : Types.ObjectId )
 		{
 			return this.findOne({
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				_id : id,
 			} );
@@ -108,7 +108,7 @@ export const postSchema = new Schema( {
 		byWalletAndHexId( wallet: string, hexId : string )
 		{
 			return this.findOne({
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				_id : Types.ObjectId.createFromHexString( hexId ),
 			} );
@@ -116,7 +116,7 @@ export const postSchema = new Schema( {
 		byWalletAndHash( wallet: string, hash : string )
 		{
 			return this.findOne({
-				deleted : Types.ObjectId.createFromTime( 0 ),
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				hash : hash,
 			} );

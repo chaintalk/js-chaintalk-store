@@ -59,7 +59,7 @@ describe( "ProfileService", () =>
 				timestamp : new Date().getTime(),
 				hash : '',
 				version : '1.0.0',
-				deleted : SchemaUtil.createObjectIdFromTime( 0 ),
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
 				key : oneProfileKey,
 				value : 'value1',
@@ -217,7 +217,7 @@ describe( "ProfileService", () =>
 						expect( updated ).toHaveProperty( key );
 					}
 
-					expect( SchemaUtil.createObjectIdFromTime( 0 ).equals( updated.deleted ) ).toBeTruthy();
+					expect( SchemaUtil.createHexStringObjectIdFromTime( 0 ) === updated.deleted ).toBeTruthy();
 					expect( updated.sig ).toBe( toBeUpdated.sig );
 					expect( updated.value ).toBe( toBeUpdated.value );
 					expect( updated.remark ).toBe( toBeUpdated.remark );
@@ -233,7 +233,7 @@ describe( "ProfileService", () =>
 						expect( findAgain ).toHaveProperty( key );
 					}
 
-					expect( SchemaUtil.createObjectIdFromTime( 0 ).equals( findAgain.deleted ) ).toBeTruthy();
+					expect( SchemaUtil.createHexStringObjectIdFromTime( 0 ) === findAgain.deleted ).toBeTruthy();
 					expect( findAgain.sig ).toBe( toBeUpdated.sig );
 					expect( findAgain.value ).toBe( toBeUpdated.value );
 					expect( findAgain.remark ).toBe( toBeUpdated.remark );
@@ -305,7 +305,7 @@ describe( "ProfileService", () =>
 			if ( find )
 			{
 				let toBeDeleted : ProfileType = { ...find,
-					deleted : SchemaUtil.createObjectIdFromTime( 1 ),
+					deleted : SchemaUtil.createHexStringObjectIdFromTime( 1 ),
 				};
 				toBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, toBeDeleted );
 				expect( toBeDeleted.sig ).toBeDefined();
@@ -406,7 +406,7 @@ describe( "ProfileService", () =>
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
-					deleted : SchemaUtil.createObjectIdFromTime( 0 ),
+					deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 					wallet : walletObj.address,
 					key : `key${ NoStr }`,
 					value : `value${ NoStr }`,
