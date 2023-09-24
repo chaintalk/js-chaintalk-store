@@ -1,14 +1,10 @@
 import { DatabaseConnection } from "../connections/DatabaseConnection";
 import { connection, Model, Types } from "mongoose";
 import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
-import { FavoriteModel, FavoriteType } from "../entities/FavoriteEntity";
-import { PostModel, postSchema, PostType } from "../entities/PostEntity";
-import { EtherWallet } from "web3id";
+import { PostModel } from "../entities/PostEntity";
 import { SchemaUtil } from "../utils/SchemaUtil";
-import { resultErrors } from "../constants/ResultErrors";
 import { ERefDataTypes } from "../models/ERefDataTypes";
 import { CommentModel } from "../entities/CommentEntity";
-import { isUndefined } from "lodash";
 
 
 export abstract class BaseService extends DatabaseConnection

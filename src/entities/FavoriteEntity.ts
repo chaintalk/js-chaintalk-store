@@ -1,6 +1,6 @@
 import { model, Schema, InferSchemaType, Types, Document } from 'mongoose';
 import { TQueueListResult } from "../models/TQuery";
-import { MBaseEntity, MBaseQuerySchema } from "../models/MBaseEntity";
+import { MBaseEntity } from "../models/MBaseEntity";
 import { MRemarkEntity } from "../models/MRemarkEntity";
 import { MRefEntity } from "../models/MRefEntity";
 import { ERefDataTypes } from "../models/ERefDataTypes";

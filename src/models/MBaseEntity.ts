@@ -2,9 +2,6 @@ import { TypeUtil } from "chaintalk-utils";
 import { Schema, Types } from "mongoose";
 import { EtherWallet } from "web3id";
 import { SchemaUtil } from "../utils/SchemaUtil";
-import { MRefEntity } from "./MRefEntity";
-import { MRemarkEntity } from "./MRemarkEntity";
-import { ERefDataTypes } from "./ERefDataTypes";
 
 /**
  * 	@module MBaseEntity

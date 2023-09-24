@@ -4,7 +4,7 @@ import { ERefDataTypes } from "../models/ERefDataTypes";
 import { FavoriteListResult, FavoriteModel, FavoriteType } from "../entities/FavoriteEntity";
 import { IWeb3StoreService } from "../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
-import { ClientSession, Document, Error, Model, SortOrder, Types } from "mongoose";
+import { Document, Error, SortOrder, Types } from "mongoose";
 import { TQueueListOptions } from "../models/TQuery";
 import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
