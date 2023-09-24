@@ -1,14 +1,16 @@
 import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
 import { EtherWallet, Web3Validator } from "web3id";
-import { FavoriteFavTypes, FavoriteListResult, FavoriteModel, FavoriteType } from "../entities/FavoriteEntity";
+import { ERefDataTypes } from "../models/ERefDataTypes";
+import { FavoriteListResult, FavoriteModel, FavoriteType } from "../entities/FavoriteEntity";
 import { IWeb3StoreService } from "../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
-import { Document, Error, SortOrder, Types } from "mongoose";
+import { ClientSession, Document, Error, Model, SortOrder, Types } from "mongoose";
 import { TQueueListOptions } from "../models/TQuery";
 import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { resultErrors } from "../constants/ResultErrors";
-import { CommentListResult } from "../entities/CommentEntity";
+import { CommentListResult, CommentModel } from "../entities/CommentEntity";
+import { PostModel } from "../entities/PostEntity";
 
 /**
  * 	@class FavoriteService
@@ -40,13 +42,21 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				{
 					return reject( resultErrors.failedValidate );
 				}
+				if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
+				{
+					return reject( `invalid data.refType` );
+				}
+				if ( ! SchemaUtil.isValidKeccak256Hash( data.refHash ) )
+				{
+					return reject( `invalid data.refHash` );
+				}
 
 				//	...
-				const followerModel : Document = new FavoriteModel( {
+				const dataModel : Document = new FavoriteModel( {
 					...data,
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				} );
-				let error : Error.ValidationError | null = followerModel.validateSync();
+				let error : Error.ValidationError | null = dataModel.validateSync();
 				if ( error )
 				{
 					return reject( error );
@@ -62,19 +72,48 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 					}
 				}
 
+				//	...
+				const origin = await this.queryOneByRefTypeAndRefHash( data.refType, data.refHash );
+				if ( ! origin || ! origin._id )
+				{
+					return reject( `origin not found` );
+				}
+
 				//	check duplicate
-				const findFollower : FavoriteType = await this._queryOneByWalletAndFavTypeAndFavHash( data.wallet, data.favType, data.favHash );
-				if ( findFollower )
+				const find : FavoriteType = await this._queryOneByWalletAndRefTypeAndRefHash( data.wallet, data.refType, data.refHash );
+				if ( find )
 				{
 					return reject( resultErrors.duplicateKeyError );
 				}
 
 				//	...
-				await this.connect();
-				const savedDoc : Document<FavoriteType> = await followerModel.save();
+				// const conn = await this.connect();
+				// const session : ClientSession = await conn.startSession();
+				// const result = await session.withTransaction( async () =>
+				// {
+				// 	const savedDoc : Document<FavoriteType> = await followerModel.save( { session } );
+				// 	return savedDoc;
+				// });
+				// await session.endSession();
+				// resolve( result ? result.toObject() : null );
 
 				//	...
-				resolve( savedDoc.toObject() );
+				await this.connect();
+				const savedDoc : Document<FavoriteType> = await dataModel.save();
+				if ( savedDoc )
+				{
+					//	statisticFavorite +1
+					const updatedUp = await this.updateStatistics<FavoriteType>
+						(
+							( 'post' === data.refType ? PostModel : CommentModel ),
+							origin._id,
+							`statisticFavorite`,
+							1
+						);
+					return resolve( savedDoc.toObject() );
+				}
+
+				resolve( null );
 			}
 			catch ( err )
 			{
@@ -151,6 +190,14 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
 				}
+				if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
+				{
+					return reject( `invalid data.refType` );
+				}
+				if ( ! SchemaUtil.isValidKeccak256Hash( data.refHash ) )
+				{
+					return reject( `invalid data.refHash` );
+				}
 
 				//	throat checking
 				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<FavoriteType>( FavoriteModel, wallet );
@@ -161,7 +208,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 
 				//	...
 				await this.connect();
-				const find : FavoriteType | null = await this._queryOneByWalletAndFavTypeAndFavHash( wallet, data.favType, data.favHash );
+				const find : FavoriteType | null = await this._queryOneByWalletAndRefTypeAndRefHash( wallet, data.refType, data.refHash );
 				if ( find )
 				{
 					const update = { deleted : find._id.toHexString() };
@@ -198,11 +245,19 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				{
 					return reject( `invalid data, missing key : by` );
 				}
+				if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
+				{
+					return reject( `invalid data.refType` );
+				}
+				if ( ! SchemaUtil.isValidKeccak256Hash( data.refHash ) )
+				{
+					return reject( `invalid data.refHash` );
+				}
 
 				switch ( data.by )
 				{
-					case 'walletAndFavTypeAndFavHash' :
-						return resolve( await this._queryOneByWalletAndFavTypeAndFavHash( wallet, data.favType, data.favHash ) );
+					case 'walletAndRefTypeAndRefHash' :
+						return resolve( await this._queryOneByWalletAndRefTypeAndRefHash( wallet, data.refType, data.refHash ) );
 				}
 
 				resolve( null );
@@ -234,11 +289,15 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				{
 					return reject( `invalid data, missing key : by` );
 				}
+				if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
+				{
+					return reject( `invalid data.refType` );
+				}
 
 				switch ( data.by )
 				{
-					case 'walletAndFavType' :
-						return resolve( await this._queryListByWalletAndFavType( wallet, data.favType, data.options ) );
+					case 'walletAndRefType' :
+						return resolve( await this._queryListByWalletAndRefType( wallet, data.refType, data.options ) );
 				}
 
 				//	...
@@ -254,11 +313,11 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 
 	/**
 	 *	@param wallet	{string}	wallet address
-	 *	@param favType	{FavoriteFavTypes}
-	 *	@param favHash	{string}
+	 *	@param refType	{ERefDataTypes}
+	 *	@param refHash	{string}
 	 *	@returns {Promise< FavoriteType | null >}
 	 */
-	private _queryOneByWalletAndFavTypeAndFavHash( wallet : string, favType : FavoriteFavTypes, favHash : string ) : Promise<FavoriteType | null>
+	private _queryOneByWalletAndRefTypeAndRefHash( wallet : string, refType : ERefDataTypes, refHash : string ) : Promise<FavoriteType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -268,24 +327,24 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				{
 					return reject( `invalid wallet` );
 				}
-				if ( ! Object.values( FavoriteFavTypes ).includes( favType ) )
+				if ( ! Object.values( ERefDataTypes ).includes( refType ) )
 				{
-					return reject( `invalid favType` );
+					return reject( `invalid refType` );
 				}
-				if ( ! SchemaUtil.isValidKeccak256Hash( favHash ) )
+				if ( ! SchemaUtil.isValidKeccak256Hash( refHash ) )
 				{
-					return reject( `invalid favHash` );
+					return reject( `invalid refHash` );
 				}
 
 				await this.connect();
-				const favorite = await FavoriteModel
+				const record = await FavoriteModel
 					.findOne()
-					.byWalletAndFavTypeAndFavHash( wallet, favType, favHash )
+					.byWalletAndRefTypeAndRefHash( wallet, refType, refHash )
 					.lean<FavoriteType>()
 					.exec();
-				if ( favorite )
+				if ( record )
 				{
-					return resolve( favorite );
+					return resolve( record );
 				}
 
 				resolve( null );
@@ -299,11 +358,11 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 
 	/**
 	 *	@param wallet		{string}	wallet address
-	 *	@param favType		{FavoriteFavTypes}
+	 *	@param refType		{ERefDataTypes}
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	private _queryListByWalletAndFavType( wallet : string, favType ?: FavoriteFavTypes, options ?: TQueueListOptions ) : Promise<FavoriteListResult>
+	private _queryListByWalletAndRefType( wallet : string, refType ?: ERefDataTypes, options ?: TQueueListOptions ) : Promise<FavoriteListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -327,18 +386,18 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				};
 
 				await this.connect();
-				const contacts : Array<FavoriteType> = await FavoriteModel
+				const list : Array<FavoriteType> = await FavoriteModel
 					.find()
-					.byWalletAndFavType( wallet, favType )
+					.byWalletAndRefType( wallet, refType )
 					.sort( sortBy )
 					.skip( skip )
 					.limit( pageSize )
 					.lean<Array<FavoriteType>>()
 					.exec();
-				if ( Array.isArray( contacts ) )
+				if ( Array.isArray( list ) )
 				{
-					result.list = contacts;
-					result.total = contacts.length;
+					result.list = list;
+					result.total = list.length;
 				}
 
 				//	...

@@ -16,16 +16,16 @@ export const followerSchema = new Schema( {
 		type : String,
 		validate : {
 			validator : ( v : string ) => TypeUtil.isNotEmptyString( v ) && EtherWallet.isValidAddress( v ),
-			message: ( /* props: any */ ) : string => `invalid address`
+			message: ( props: any ) : string => `invalid ${props.path}`
 		},
-		required : [ true, 'address required' ]
+		required : [ true, '{PATH} required' ]
 	},
 	name : {
 		//	follower's name
 		type : String,
 		validate : {
 			validator : ( v : any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
-			message: ( /* props: any */ ) : string => `invalid name. (should be less than 128 characters)`
+			message: ( props: any ) : string => `invalid ${props.path}, should be less than 128 characters`
 		},
 		required : false
 	},
@@ -34,7 +34,7 @@ export const followerSchema = new Schema( {
 		type : String,
 		validate : {
 			validator : ( v : any ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
-			message: ( /* props: any */ ) : string => `invalid avatar. (should be less than 256 characters)`
+			message: ( props: any ) : string => `invalid ${props.path}, should be less than 256 characters`
 		},
 		required : false
 	},

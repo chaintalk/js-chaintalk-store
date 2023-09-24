@@ -38,7 +38,7 @@ export class DatabaseConnection
 				//	2 = connecting
 				//	3 = disconnecting
 				//
-				if ( 0 === connection.readyState )
+				if ( 0 === connection.readyState || ! this.conn )
 				{
 					/**
 					 * 	connect options

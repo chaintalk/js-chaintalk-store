@@ -17,7 +17,7 @@ export const MRemarkEntity : any = {
 				}
 				return true;
 			},
-			message: ( /* props: any */ ) : string => `invalid remark, must be less than 2048 characters`
+			message: ( props: any ) : string => `invalid ${props.path}, must be less than 2048 characters`
 		},
 		required : false
 	},

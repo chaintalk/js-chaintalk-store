@@ -15,6 +15,10 @@ export { IWeb3StoreService };
 /**
  * 	@export entities
  */
+import { ERefDataTypes } from "./models/ERefDataTypes";
+export { ERefDataTypes }
+
+
 import { commentSchema, CommentModel } from "./entities/CommentEntity";
 import type { CommentType, CommentListResult } from "./entities/CommentEntity";
 export { commentSchema, CommentModel };
@@ -29,9 +33,8 @@ export { ContactType, ContactListResult };
 
 import { favoriteSchema, FavoriteModel } from "./entities/FavoriteEntity";
 import type { FavoriteType, FavoriteListResult } from "./entities/FavoriteEntity";
-import { FavoriteFavTypes } from "./entities/FavoriteEntity";
 export { favoriteSchema, FavoriteModel };
-export { FavoriteType, FavoriteListResult, FavoriteFavTypes };
+export { FavoriteType, FavoriteListResult };
 
 
 import { followerSchema, FollowerModel } from "./entities/FollowerEntity";

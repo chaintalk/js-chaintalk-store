@@ -22,10 +22,10 @@ export const likeSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: LikeLikeTypes ) => Object.values( LikeLikeTypes ).includes( v ),
-			message: ( /* props: any */ ) : string => `invalid likeType`
+			message: ( props: any ) : string => `invalid ${props.path}`
 		},
 		enum: Object.values( LikeLikeTypes ),
-		required: [ true, 'likeType required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	likeHash : {
 		//	Keccak-256(SHA-3), see the hash value of the Ethereum data block
@@ -34,9 +34,9 @@ export const likeSchema = new Schema( {
 		validate: {
 			//	Starts with "0x" (case-insensitive)
 			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
-			message: ( /* props: any */ ) : string => `invalid likeHash, must be 66 lowercase hex characters`
+			message: ( props: any ) : string => `invalid ${props.path}, must be 66 lowercase hex characters`
 		},
-		required: [ true, 'likeHash required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	likeBody : {
 		type : String,
@@ -51,7 +51,7 @@ export const likeSchema = new Schema( {
 				}
 				return true;
 			},
-			message: ( /* props: any */ ) : string => `invalid likeBody, must be less than 2048 characters`
+			message: ( props: any ) : string => `invalid ${props.path}, must be less than 2048 characters`
 		},
 		required : false
 	},

@@ -5,6 +5,7 @@ import { MBaseEntity } from "../models/MBaseEntity";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { MStatisticEntity } from "../models/MStatisticEntity";
 import { MRemarkEntity } from "../models/MRemarkEntity";
+import { EtherWallet } from "web3id";
 
 
 /**
@@ -19,32 +20,59 @@ export const commentSchema = new Schema( {
 		validate: {
 			//	Starts with "0x" (case-insensitive)
 			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
-			message: ( /* props: any */ ) : string => `invalid postHash, must be 66 lowercase hex characters`
+			message: ( props: any ) : string => `invalid ${props.path}, must be 66 lowercase hex characters`
 		},
-		required: [ true, 'postHash required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	authorName : {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
-			message: ( /* props: any */ ) : string => `invalid authorName. (should be less than 128 characters)`
+			message: ( props: any ) : string => `invalid ${props.path}. (should be less than 128 characters)`
 		},
-		required: [ true, 'authorName required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	authorAvatar : {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
-			message: ( /* props: any */ ) : string => `invalid authorAvatar. (should be less than 256 characters)`
+			message: ( props: any ) : string => `invalid ${props.path}. (should be less than 256 characters)`
 		},
-		required: [ true, 'authorAvatar required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	replyTo : {
 		//	Reply to the specified author name. @authorName
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
-			message: ( /* props: any */ ) : string => `invalid replyTo. (should be less than 128 characters)`
+			message: ( props: any ) : string => `invalid ${props.path}. (should be less than 128 characters)`
+		},
+		required: false
+	},
+	replyToWallet : {
+		//	reply to the specified wallet
+		type : String,
+		validate: {
+			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && EtherWallet.isValidAddress( v ),
+			message: ( props: any ) : string => `invalid ${props.path}. (should be less than 128 characters)`
+		},
+		required: false
+	},
+	replyToAuthorName : {
+		//	Reply to the specified author name. @authorName
+		type : String,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
+			message: ( props: any ) : string => `invalid ${props.path}. (should be less than 128 characters)`
+		},
+		required: false
+	},
+	replyToAuthorAvatar : {
+		//	Reply to the specified author name. @authorName
+		type : String,
+		validate: {
+			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
+			message: ( props: any ) : string => `invalid ${props.path}. (should be less than 256 characters)`
 		},
 		required: false
 	},
@@ -53,18 +81,18 @@ export const commentSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
-			message: ( /* props: any */ ) : string => `invalid postSnippet. (should be less than 2048 characters)`
+			message: ( props: any ) : string => `invalid ${props.path}. (should be less than 2048 characters)`
 		},
-		required: [ true, 'postSnippet required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	body : {
 		//	comment body/content
 		type : String,
 		validate: {
 			validator : ( v: any ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
-			message: ( /* props: any */ ) : string => `invalid body. (should be less than 2048 characters)`
+			message: ( props: any ) : string => `invalid ${props.path}. (should be less than 2048 characters)`
 		},
-		required: [ true, 'body required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	pictures : {
 		type : [String],
@@ -84,7 +112,7 @@ export const commentSchema = new Schema( {
 				}
 				return true;
 			},
-			message: ( /* props: any */ ) : string => `invalid pictures. (each element should be less than 256 characters)`
+			message: ( props: any ) : string => `invalid ${props.path}. (each element should be less than 256 characters)`
 		},
 		required: false
 	},
@@ -106,7 +134,7 @@ export const commentSchema = new Schema( {
 				}
 				return true;
 			},
-			message: ( /* props: any */ ) : string => `invalid videos. (each element should be less than 256 characters)`
+			message: ( props: any ) : string => `invalid ${props.path}. (each element should be less than 256 characters)`
 		},
 		required: false
 	},

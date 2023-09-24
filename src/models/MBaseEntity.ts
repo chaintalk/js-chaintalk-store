@@ -2,6 +2,9 @@ import { TypeUtil } from "chaintalk-utils";
 import { Schema, Types } from "mongoose";
 import { EtherWallet } from "web3id";
 import { SchemaUtil } from "../utils/SchemaUtil";
+import { MRefEntity } from "./MRefEntity";
+import { MRemarkEntity } from "./MRemarkEntity";
+import { ERefDataTypes } from "./ERefDataTypes";
 
 /**
  * 	@module MBaseEntity
@@ -11,9 +14,9 @@ export const MBaseEntity : any = {
 		type : Number,
 		validate: {
 			validator : ( v: number ) => v > 0,
-			message: ( /* props: any */ ) : string => `invalid timestamp`
+			message: ( props: any ) : string => `invalid ${props.path}`
 		},
-		required: [ true, 'timestamp required' ],
+		required: [ true, '{PATH} required' ],
 		default : new Date().getTime(),
 	},
 	hash : {
@@ -23,27 +26,27 @@ export const MBaseEntity : any = {
 		validate: {
 			//	Starts with "0x" (case-insensitive)
 			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
-			message: ( /* props: any */ ) : string => `invalid hash, must be 66 lowercase hex characters`
+			message: ( props: any ) : string => `invalid ${props.path}, must be 66 lowercase hex characters`
 		},
-		required: [ true, 'hash required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	version : {
 		//	version of the data structure
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 16,
-			message: ( /* props: any */ ) : string => `invalid version`
+			message: ( props: any ) : string => `invalid ${props.path}`
 		},
-		required: [ true, 'version required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	deleted : {
 		//	deleted === _id, normal == 0
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 32,
-			message: ( /* props: any */ ) : string => `invalid deleted`
+			message: ( props: any ) : string => `invalid ${props.path}`
 		},
-		required : [ true, 'deleted required' ],
+		required : [ true, '{PATH} required' ],
 		default : Types.ObjectId.createFromTime( 0 ).toHexString(),
 	},
 	wallet : {
@@ -52,9 +55,9 @@ export const MBaseEntity : any = {
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && EtherWallet.isValidAddress( v ),
-			message: ( /* props: any */ ) : string => `invalid wallet`
+			message: ( props: any ) : string => `invalid ${props.path}`
 		},
-		required: [ true, 'wallet required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	sig : {
 		//	signature
@@ -65,8 +68,31 @@ export const MBaseEntity : any = {
 		validate: {
 			//validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && 132 === v.length && /^0x[0-9a-f]{130}$/.test( v ),
 			validator : ( v: string ) => EtherWallet.isValidSignatureString( v ),
-			message: ( /* props: any */ ) : string => `invalid sig, must be 132 lowercase hex characters`
+			message: ( props: any ) : string => `invalid ${props.path}, must be 132 lowercase hex characters`
 		},
-		required: [ true, 'sig required' ]
+		required: [ true, '{PATH} required' ]
 	},
 };
+
+
+export const MBaseQuerySchema = new Schema( {}, {
+	timestamps: true,
+	statics: {
+		byWalletAndId( wallet : string, id : Types.ObjectId )
+		{
+			return this.findOne( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				wallet : wallet,
+				_id : id,
+			} );
+		},
+		byWalletAndHexId( wallet : string, hexId : string )
+		{
+			return this.findOne( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				wallet : wallet,
+				_id : Types.ObjectId.createFromHexString( hexId ),
+			} );
+		},
+	}
+} );

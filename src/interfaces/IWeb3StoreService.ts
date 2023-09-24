@@ -24,7 +24,7 @@ export interface IWeb3StoreService< T, R >
 	delete( wallet: string, data : T, sig : string )  : Promise<number>;
 
 	/**
-	 *	query one an list
+	 *	query one or list
 	 */
 	queryOne( wallet : string, data : any, sig : string ) : Promise< T | null >
 	queryList( wallet : string, data : any, sig : string ) : Promise< R >

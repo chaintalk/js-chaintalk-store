@@ -383,6 +383,8 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				{
 					case 'wallet' :
 						return resolve( await this._queryListByWallet( wallet, data.options ) );
+					case 'refAuthorWallet' :
+						return resolve( await this._queryListByRefAuthorWallet( data.refAuthorWallet, data.options ) );
 				}
 
 				//	...
@@ -416,14 +418,14 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				}
 
 				await this.connect();
-				const post = await PostModel
+				const record = await PostModel
 					.findOne()
 					.byWalletAndHash( wallet, hash )
 					.lean<PostType>()
 					.exec();
-				if ( post )
+				if ( record )
 				{
-					return resolve( post );
+					return resolve( record );
 				}
 
 				resolve( null );
@@ -466,7 +468,7 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				};
 
 				await this.connect();
-				const contacts : Array<PostType> = await PostModel
+				const list : Array<PostType> = await PostModel
 					.find()
 					.byWallet( wallet )
 					.sort( sortBy )
@@ -474,10 +476,65 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 					.limit( pageSize )
 					.lean<Array<PostType>>()
 					.exec();
-				if ( Array.isArray( contacts ) )
+				if ( Array.isArray( list ) )
 				{
-					result.list = contacts;
-					result.total = contacts.length;
+					result.list = list;
+					result.total = list.length;
+				}
+
+				//	...
+				resolve( result );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		} );
+	}
+
+	/**
+	 *	@param refAuthorWallet		{string}	wallet address
+	 *	@param options	{TQueueListOptions}
+	 *	@returns {Promise<PostListResult>}
+	 */
+	private _queryListByRefAuthorWallet( refAuthorWallet : string, options ? : TQueueListOptions ) : Promise<PostListResult>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! EtherWallet.isValidAddress( refAuthorWallet ) )
+				{
+					return reject( `invalid wallet` );
+				}
+
+				const pageNo = PageUtil.getSafePageNo( options?.pageNo );
+				const pageSize = PageUtil.getSafePageSize( options?.pageSize );
+				const skip = ( pageNo - 1 ) * pageSize;
+				const sortBy : {
+					[ key : string ] : SortOrder
+				} = QueryUtil.getSafeSortBy( options?.sort );
+
+				let result : PostListResult = {
+					total : 0,
+					pageNo : pageNo,
+					pageSize : pageSize,
+					list : [],
+				};
+
+				await this.connect();
+				const list : Array<PostType> = await PostModel
+					.find()
+					.byRefAuthorWallet( refAuthorWallet )
+					.sort( sortBy )
+					.skip( skip )
+					.limit( pageSize )
+					.lean<Array<PostType>>()
+					.exec();
+				if ( Array.isArray( list ) )
+				{
+					result.list = list;
+					result.total = list.length;
 				}
 
 				//	...

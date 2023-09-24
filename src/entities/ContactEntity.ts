@@ -21,9 +21,9 @@ export const contactSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && EtherWallet.isValidAddress( v ),
-			message: ( /* props: any */ ) : string => `invalid address`
+			message: ( props: any ) : string => `invalid ${props.path}`
 		},
-		required: [ true, 'address required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	avatar : {
 		type : String,

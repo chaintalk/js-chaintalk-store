@@ -13,17 +13,17 @@ export const profileSchema = new Schema( {
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
-			message: ( /* props: any */ ) : string => `invalid key`
+			message: ( props: any ) : string => `invalid ${props.path}`
 		},
-		required: [ true, 'key required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	value : {
 		type : String,
 		validate: {
 			validator : ( v: string ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
-			message: ( /* props: any */ ) : string => `invalid value`
+			message: ( props: any ) : string => `invalid ${props.path}`
 		},
-		required: [ true, 'value required' ]
+		required: [ true, '{PATH} required' ]
 	},
 	...MRemarkEntity
 }, {

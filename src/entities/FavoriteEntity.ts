@@ -1,71 +1,72 @@
 import { model, Schema, InferSchemaType, Types, Document } from 'mongoose';
 import { TQueueListResult } from "../models/TQuery";
-import { MBaseEntity } from "../models/MBaseEntity";
-import { SchemaUtil } from "../utils/SchemaUtil";
-import { TypeUtil } from "chaintalk-utils";
+import { MBaseEntity, MBaseQuerySchema } from "../models/MBaseEntity";
 import { MRemarkEntity } from "../models/MRemarkEntity";
+import { MRefEntity } from "../models/MRefEntity";
+import { ERefDataTypes } from "../models/ERefDataTypes";
 
-/**
- * 	define favType enum
- */
-export enum FavoriteFavTypes {
-	post = 'post'
-}
 
 /**
  * 	Follower
  */
 export const favoriteSchema = new Schema( {
 	...MBaseEntity,
-	favType : {
-		type : String,
-		validate: {
-			validator : ( v: FavoriteFavTypes ) => Object.values( FavoriteFavTypes ).includes( v ),
-			message: ( /* props: any */ ) : string => `invalid favType`
-		},
-		enum: Object.values( FavoriteFavTypes ),
-		required: [ true, 'favType required' ]
-	},
-	favHash : {
-		//	Keccak-256(SHA-3), see the hash value of the Ethereum data block
-		type : String,
-		unique: true,
-		validate: {
-			//	Starts with "0x" (case-insensitive)
-			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
-			message: ( /* props: any */ ) : string => `invalid favHash, must be 66 lowercase hex characters`
-		},
-		required: [ true, 'favHash required' ]
-	},
-	favBody : {
-		type : String,
-		validate: {
-			validator : ( v: string ) => {
-				if ( v )
-				{
-					if ( ! TypeUtil.isNotEmptyString( v ) || v.length > 2048 )
-					{
-						return false;
-					}
-				}
-				return true;
-			},
-			message: ( /* props: any */ ) : string => `invalid favBody, must be less than 2048 characters`
-		},
-		required : false
-	},
+	...MRefEntity,
 	...MRemarkEntity
 }, {
 	timestamps: true,
 	query: {
-		byWalletAndFavType( wallet: string, favType ?: FavoriteFavTypes )
+		//	base query helper
+		byId( id : Types.ObjectId )
 		{
-			if ( undefined !== favType )
+			return this.findOne( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				_id : id,
+			} );
+		},
+		byHexId( hexId : string )
+		{
+			return this.findOne( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				_id : Types.ObjectId.createFromHexString( hexId ),
+			} );
+		},
+		byWalletAndId( wallet : string, id : Types.ObjectId )
+		{
+			return this.findOne( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				wallet : wallet,
+				_id : id,
+			} );
+		},
+		byWalletAndHexId( wallet : string, hexId : string )
+		{
+			return this.findOne( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				wallet : wallet,
+				_id : Types.ObjectId.createFromHexString( hexId ),
+			} );
+		},
+
+
+		byWalletAndRefTypeAndRefHash( wallet : string, refType : ERefDataTypes, refHash : string )
+		{
+			return this.where( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				wallet : wallet,
+				refType : refType,
+				refHash : refHash,
+			} );
+		},
+
+		byWalletAndRefType( wallet: string, refType ?: ERefDataTypes )
+		{
+			if ( undefined !== refType )
 			{
 				return this.find({
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet,
-					favType : favType
+					refType : refType
 				} );
 			}
 			else
@@ -76,13 +77,11 @@ export const favoriteSchema = new Schema( {
 				} );
 			}
 		},
-		byWalletAndFavTypeAndFavHash( wallet : string, favType : FavoriteFavTypes, favHash : string )
+		byRefAuthorWallet( refAuthorWallet: string )
 		{
-			return this.findOne( {
+			return this.find({
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
-				wallet : wallet,
-				favType : favType,
-				favHash : favHash,
+				refAuthorWallet : refAuthorWallet,
 			} );
 		}
 	}
@@ -93,11 +92,11 @@ export const favoriteSchema = new Schema( {
  * 	 1 represents ascending index,
  * 	-1 represents descending index
  */
-favoriteSchema.index({ deleted : 1, wallet: 1, favType: 1, favHash : 1 }, { unique: true } );
+favoriteSchema.index({ deleted : 1, wallet: 1, refType: 1, refHash : 1 }, { unique: true } );
 
 favoriteSchema.method('getUniqueKey', function getUniqueKey()
 {
-	return `${ this.wallet }-${ this.favType }-${ this.favHash }`;
+	return `${ this.wallet }-${ this.refType }-${ this.refHash }`;
 });
 
 export type FavoriteType = InferSchemaType< typeof favoriteSchema > & Document<Types.ObjectId>;
@@ -119,3 +118,4 @@ export type FavoriteListResult = TQueueListResult &
 
 
 export const FavoriteModel = model( 'Favorite', favoriteSchema );
+
