@@ -1,6 +1,6 @@
 import { PageUtil, TestUtil, TypeUtil } from "chaintalk-utils";
 import { EtherWallet, Web3Validator } from "web3id";
-import { LikeLikeTypes, LikeListResult, LikeModel, LikeType } from "../entities/LikeEntity";
+import { LikeListResult, LikeModel, LikeType } from "../entities/LikeEntity";
 import { IWeb3StoreService } from "../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
 import { Document, Error, SortOrder, Types } from "mongoose";
@@ -8,6 +8,10 @@ import { TQueueListOptions } from "../models/TQuery";
 import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { resultErrors } from "../constants/ResultErrors";
+import { ERefDataTypes } from "../models/ERefDataTypes";
+import { FavoriteType } from "../entities/FavoriteEntity";
+import { PostModel } from "../entities/PostEntity";
+import { CommentModel } from "../entities/CommentEntity";
 
 /**
  * 	@class LikeService
@@ -39,6 +43,14 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				{
 					return reject( resultErrors.failedValidate );
 				}
+				if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
+				{
+					return reject( `invalid data.refType` );
+				}
+				if ( ! SchemaUtil.isValidKeccak256Hash( data.refHash ) )
+				{
+					return reject( `invalid data.refHash` );
+				}
 
 				//	...
 				const likeModel : Document = new LikeModel( {
@@ -61,8 +73,15 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 					}
 				}
 
+				//	...
+				const origin = await this.queryOneByRefTypeAndRefHash( data.refType, data.refHash );
+				if ( ! origin || ! origin._id )
+				{
+					return reject( `origin not found` );
+				}
+
 				//	check duplicate
-				const find : LikeType = await this._queryOneByWalletAndLikeTypeAndLikeHash( data.wallet, data.likeType, data.likeHash );
+				const find : LikeType = await this._queryOneByWalletAndRefTypeAndRefHash( data.wallet, data.refType, data.refHash );
 				if ( find )
 				{
 					return reject( resultErrors.duplicateKeyError );
@@ -70,10 +89,22 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 
 				//	...
 				await this.connect();
-				const savedDoc : Document<LikeType> = await likeModel.save();
+				const savedDoc : Document<FavoriteType> = await likeModel.save();
+				if ( savedDoc )
+				{
+					//	statisticFavorite +1
+					const updatedUp = await this.updateStatistics<FavoriteType>
+					(
+						( 'post' === data.refType ? PostModel : CommentModel ),
+						origin._id,
+						`statisticLike`,
+						1
+					);
+					return resolve( savedDoc.toObject() );
+				}
 
-				//	...
-				resolve( savedDoc.toObject() );
+				resolve( null );
+
 			}
 			catch ( err )
 			{
@@ -150,6 +181,14 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
 				}
+				if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
+				{
+					return reject( `invalid data.refType` );
+				}
+				if ( ! SchemaUtil.isValidKeccak256Hash( data.refHash ) )
+				{
+					return reject( `invalid data.refHash` );
+				}
 
 				//	throat checking
 				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<LikeType>( LikeModel, wallet );
@@ -160,7 +199,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 
 				//	...
 				await this.connect();
-				const find : LikeType | null = await this._queryOneByWalletAndLikeTypeAndLikeHash( wallet, data.likeType, data.likeHash );
+				const find : LikeType | null = await this._queryOneByWalletAndRefTypeAndRefHash( wallet, data.refType, data.refHash );
 				if ( find )
 				{
 					const update = { deleted : find._id.toHexString() };
@@ -201,8 +240,8 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 
 				switch ( data.by )
 				{
-					case 'walletAndLikeTypeAndLikeHash' :
-						return resolve( await this._queryOneByWalletAndLikeTypeAndLikeHash( wallet, data.likeType, data.likeHash ) );
+					case 'walletAndRefTypeAndRefHash' :
+						return resolve( await this._queryOneByWalletAndRefTypeAndRefHash( wallet, data.refType, data.refHash ) );
 				}
 
 				resolve( null );
@@ -237,8 +276,8 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 
 				switch ( data.by )
 				{
-					case 'walletAndLikeType' :
-						return resolve( await this._queryListByWalletAndLikeType( wallet, data.address, data.options ) );
+					case 'walletAndRefType' :
+						return resolve( await this._queryListByWalletAndRefType( wallet, data.address, data.options ) );
 				}
 
 				//	...
@@ -253,11 +292,11 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 
 	/**
 	 *	@param wallet	{string}	wallet address
-	 *	@param likeType	{LikeLikeTypes}
-	 *	@param likeHash	{string}
+	 *	@param refType	{ERefDataTypes}
+	 *	@param refHash	{string}
 	 *	@returns {Promise< LikeType | null >}
 	 */
-	private _queryOneByWalletAndLikeTypeAndLikeHash( wallet : string, likeType : LikeLikeTypes, likeHash : string ) : Promise<LikeType | null>
+	private _queryOneByWalletAndRefTypeAndRefHash( wallet : string, refType : ERefDataTypes, refHash : string ) : Promise<LikeType | null>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -267,19 +306,19 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				{
 					return reject( `invalid wallet` );
 				}
-				if ( ! Object.values( LikeLikeTypes ).includes( likeType ) )
+				if ( ! Object.values( ERefDataTypes ).includes( refType ) )
 				{
-					return reject( `invalid likeType` );
+					return reject( `invalid refType` );
 				}
-				if ( ! SchemaUtil.isValidKeccak256Hash( likeHash ) )
+				if ( ! SchemaUtil.isValidKeccak256Hash( refHash ) )
 				{
-					return reject( `invalid likeHash` );
+					return reject( `invalid refHash` );
 				}
 
 				await this.connect();
 				const favorite = await LikeModel
 					.findOne()
-					.byWalletAndLikeTypeAndLikeHash( wallet, likeType, likeHash )
+					.byWalletAndRefTypeAndRefHash( wallet, refType, refHash )
 					.lean<LikeType>()
 					.exec();
 				if ( favorite )
@@ -298,11 +337,11 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 
 	/**
 	 *	@param wallet		{string}	wallet address
-	 *	@param likeType		{LikeLikeTypes}
+	 *	@param refType		{ERefDataTypes}
 	 *	@param options	{TQueueListOptions}
 	 *	@returns {Promise<ContactListResult>}
 	 */
-	private _queryListByWalletAndLikeType( wallet : string, likeType ?: LikeLikeTypes, options ?: TQueueListOptions ) : Promise<LikeListResult>
+	private _queryListByWalletAndRefType( wallet : string, refType ?: ERefDataTypes, options ?: TQueueListOptions ) : Promise<LikeListResult>
 	{
 		return new Promise( async ( resolve, reject ) =>
 		{
@@ -328,7 +367,7 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				await this.connect();
 				const contacts : Array<LikeType> = await LikeModel
 					.find()
-					.byWalletAndLikeType( wallet, likeType )
+					.byWalletAndRefType( wallet, refType )
 					.sort( sortBy )
 					.skip( skip )
 					.limit( pageSize )

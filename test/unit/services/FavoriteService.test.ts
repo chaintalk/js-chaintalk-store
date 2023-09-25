@@ -239,12 +239,6 @@ describe( "FavoriteService", () =>
 	{
 		it( "should update a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const favoriteService = new FavoriteService();
 			const findFavorite : FavoriteType | null = await favoriteService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneFavHash } );
 			expect( findFavorite ).toBeDefined();
@@ -286,12 +280,6 @@ describe( "FavoriteService", () =>
 	{
 		it( "should logically delete a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const favoriteService = new FavoriteService();
 			const findFavorite : FavoriteType | null = await favoriteService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneFavHash } );
 			if ( findFavorite )
@@ -320,12 +308,6 @@ describe( "FavoriteService", () =>
 	{
 		it( "should return a list of records from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const favoriteService = new FavoriteService();
 			const results : FavoriteListResult = await favoriteService.queryList( walletObj.address, { by : 'walletAndRefType', refType : ERefDataTypes.post } );
 			expect( results ).toHaveProperty( 'total' );
@@ -376,12 +358,6 @@ describe( "FavoriteService", () =>
 	{
 		it( "should return a list of records by pagination from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			//
 			//	create many favorites
 			//

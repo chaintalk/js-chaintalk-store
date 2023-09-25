@@ -1,9 +1,9 @@
 import { describe, expect } from '@jest/globals';
 import {
-	LikeLikeTypes,
+	ERefDataTypes, FavoriteService, FavoriteType,
 	LikeListResult,
 	likeSchema,
-	LikeType
+	LikeType, postSchema, PostService, PostType
 } from "../../../src";
 import { EtherWallet, TWalletBaseItem, Web3Digester, Web3Signer } from "web3id";
 import { ethers } from "ethers";
@@ -20,8 +20,65 @@ import { resultErrors } from "../../../src";
  */
 describe( "LikeService", () =>
 {
+	const statisticKeys : Array<string> | null = SchemaUtil.getPrefixedKeys( postSchema, 'statistic' );
+	const exceptedKeys : Array<string> = Array.isArray( statisticKeys ) ? statisticKeys : [];
+	let walletObj : TWalletBaseItem;
+	let savedPost : PostType;
+	let savedFavorite : FavoriteType;
+
 	beforeAll( async () =>
 	{
+		//
+		//	create a wallet by mnemonic
+		//
+		const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+		walletObj = EtherWallet.createWalletFromMnemonic( mnemonic );
+
+		//	assert ...
+		expect( walletObj ).not.toBeNull();
+		expect( walletObj.mnemonic ).toBe( mnemonic );
+		expect( walletObj.privateKey.startsWith( '0x' ) ).toBe( true );
+		expect( walletObj.address.startsWith( '0x' ) ).toBe( true );
+		expect( walletObj.index ).toBe( 0 );
+		expect( walletObj.path ).toBe( ethers.defaultPath );
+
+		//
+		//	create a new contact with ether signature
+		//
+		let post : PostType = {
+			timestamp : new Date().getTime(),
+			hash : '',
+			version : '1.0.0',
+			deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+			wallet : walletObj.address,
+			sig : ``,
+			authorName : 'XING',
+			authorAvatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
+			body : 'Hello 1',
+			pictures : [],
+			videos : [],
+			bitcoinPrice : '25888',
+			statisticView : 0,
+			statisticRepost : 0,
+			statisticQuote : 0,
+			statisticLike : 0,
+			statisticFavorite : 0,
+			statisticReply : 0,
+			remark : 'no ...',
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+		post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+		post.hash = await Web3Digester.hashObject( post, exceptedKeys );
+		expect( post.sig ).toBeDefined();
+		expect( typeof post.sig ).toBe( 'string' );
+		expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+		//
+		//	try to save the record to database
+		//
+		const postService = new PostService();
+		savedPost = await postService.add( walletObj.address, post, post.sig );
 	} );
 	afterAll( async () =>
 	{
@@ -39,20 +96,6 @@ describe( "LikeService", () =>
 		it( "should add a record to database", async () =>
 		{
 			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
-			//	assert ...
-			expect( walletObj ).not.toBeNull();
-			expect( walletObj.mnemonic ).toBe( mnemonic );
-			expect( walletObj.privateKey.startsWith( '0x' ) ).toBe( true );
-			expect( walletObj.address.startsWith( '0x' ) ).toBe( true );
-			expect( walletObj.index ).toBe( 0 );
-			expect( walletObj.path ).toBe( ethers.defaultPath );
-
-			//
 			//	create a new like with ether signature
 			//
 			let like : LikeType = {
@@ -61,9 +104,9 @@ describe( "LikeService", () =>
 				version : '1.0.0',
 				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 				wallet : walletObj.address,
-				likeType : LikeLikeTypes.post,
-				likeHash : '0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4ea',
-				//likeBody : '',
+				refType : ERefDataTypes.post,
+				refHash : savedPost.hash,
+				refBody : '',
 				sig : ``,
 				remark : 'no remark',
 				createdAt: new Date(),
@@ -78,9 +121,18 @@ describe( "LikeService", () =>
 			//
 			//	try to save the record to database
 			//
+			const postService = new PostService();
 			const likeService = new LikeService();
 			await likeService.clearAll();
 
+			//	find post first time
+			const findPost : PostType | null = await postService.queryOne( walletObj.address, { by : 'walletAndHash', hash : savedPost.hash } );
+			expect( findPost ).not.toBe( null );
+			expect( findPost ).toBeDefined();
+			expect( findPost ).toHaveProperty( 'statisticLike' );
+			expect( findPost.statisticLike ).toBeGreaterThanOrEqual( 0 );
+
+			//	add favorite and update statistic
 			const result = await likeService.add( walletObj.address, like, like.sig );
 			expect( result ).toBeDefined();
 
@@ -93,6 +145,13 @@ describe( "LikeService", () =>
 					expect( result ).toHaveProperty( key );
 				}
 			}
+
+			//	check for updating of statistic
+			const findPostAgain : PostType | null = await postService.queryOne( walletObj.address, { by : 'walletAndHash', hash : savedPost.hash } );
+			expect( findPostAgain ).not.toBe( null );
+			expect( findPostAgain ).toBeDefined();
+			expect( findPostAgain ).toHaveProperty( 'statisticLike' );
+			expect( findPostAgain.statisticLike ).toBeGreaterThan( findPost.statisticLike );
 
 
 			try
@@ -134,14 +193,8 @@ describe( "LikeService", () =>
 	{
 		it( "should return a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const likeService = new LikeService();
-			const result : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndLikeTypeAndLikeHash', likeType : LikeLikeTypes.post, likeHash : oneLikeHash } );
+			const result : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : savedPost.hash } );
 			expect( result ).not.toBe( null );
 			expect( result ).toBeDefined();
 			//
@@ -190,7 +243,7 @@ describe( "LikeService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const likeService = new LikeService();
-			const findFavorite : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndLikeTypeAndLikeHash', likeType : LikeLikeTypes.post, likeHash : oneLikeHash } );
+			const findFavorite : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneLikeHash } );
 			expect( findFavorite ).toBeDefined();
 			if ( findFavorite )
 			{
@@ -237,7 +290,7 @@ describe( "LikeService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const likeService = new LikeService();
-			const findFavorite : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndLikeTypeAndLikeHash', likeType : LikeLikeTypes.post, likeHash : oneLikeHash } );
+			const findFavorite : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneLikeHash } );
 			if ( findFavorite )
 			{
 				let likeToBeDeleted : LikeType = { ...findFavorite,
@@ -252,7 +305,7 @@ describe( "LikeService", () =>
 				const result : number = await likeService.delete( walletObj.address, likeToBeDeleted, likeToBeDeleted.sig );
 				expect( result ).toBeGreaterThanOrEqual( 0 );
 
-				const findFavoriteAgain : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndLikeTypeAndLikeHash', likeType : LikeLikeTypes.post, likeHash : oneLikeHash } );
+				const findFavoriteAgain : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneLikeHash } );
 				expect( findFavoriteAgain ).toBe( null );
 			}
 
@@ -271,7 +324,7 @@ describe( "LikeService", () =>
 			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
 
 			const likeService = new LikeService();
-			const results : LikeListResult = await likeService.queryList( walletObj.address, { by : 'walletAndLikeType', likeType : LikeLikeTypes.post } );
+			const results : LikeListResult = await likeService.queryList( walletObj.address, { by : 'walletAndRefType', refType : ERefDataTypes.post } );
 			expect( results ).toHaveProperty( 'total' );
 			expect( results ).toHaveProperty( 'list' );
 			//
@@ -289,8 +342,8 @@ describe( "LikeService", () =>
 			//           deleted: new ObjectId("000000000000000000000000"),
 			//           wallet: '0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357',
 			//           sig: '0xc16b915fc3cfdafd7d9a3cc08a2d7f071dbddd89745c95437cc63605f01886e40e4f4a91c7fe36f069f0fce1611e7510b00d1112cf521a4a54dbfad2ec07043f1c',
-			//           likeType: 'post',
-			//           likeHash: '0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4ea',
+			//           refType: 'post',
+			//           refHash: '0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4ea',
 			//           remark: 'no remark',
 			//           createdAt: 2023-09-13T22:39:30.290Z,
 			//           updatedAt: 2023-09-13T22:39:30.290Z,
@@ -321,32 +374,70 @@ describe( "LikeService", () =>
 		it( "should return a list of records by pagination from database", async () =>
 		{
 			//
-			//	create a wallet by mnemonic
+			//	create many favorites
 			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
-			//
-			//	create many likes
-			//
+			const postService = new PostService();
 			const likeService = new LikeService();
 			await likeService.clearAll();
 
-			let walletObjNew : TWalletBaseItem = walletObj;
 			for ( let i = 0; i < 100; i ++ )
 			{
 				const NoStr : string = Number(i).toString().padStart( 2, '0' );
 
-				walletObjNew = EtherWallet.createNewAddress( walletObjNew );
+				//
+				//	create a new contact with ether signature
+				//
+				const postAuthorWallet = EtherWallet.createWalletFromMnemonic().address;
+				const postAuthorName = 'XING';
+				const postAuthorAvatar = 'https://avatars.githubusercontent.com/u/142800322?v=4';
+				let post : PostType = {
+					timestamp : new Date().getTime(),
+					hash : '',
+					version : '1.0.0',
+					deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+					wallet : postAuthorWallet,
+					sig : ``,
+					authorName : postAuthorName,
+					authorAvatar : postAuthorAvatar,
+					body : 'Hello 1',
+					pictures : [],
+					videos : [],
+					bitcoinPrice : '25888',
+					statisticView : 0,
+					statisticRepost : 0,
+					statisticQuote : 0,
+					statisticLike : 0,
+					statisticFavorite : 0,
+					statisticReply : 0,
+					remark : `no ...${ NoStr }`,
+					createdAt: new Date(),
+					updatedAt: new Date()
+				};
+				post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+				post.hash = await Web3Digester.hashObject( post, exceptedKeys );
+				expect( post.sig ).toBeDefined();
+				expect( typeof post.sig ).toBe( 'string' );
+				expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+				//	try to save the record to database
+				const newPagePost = await postService.add( walletObj.address, post, post.sig );
+				expect( newPagePost ).toBeDefined();
+
+				//
+				//	create favorite
+				//
 				let like : LikeType = {
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
 					deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
 					wallet : walletObj.address,
-					likeType : LikeLikeTypes.post,
-					likeHash : `0x21393d589acdac81de848d71ddabf907775b7efb5d5e25361a6a2c2df3aaa4${ NoStr }`,
-					//likeBody : '',
+					refType : ERefDataTypes.post,
+					refHash : newPagePost.hash,
+					refAuthorWallet : postAuthorWallet,
+					refAuthorName : postAuthorName,
+					refAuthorAvatar : postAuthorAvatar,
+					refBody : JSON.stringify( newPagePost ),
 					sig : ``,
 					remark : `no remark ${ NoStr }`,
 					createdAt: new Date(),
@@ -360,18 +451,17 @@ describe( "LikeService", () =>
 
 				const result = await likeService.add( walletObj.address, like, like.sig );
 				expect( result ).toBeDefined();
+
 			}
 
-			//
 			//	....
-			//
 			for ( let page = 1; page <= 10; page ++ )
 			{
 				const options : TQueueListOptions = {
 					pageNo : page,
 					pageSize : 10
 				};
-				const results : LikeListResult = await likeService.queryList( walletObj.address, { by : 'walletAndLikeType', likeType : LikeLikeTypes.post, options : options } );
+				const results : LikeListResult = await likeService.queryList( walletObj.address, { by : 'walletAndRefType', refType : ERefDataTypes.post, options : options } );
 				expect( results ).toHaveProperty( 'total' );
 				expect( results ).toHaveProperty( 'pageNo' );
 				expect( results ).toHaveProperty( 'pageSize' );

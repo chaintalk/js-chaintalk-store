@@ -4,69 +4,28 @@ import { MBaseEntity } from "../models/MBaseEntity";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { TypeUtil } from "chaintalk-utils";
 import { MRemarkEntity } from "../models/MRemarkEntity";
+import { MRefEntity } from "../models/MRefEntity";
+import { ERefDataTypes } from "../models/ERefDataTypes";
 
-/**
- * 	define likeType enum
- */
-export enum LikeLikeTypes {
-	post = 'post',
-	comment = 'comment'
-}
 
 /**
  * 	Follower
  */
 export const likeSchema = new Schema( {
 	...MBaseEntity,
-	likeType : {
-		type : String,
-		validate: {
-			validator : ( v: LikeLikeTypes ) => Object.values( LikeLikeTypes ).includes( v ),
-			message: ( props: any ) : string => `invalid ${props.path}`
-		},
-		enum: Object.values( LikeLikeTypes ),
-		required: [ true, '{PATH} required' ]
-	},
-	likeHash : {
-		//	Keccak-256(SHA-3), see the hash value of the Ethereum data block
-		type : String,
-		unique: true,
-		validate: {
-			//	Starts with "0x" (case-insensitive)
-			validator : ( v: string ) => SchemaUtil.isValidKeccak256Hash( v ),
-			message: ( props: any ) : string => `invalid ${props.path}, must be 66 lowercase hex characters`
-		},
-		required: [ true, '{PATH} required' ]
-	},
-	likeBody : {
-		type : String,
-		validate: {
-			validator : ( v: string ) => {
-				if ( v )
-				{
-					if ( ! TypeUtil.isNotEmptyString( v ) || v.length > 2048 )
-					{
-						return false;
-					}
-				}
-				return true;
-			},
-			message: ( props: any ) : string => `invalid ${props.path}, must be less than 2048 characters`
-		},
-		required : false
-	},
+	...MRefEntity,
 	...MRemarkEntity
 }, {
 	timestamps: true,
 	query: {
-		byWalletAndLikeType( wallet: string, likeType ?: LikeLikeTypes )
+		byWalletAndRefType( wallet: string, refType ?: ERefDataTypes )
 		{
-			if ( undefined !== likeType )
+			if ( undefined !== refType )
 			{
 				return this.find({
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet,
-					likeType : likeType
+					refType : refType
 				} );
 			}
 			else
@@ -77,13 +36,13 @@ export const likeSchema = new Schema( {
 				} );
 			}
 		},
-		byWalletAndLikeTypeAndLikeHash( wallet : string, likeType : LikeLikeTypes, likeHash : string )
+		byWalletAndRefTypeAndRefHash( wallet : string, refType : ERefDataTypes, refHash : string )
 		{
 			return this.findOne( {
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
-				likeType : likeType,
-				likeHash : likeHash,
+				refType : refType,
+				refHash : refHash,
 			} );
 		}
 	}
@@ -94,11 +53,11 @@ export const likeSchema = new Schema( {
  * 	 1 represents ascending index,
  * 	-1 represents descending index
  */
-likeSchema.index({ deleted : 1, wallet: 1, likeType: 1, likeHash : 1 }, { unique: true } );
+likeSchema.index({ deleted : 1, wallet: 1, refType: 1, refHash : 1 }, { unique: true } );
 
 likeSchema.method('getUniqueKey', function getUniqueKey()
 {
-	return `${ this.wallet }-${ this.likeType }-${ this.likeHash }`;
+	return `${ this.wallet }-${ this.refType }-${ this.refHash }`;
 });
 
 export type LikeType = InferSchemaType< typeof likeSchema > & Document<Types.ObjectId>;

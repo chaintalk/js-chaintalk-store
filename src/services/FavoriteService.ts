@@ -52,11 +52,11 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				}
 
 				//	...
-				const dataModel : Document = new FavoriteModel( {
+				const favoriteModel : Document = new FavoriteModel( {
 					...data,
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				} );
-				let error : Error.ValidationError | null = dataModel.validateSync();
+				let error : Error.ValidationError | null = favoriteModel.validateSync();
 				if ( error )
 				{
 					return reject( error );
@@ -99,7 +99,7 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 
 				//	...
 				await this.connect();
-				const savedDoc : Document<FavoriteType> = await dataModel.save();
+				const savedDoc : Document<FavoriteType> = await favoriteModel.save();
 				if ( savedDoc )
 				{
 					//	statisticFavorite +1

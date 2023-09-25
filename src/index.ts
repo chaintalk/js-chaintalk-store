@@ -45,9 +45,8 @@ export { FollowerType, FollowerListResult };
 
 import { likeSchema, LikeModel } from "./entities/LikeEntity";
 import type { LikeType, LikeListResult } from "./entities/LikeEntity";
-import { LikeLikeTypes } from "./entities/LikeEntity";
 export { likeSchema, LikeModel };
-export { LikeType, LikeListResult, LikeLikeTypes };
+export { LikeType, LikeListResult };
 
 
 import { postSchema, PostModel } from "./entities/PostEntity";
