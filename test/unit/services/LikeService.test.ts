@@ -1,6 +1,6 @@
 import { describe, expect } from '@jest/globals';
 import {
-	ERefDataTypes, FavoriteService, FavoriteType,
+	ERefDataTypes, FavoriteType,
 	LikeListResult,
 	likeSchema,
 	LikeType, postSchema, PostService, PostType
@@ -24,7 +24,6 @@ describe( "LikeService", () =>
 	const exceptedKeys : Array<string> = Array.isArray( statisticKeys ) ? statisticKeys : [];
 	let walletObj : TWalletBaseItem;
 	let savedPost : PostType;
-	let savedFavorite : FavoriteType;
 
 	beforeAll( async () =>
 	{
