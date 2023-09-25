@@ -9,7 +9,6 @@ import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { resultErrors } from "../constants/ResultErrors";
 import { CommentModel, commentSchema, CommentType } from "../entities/CommentEntity";
-import { ERefDataTypes } from "../models/ERefDataTypes";
 
 /**
  * 	class PostService
