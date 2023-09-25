@@ -531,7 +531,7 @@ describe( "CommentService", () =>
 				//       ]
 				//     }
 				//
-				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( postSchema );
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( commentSchema );
 				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
 				if ( requiredKeys )
 				{

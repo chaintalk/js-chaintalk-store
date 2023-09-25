@@ -8,10 +8,29 @@ import { MRefEntity } from "../models/MRefEntity";
 
 
 /**
+ *	define post content types
+ */
+export enum PostContentTypes {
+	original = 'original',
+	reposted = 'reposted'
+}
+
+/**
  * 	Post
  */
 export const postSchema = new Schema( {
 	...MBaseEntity,
+	contentType : {
+		//	post content type
+		type : String,
+		validate : {
+			validator : ( v : PostContentTypes ) => Object.values( PostContentTypes ).includes( v ),
+			message : ( props: any ) : string => `invalid ${props.path}`
+		},
+		enum : Object.values( PostContentTypes ),
+		required: [ true, '{PATH} required' ],
+		default : PostContentTypes.original,
+	},
 	authorName : {
 		type : String,
 		validate : {

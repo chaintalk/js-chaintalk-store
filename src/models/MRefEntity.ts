@@ -52,7 +52,6 @@ export const MRefEntity : any = {
 		//	hash value of quoted content
 		//	Keccak-256(SHA-3), see the hash value of the Ethereum data block
 		type : String,
-		unique : true,
 		validate : {
 			//	Starts with "0x" (case-insensitive)
 			validator : ( v : string ) => SchemaUtil.isValidKeccak256Hash( v ),
