@@ -12,7 +12,8 @@ import { MRefEntity } from "../models/MRefEntity";
  */
 export enum PostContentTypes {
 	original = 'original',
-	reposted = 'reposted'
+	reposted = 'reposted',
+	quoted = 'quoted',
 }
 
 /**

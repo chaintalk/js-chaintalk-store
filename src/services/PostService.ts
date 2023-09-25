@@ -4,11 +4,12 @@ import { IWeb3StoreService } from "../interfaces/IWeb3StoreService";
 import { BaseService } from "./BaseService";
 import { Document, Error, SortOrder, Types } from "mongoose";
 import { TQueueListOptions } from "../models/TQuery";
-import { PostListResult, PostModel, postSchema, PostType } from "../entities/PostEntity";
+import { PostContentTypes, PostListResult, PostModel, postSchema, PostType } from "../entities/PostEntity";
 import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { resultErrors } from "../constants/ResultErrors";
-import { commentSchema, CommentType } from "../entities/CommentEntity";
+import { CommentModel, commentSchema, CommentType } from "../entities/CommentEntity";
+import { ERefDataTypes } from "../models/ERefDataTypes";
 
 /**
  * 	class PostService
@@ -73,12 +74,56 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 					}
 				}
 
+				let origin;
+				if ( [ PostContentTypes.reposted, PostContentTypes.quoted ].includes( data.contentType ) )
+				{
+					origin = await this.queryOneByRefTypeAndRefHash( data.refType, data.refHash );
+					if ( ! origin || ! origin._id )
+					{
+						return reject( `origin not found` );
+					}
+				}
+
 				//	...
 				await this.connect();
 				const savedDoc : Document<PostType> = await postModel.save();
+				if ( savedDoc )
+				{
+					if ( [ PostContentTypes.reposted, PostContentTypes.quoted ].includes( data.contentType ) )
+					{
+						//
+						//	update statistics
+						//
+						let statisticKey;
+						switch ( data.contentType )
+						{
+							case PostContentTypes.reposted:
+								statisticKey = 'statisticRepost';
+								break;
+							case PostContentTypes.quoted:
+								statisticKey = 'statisticQuote';
+								break;
+						}
+						if ( statisticKey && TypeUtil.isNotEmptyString( statisticKey ) )
+						{
+							//	statisticFavorite +1
+							if ( 'post' === data.refType )
+							{
+								await this.updateStatistics<PostType>( PostModel, origin._id, statisticKey, 1 );
+							}
+							else
+							{
+								await this.updateStatistics<CommentType>( CommentModel, origin._id, statisticKey, 1 );
+							}
+						}
+					}
+
+					//	...
+					return resolve( savedDoc.toObject() );
+				}
 
 				//	...
-				resolve( savedDoc.toObject() );
+				resolve( null );
 			}
 			catch ( err )
 			{

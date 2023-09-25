@@ -10,8 +10,8 @@ import { SchemaUtil } from "../utils/SchemaUtil";
 import { resultErrors } from "../constants/ResultErrors";
 import { ERefDataTypes } from "../models/ERefDataTypes";
 import { FavoriteType } from "../entities/FavoriteEntity";
-import { PostModel } from "../entities/PostEntity";
-import { CommentModel } from "../entities/CommentEntity";
+import { PostModel, PostType } from "../entities/PostEntity";
+import { CommentModel, CommentType } from "../entities/CommentEntity";
 
 /**
  * 	@class LikeService
@@ -93,13 +93,14 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				if ( savedDoc )
 				{
 					//	statisticFavorite +1
-					const updatedUp = await this.updateStatistics<FavoriteType>
-					(
-						( 'post' === data.refType ? PostModel : CommentModel ),
-						origin._id,
-						`statisticLike`,
-						1
-					);
+					if ( 'post' === data.refType )
+					{
+						await this.updateStatistics<PostType>( PostModel, origin._id, `statisticLike`, 1 );
+					}
+					else
+					{
+						await this.updateStatistics<CommentType>( CommentModel, origin._id, `statisticLike`, 1 );
+					}
 					return resolve( savedDoc.toObject() );
 				}
 

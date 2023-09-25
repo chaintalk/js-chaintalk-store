@@ -9,8 +9,8 @@ import { TQueueListOptions } from "../models/TQuery";
 import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { resultErrors } from "../constants/ResultErrors";
-import { CommentListResult, CommentModel } from "../entities/CommentEntity";
-import { PostModel } from "../entities/PostEntity";
+import { CommentListResult, CommentModel, CommentType } from "../entities/CommentEntity";
+import { PostModel, PostType } from "../entities/PostEntity";
 
 /**
  * 	@class FavoriteService
@@ -103,13 +103,14 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				if ( savedDoc )
 				{
 					//	statisticFavorite +1
-					const updatedUp = await this.updateStatistics<FavoriteType>
-						(
-							( 'post' === data.refType ? PostModel : CommentModel ),
-							origin._id,
-							`statisticFavorite`,
-							1
-						);
+					if ( 'post' === data.refType )
+					{
+						await this.updateStatistics<PostType>( PostModel, origin._id, `statisticFavorite`, 1 );
+					}
+					else
+					{
+						await this.updateStatistics<CommentType>( CommentModel, origin._id, `statisticFavorite`, 1 );
+					}
 					return resolve( savedDoc.toObject() );
 				}
 
