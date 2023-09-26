@@ -20,7 +20,7 @@ export const likeSchema = new Schema( {
 		{
 			if ( undefined !== refType )
 			{
-				return this.find({
+				return this.where({
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet,
 					refType : refType
@@ -28,7 +28,7 @@ export const likeSchema = new Schema( {
 			}
 			else
 			{
-				return this.find({
+				return this.where({
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet
 				} );
@@ -36,7 +36,8 @@ export const likeSchema = new Schema( {
 		},
 		byWalletAndRefTypeAndRefHash( wallet : string, refType : ERefDataTypes, refHash : string )
 		{
-			return this.findOne( {
+			//	find one
+			return this.where( {
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				refType : refType,

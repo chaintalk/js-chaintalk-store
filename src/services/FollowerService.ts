@@ -283,14 +283,14 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				}
 
 				await this.connect();
-				const followers = await FollowerModel
+				const record = await FollowerModel
 					.findOne()
 					.byWalletAndAddress( wallet, address )
 					.lean<FollowerType>()
 					.exec();
-				if ( Array.isArray( followers ) && 1 === followers.length )
+				if ( record )
 				{
-					return resolve( followers[ 0 ] );
+					return resolve( record );
 				}
 
 				resolve( null );
@@ -323,14 +323,14 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				}
 
 				await this.connect();
-				const contact = await FollowerModel
+				const record = await FollowerModel
 					.findOne()
 					.byWalletAndHash( wallet, hash )
 					.lean<FollowerType>()
 					.exec();
-				if ( contact )
+				if ( record )
 				{
-					return resolve( contact );
+					return resolve( record );
 				}
 
 				resolve( null );

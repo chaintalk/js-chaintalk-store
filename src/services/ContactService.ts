@@ -320,14 +320,14 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				}
 
 				await this.connect();
-				const contacts = await ContactModel
+				const record = await ContactModel
 					.findOne()
 					.byWalletAndAddress( wallet, address )
 					.lean<ContactType>()
 					.exec();
-				if ( Array.isArray( contacts ) && 1 === contacts.length )
+				if ( record )
 				{
-					return resolve( contacts[ 0 ] );
+					return resolve( record );
 				}
 
 				resolve( null );
@@ -360,14 +360,14 @@ export class ContactService extends BaseService implements IWeb3StoreService<Con
 				}
 
 				await this.connect();
-				const contact = await ContactModel
+				const record = await ContactModel
 					.findOne()
 					.byWalletAndHash( wallet, hash )
 					.lean<PostType>()
 					.exec();
-				if ( contact )
+				if ( record )
 				{
-					return resolve( contact );
+					return resolve( record );
 				}
 
 				resolve( null );

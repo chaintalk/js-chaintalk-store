@@ -16,8 +16,21 @@ import { resultErrors } from "../../../src";
  */
 describe( "FollowerService", () =>
 {
+	//
+	//	create a wallet by mnemonic
+	//
+	const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+	const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
+
 	beforeAll( async () =>
 	{
+		//	assert ...
+		expect( walletObj ).not.toBeNull();
+		expect( walletObj.mnemonic ).toBe( mnemonic );
+		expect( walletObj.privateKey.startsWith( '0x' ) ).toBe( true );
+		expect( walletObj.address.startsWith( '0x' ) ).toBe( true );
+		expect( walletObj.index ).toBe( 0 );
+		expect( walletObj.path ).toBe( ethers.defaultPath );
 	} );
 	afterAll( async () =>
 	{
@@ -34,20 +47,6 @@ describe( "FollowerService", () =>
 	{
 		it( "should add a record to database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
-			//	assert ...
-			expect( walletObj ).not.toBeNull();
-			expect( walletObj.mnemonic ).toBe( mnemonic );
-			expect( walletObj.privateKey.startsWith( '0x' ) ).toBe( true );
-			expect( walletObj.address.startsWith( '0x' ) ).toBe( true );
-			expect( walletObj.index ).toBe( 0 );
-			expect( walletObj.path ).toBe( ethers.defaultPath );
-
 			//
 			//	create a new follower with ether signature
 			//
@@ -77,6 +76,10 @@ describe( "FollowerService", () =>
 			const followerService = new FollowerService();
 			await followerService.clearAll();
 
+			//	wait for a while
+			await TestUtil.sleep(1000 );
+
+			//	...
 			const result = await followerService.add( walletObj.address, follower, follower.sig );
 			expect( result ).toBeDefined();
 
@@ -113,7 +116,7 @@ describe( "FollowerService", () =>
 				//       [Symbol(errorLabels)]: Set(0) {}
 				//     }
 
-				//console.log( `err: `, JSON.stringify( err ) );
+				// console.log( `err: `, JSON.stringify( err ) );
 				//	err: {"index":0,"code":11000,"keyPattern":{"deleted":1,"wallet":1,"address":1},"keyValue":{"deleted":"000000000000000000000000","wallet":"0xC8F60EaF5988aC37a2963aC5Fabe97f709d6b357","address":"0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"}}
 				expect( JSON.stringify( err ).includes( `"code":11000,` )
 					||
@@ -130,12 +133,6 @@ describe( "FollowerService", () =>
 	{
 		it( "should return a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const followerService = new FollowerService();
 			const result : FollowerType | null = await followerService.queryOne( walletObj.address, { by : 'walletAndAddress', address : oneFollowerAddress } );
 			expect( result ).not.toBe( null );
@@ -180,12 +177,6 @@ describe( "FollowerService", () =>
 	{
 		it( "should return a list of records from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const followerService = new FollowerService();
 			const results : FollowerListResult = await followerService.queryList( walletObj.address, { by : 'walletAndAddress', address : oneFollowerAddress } );
 			expect( results ).toHaveProperty( 'total' );
@@ -233,12 +224,6 @@ describe( "FollowerService", () =>
 	{
 		it( "should return a list of records by pagination from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			//
 			//	create many followers
 			//
@@ -340,12 +325,6 @@ describe( "FollowerService", () =>
 	{
 		it( "should update a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const followerService = new FollowerService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
 			const findContact : FollowerType | null = await followerService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
@@ -388,12 +367,6 @@ describe( "FollowerService", () =>
 	{
 		it( "should logically delete a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const followerService = new FollowerService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
 			const findContact : FollowerType | null = await followerService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );

@@ -46,7 +46,7 @@ export const followerSchema = new Schema( {
 		{
 			if ( undefined !== address )
 			{
-				return this.find( {
+				return this.where( {
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet,
 					address : address
@@ -54,7 +54,7 @@ export const followerSchema = new Schema( {
 			}
 			else
 			{
-				return this.find( {
+				return this.where( {
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet
 				} );
@@ -62,14 +62,15 @@ export const followerSchema = new Schema( {
 		},
 		byAddress( address : string )
 		{
-			return this.find( {
+			return this.where( {
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				address : address
 			} );
 		},
 		byWalletAndHash( wallet : string, hash : string )
 		{
-			return this.findOne( {
+			//	find one
+			return this.where( {
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				hash : hash,

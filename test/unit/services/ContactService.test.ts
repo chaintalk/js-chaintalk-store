@@ -16,8 +16,26 @@ import { resultErrors } from "../../../src";
  */
 describe( "ContactService", () =>
 {
+	//
+	//	create a wallet by mnemonic
+	//
+	const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+	const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
+
+
 	beforeAll( async () =>
 	{
+		//	assert ...
+		expect( walletObj ).not.toBeNull();
+		expect( walletObj.mnemonic ).toBe( mnemonic );
+		expect( walletObj.privateKey.startsWith( '0x' ) ).toBe( true );
+		expect( walletObj.address.startsWith( '0x' ) ).toBe( true );
+		expect( walletObj.index ).toBe( 0 );
+		expect( walletObj.path ).toBe( ethers.defaultPath );
+
+		//	clear up all
+		const contactService = new ContactService();
+		await contactService.clearAll();
 	} );
 	afterAll( async () =>
 	{
@@ -31,20 +49,6 @@ describe( "ContactService", () =>
 	{
 		it( "should add a record to database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
-			//	assert ...
-			expect( walletObj ).not.toBeNull();
-			expect( walletObj.mnemonic ).toBe( mnemonic );
-			expect( walletObj.privateKey.startsWith( '0x' ) ).toBe( true );
-			expect( walletObj.address.startsWith( '0x' ) ).toBe( true );
-			expect( walletObj.index ).toBe( 0 );
-			expect( walletObj.path ).toBe( ethers.defaultPath );
-
 			//
 			//	create a new contact with ether signature
 			//
@@ -72,8 +76,11 @@ describe( "ContactService", () =>
 			//	try to save the record to database
 			//
 			const contactService = new ContactService();
-			await contactService.clearAll();
 
+			//	wait for a while
+			await TestUtil.sleep(100 );
+
+			//	...
 			const result = await contactService.add( walletObj.address, contact, contact.sig );
 			expect( result ).toBeDefined();
 
@@ -87,6 +94,8 @@ describe( "ContactService", () =>
 				}
 			}
 
+			//	wait for a while
+			await TestUtil.sleep(100 );
 
 			try
 			{
@@ -127,12 +136,6 @@ describe( "ContactService", () =>
 	{
 		it( "should return a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
 			const result : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
@@ -174,12 +177,6 @@ describe( "ContactService", () =>
 	{
 		it( "should return a list of records from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
 			const results : ContactListResult = await contactService.queryList( walletObj.address, { by : 'walletAndAddress', address : address } );
@@ -229,16 +226,9 @@ describe( "ContactService", () =>
 		it( "should return a list of records by pagination from database", async () =>
 		{
 			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
-			//
 			//	create many contacts
 			//
 			const contactService = new ContactService();
-			await contactService.clearAll();
 
 			let walletObjNew : TWalletBaseItem = walletObj;
 			for ( let i = 0; i < 100; i ++ )
@@ -335,12 +325,6 @@ describe( "ContactService", () =>
 	{
 		it( "should update a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
 			const findContact : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
@@ -404,12 +388,6 @@ describe( "ContactService", () =>
 
 		it( "should only be able to update keys that are allowed to be updated", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
 			const findContact : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
@@ -463,12 +441,6 @@ describe( "ContactService", () =>
 
 		it( "should throw an not found error", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
 			const find : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );
@@ -513,12 +485,6 @@ describe( "ContactService", () =>
 	{
 		it( "should logically delete a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const contactService = new ContactService();
 			const address = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
 			const findContact : ContactType | null = await contactService.queryOne( walletObj.address, { by : 'walletAndAddress', address : address } );

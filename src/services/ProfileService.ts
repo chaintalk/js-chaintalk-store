@@ -300,14 +300,14 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 				}
 
 				await this.connect();
-				const favorite = await ProfileModel
+				const record = await ProfileModel
 					.findOne()
 					.byWalletAndKey( wallet, key )
 					.lean<ProfileType>()
 					.exec();
-				if ( favorite )
+				if ( record )
 				{
-					return resolve( favorite );
+					return resolve( record );
 				}
 
 				resolve( null );

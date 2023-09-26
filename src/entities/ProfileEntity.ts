@@ -31,14 +31,15 @@ export const profileSchema = new Schema( {
 	query: {
 		byWallet( wallet: string )
 		{
-			return this.find({
+			return this.where({
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet
 			} );
 		},
 		byWalletAndKey( wallet: string, key : string )
 		{
-			return this.findOne({
+			//	find one
+			return this.where({
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				key : key,
@@ -46,7 +47,8 @@ export const profileSchema = new Schema( {
 		},
 		byWalletAndHash( wallet: string, hash : string )
 		{
-			return this.findOne({
+			//	find one
+			return this.where({
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				hash : hash,

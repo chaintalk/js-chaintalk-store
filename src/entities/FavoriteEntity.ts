@@ -19,21 +19,24 @@ export const favoriteSchema = new Schema( {
 		//	base query helper
 		byId( id : Types.ObjectId )
 		{
-			return this.findOne( {
+			//	find one
+			return this.where( {
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				_id : id,
 			} );
 		},
 		byHexId( hexId : string )
 		{
-			return this.findOne( {
+			//	find one
+			return this.where( {
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				_id : Types.ObjectId.createFromHexString( hexId ),
 			} );
 		},
 		byWalletAndId( wallet : string, id : Types.ObjectId )
 		{
-			return this.findOne( {
+			//	find one
+			return this.where( {
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				_id : id,
@@ -41,7 +44,8 @@ export const favoriteSchema = new Schema( {
 		},
 		byWalletAndHexId( wallet : string, hexId : string )
 		{
-			return this.findOne( {
+			//	find one
+			return this.where( {
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
 				_id : Types.ObjectId.createFromHexString( hexId ),
@@ -51,6 +55,7 @@ export const favoriteSchema = new Schema( {
 
 		byWalletAndRefTypeAndRefHash( wallet : string, refType : ERefDataTypes, refHash : string )
 		{
+			//	find one
 			return this.where( {
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				wallet : wallet,
@@ -63,7 +68,7 @@ export const favoriteSchema = new Schema( {
 		{
 			if ( undefined !== refType )
 			{
-				return this.find({
+				return this.where({
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet,
 					refType : refType
@@ -71,7 +76,7 @@ export const favoriteSchema = new Schema( {
 			}
 			else
 			{
-				return this.find({
+				return this.where({
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 					wallet : wallet
 				} );
@@ -79,7 +84,7 @@ export const favoriteSchema = new Schema( {
 		},
 		byRefAuthorWallet( refAuthorWallet: string )
 		{
-			return this.find({
+			return this.where({
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				refAuthorWallet : refAuthorWallet,
 			} );

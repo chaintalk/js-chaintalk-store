@@ -379,14 +379,14 @@ export class CommentService extends BaseService implements IWeb3StoreService< Co
 				}
 
 				await this.connect();
-				const post = await CommentModel
+				const record = await CommentModel
 					.findOne()
 					.byWalletAndHash( wallet, hash )
 					.lean<CommentType>()
 					.exec();
-				if ( post )
+				if ( record )
 				{
-					return resolve( post );
+					return resolve( record );
 				}
 
 				resolve( null );
@@ -414,14 +414,14 @@ export class CommentService extends BaseService implements IWeb3StoreService< Co
 				}
 
 				await this.connect();
-				const post = await CommentModel
+				const record = await CommentModel
 					.findOne()
 					.byHash( hash )
 					.lean<CommentType>()
 					.exec();
-				if ( post )
+				if ( record )
 				{
-					return resolve( post );
+					return resolve( record );
 				}
 
 				resolve( null );

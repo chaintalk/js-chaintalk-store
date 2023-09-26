@@ -317,14 +317,14 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				}
 
 				await this.connect();
-				const favorite = await LikeModel
+				const record = await LikeModel
 					.findOne()
 					.byWalletAndRefTypeAndRefHash( wallet, refType, refHash )
 					.lean<LikeType>()
 					.exec();
-				if ( favorite )
+				if ( record )
 				{
-					return resolve( favorite );
+					return resolve( record );
 				}
 
 				resolve( null );
