@@ -1,5 +1,12 @@
 import { Schema, Types } from "mongoose";
 import { TypeUtil } from "chaintalk-utils";
+import { commentSchema } from "../entities/CommentEntity";
+import { contactSchema } from "../entities/ContactEntity";
+import { favoriteSchema } from "../entities/FavoriteEntity";
+import { followerSchema } from "../entities/FollowerEntity";
+import { likeSchema } from "../entities/LikeEntity";
+import { postSchema } from "../entities/PostEntity";
+import { profileSchema } from "../entities/ProfileEntity";
 
 /**
  * 	@class SchemaUtil
@@ -34,6 +41,32 @@ export class SchemaUtil
 		//	Keccak-256(SHA-3), see the hash value of the Ethereum data block
 		//	Starts with "0x" (case-insensitive)
 		return TypeUtil.isNotEmptyString( v ) && 66 === v.length && /^0x[0-9a-f]{64}$/.test( v );
+	}
+
+	/**
+	 *	@param service	{string}
+	 *	@returns {Array<string> | null}
+	 */
+	public static getRequiredKeysByService( service : string ) : Array<string> | null
+	{
+		switch ( service )
+		{
+			case 'comment' :
+				return this.getRequiredKeys( commentSchema );
+			case 'contact':
+				return this.getRequiredKeys( contactSchema );
+			case 'favorite':
+				return this.getRequiredKeys( favoriteSchema );
+			case 'follower':
+				return this.getRequiredKeys( followerSchema );
+			case 'like':
+				return this.getRequiredKeys( likeSchema );
+			case 'post':
+				return this.getRequiredKeys( postSchema );
+			case 'profile':
+				return this.getRequiredKeys( profileSchema );
+		}
+		return null;
 	}
 
 	/**
