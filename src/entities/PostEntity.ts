@@ -10,7 +10,8 @@ import { MRefEntity } from "../models/MRefEntity";
 /**
  *	define post content types
  */
-export enum PostContentTypes {
+export enum PostContentTypes
+{
 	original = 'original',
 	reposted = 'reposted',
 	quoted = 'quoted',
@@ -26,17 +27,17 @@ export const postSchema = new Schema( {
 		type : String,
 		validate : {
 			validator : ( v : PostContentTypes ) => Object.values( PostContentTypes ).includes( v ),
-			message : ( props: any ) : string => `invalid ${props.path}`
+			message : ( props : any ) : string => `invalid ${ props.path }`
 		},
 		enum : Object.values( PostContentTypes ),
-		required: [ true, '{PATH} required' ],
+		required : [ true, '{PATH} required' ],
 		default : PostContentTypes.original,
 	},
 	authorName : {
 		type : String,
 		validate : {
 			validator : ( v : any ) => TypeUtil.isNotEmptyString( v ) && v.length < 128,
-			message : ( props: any ) : string => `invalid ${props.path}, should be less than 128 characters`
+			message : ( props : any ) : string => `invalid ${ props.path }, should be less than 128 characters`
 		},
 		required : [ true, '{PATH} required' ]
 	},
@@ -44,7 +45,7 @@ export const postSchema = new Schema( {
 		type : String,
 		validate : {
 			validator : ( v : any ) => TypeUtil.isNotEmptyString( v ) && v.length < 256,
-			message : ( props: any ) : string => `invalid ${props.path}, should be less than 256 characters`
+			message : ( props : any ) : string => `invalid ${ props.path }, should be less than 256 characters`
 		},
 		required : [ true, '{PATH} required' ]
 	},
@@ -53,7 +54,7 @@ export const postSchema = new Schema( {
 		type : String,
 		validate : {
 			validator : ( v : any ) => TypeUtil.isNotEmptyString( v ) && v.length < 2048,
-			message : ( props: any ) : string => `invalid ${props.path}, should be less than 2048 characters`
+			message : ( props : any ) : string => `invalid ${ props.path }, should be less than 2048 characters`
 		},
 		required : [ true, '{PATH} required' ]
 	},
@@ -75,7 +76,7 @@ export const postSchema = new Schema( {
 				}
 				return true;
 			},
-			message : ( props: any ) : string => `invalid ${props.path}, each element should be less than 256 characters`
+			message : ( props : any ) : string => `invalid ${ props.path }, each element should be less than 256 characters`
 		},
 		required : false
 	},
@@ -97,7 +98,7 @@ export const postSchema = new Schema( {
 				}
 				return true;
 			},
-			message : ( props: any ) : string => `invalid ${props.path}, each element should be less than 256 characters`
+			message : ( props : any ) : string => `invalid ${ props.path }, each element should be less than 256 characters`
 		},
 		required : false
 	},
@@ -153,9 +154,9 @@ export const postSchema = new Schema( {
 				wallet : wallet
 			} );
 		},
-		byRefAuthorWallet( refAuthorWallet: string )
+		byRefAuthorWallet( refAuthorWallet : string )
 		{
-			return this.where({
+			return this.where( {
 				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
 				refAuthorWallet : refAuthorWallet,
 			} );
@@ -179,3 +180,4 @@ export type PostListResult = TQueueListResult &
 
 
 export const PostModel = model( 'Post', postSchema );
+

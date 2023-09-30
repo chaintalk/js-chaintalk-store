@@ -1,7 +1,7 @@
 import { describe, expect } from '@jest/globals';
 import { EtherWallet, Web3Signer, TWalletBaseItem, Web3Digester } from "web3id";
 import { ethers } from "ethers";
-import { DatabaseConnection } from "../../../src";
+import { DatabaseConnection, ERefDataTypes } from "../../../src";
 import { TestUtil } from "chaintalk-utils";
 import { SchemaUtil } from "../../../src";
 import { PostListResult, postSchema, PostType } from "../../../src";
@@ -18,8 +18,25 @@ import { resultErrors } from "../../../src";
  */
 describe( "CommentService", () =>
 {
+	//
+	//	create a wallet by mnemonic
+	//
+	const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
+	const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
+
 	beforeAll( async () =>
 	{
+		//	assert ...
+		expect( walletObj ).not.toBeNull();
+		expect( walletObj.mnemonic ).toBe( mnemonic );
+		expect( walletObj.privateKey.startsWith( '0x' ) ).toBe( true );
+		expect( walletObj.address.startsWith( '0x' ) ).toBe( true );
+		expect( walletObj.index ).toBe( 0 );
+		expect( walletObj.path ).toBe( ethers.defaultPath );
+
+		//	clear all before all testing
+		const postService = new PostService();
+		await postService.clearAll();
 	} );
 	afterAll( async () =>
 	{
@@ -35,24 +52,11 @@ describe( "CommentService", () =>
 	let savedPost : PostType;
 	let savedComment : CommentType;
 
+
 	describe( "Add record", () =>
 	{
 		it( "should add a comment to an existing post", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
-			//	assert ...
-			expect( walletObj ).not.toBeNull();
-			expect( walletObj.mnemonic ).toBe( mnemonic );
-			expect( walletObj.privateKey.startsWith( '0x' ) ).toBe( true );
-			expect( walletObj.address.startsWith( '0x' ) ).toBe( true );
-			expect( walletObj.index ).toBe( 0 );
-			expect( walletObj.path ).toBe( ethers.defaultPath );
-
 			//
 			//	create a new contact with ether signature
 			//
@@ -77,6 +81,7 @@ describe( "CommentService", () =>
 				statisticLike : 0,
 				statisticFavorite : 0,
 				statisticReply : 0,
+				refType : ERefDataTypes.post,
 				remark : 'no ...',
 				createdAt: new Date(),
 				updatedAt: new Date()
@@ -91,11 +96,13 @@ describe( "CommentService", () =>
 			//	try to save the record to database
 			//
 			const postService = new PostService();
-			await postService.clearAll();
 
 			savedPost = await postService.add( walletObj.address, post, post.sig );
 			expect( savedPost ).toBeDefined();
 			expect( savedPost ).toHaveProperty( '_id' );
+			expect( savedPost ).toHaveProperty( 'hash' );
+			expect( savedPost ).toHaveProperty( 'sig' );
+			expect( SchemaUtil.isValidKeccak256Hash( savedPost.hash ) ).toBeTruthy();
 			//console.log( savedPost );
 			//    {
 			//       version: '1.0.0',
@@ -178,12 +185,6 @@ describe( "CommentService", () =>
 	{
 		it( "should return a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const commentService = new CommentService();
 			const result : CommentType | null = await commentService.queryOne( walletObj.address, { by : `walletAndHash`, hash : savedComment.hash } );
 			//
@@ -237,6 +238,10 @@ describe( "CommentService", () =>
 	{
 		it( "should return a list by postHash", async () =>
 		{
+			expect( savedPost ).toBeDefined();
+			expect( savedPost ).toHaveProperty( 'hash' );
+			expect( SchemaUtil.isValidKeccak256Hash( savedPost.hash ) ).toBeTruthy();
+
 			const commentService = new CommentService();
 			const results : PostListResult = await commentService.queryList( '', { by : 'postHash', postHash : savedPost.hash } );
 			expect( results ).toHaveProperty( 'total' );
@@ -295,12 +300,6 @@ describe( "CommentService", () =>
 
 		it( "should return a list by wallet", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const commentService = new CommentService();
 			const results : PostListResult = await commentService.queryList( walletObj.address, { by : 'walletAndPostHash', address : walletObj.address } );
 			expect( results ).toHaveProperty( 'total' );
@@ -359,12 +358,6 @@ describe( "CommentService", () =>
 
 		it( "should return a list by wallet and postHash", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			const commentService = new CommentService();
 			const results : PostListResult = await commentService.queryList( walletObj.address, { by : 'walletAndPostHash', address : walletObj.address, postHash : savedPost.hash } );
 			expect( results ).toHaveProperty( 'total' );
@@ -427,12 +420,6 @@ describe( "CommentService", () =>
 	{
 		it( "should return a list of records by pagination from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			//
 			//	create many contacts
 			//
@@ -557,12 +544,6 @@ describe( "CommentService", () =>
 		it( "should update a record by wallet and address from database", async () =>
 		{
 			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
-			//
 			//	create a new post with signature
 			//
 			let comment : CommentType = {
@@ -683,12 +664,6 @@ describe( "CommentService", () =>
 		it( "should update statistics", async () =>
 		{
 			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
-			//
 			//	create a new comment with signature
 			//
 			let comment : CommentType = {
@@ -761,12 +736,6 @@ describe( "CommentService", () =>
 	{
 		it( "should logically delete a record by wallet and address from database", async () =>
 		{
-			//
-			//	create a wallet by mnemonic
-			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
-
 			//
 			//	create a new comment with signature
 			//

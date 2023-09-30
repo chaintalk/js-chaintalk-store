@@ -53,10 +53,11 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				}
 
 				//	...
-				const postModel : Document = new PostModel( {
+				const toBeSaved = {
 					...data,
 					deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
-				} );
+				};
+				const postModel : Document = new PostModel( toBeSaved );
 				let error : Error.ValidationError | null = postModel.validateSync();
 				if ( error )
 				{
