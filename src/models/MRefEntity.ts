@@ -1,7 +1,6 @@
 import { TypeUtil } from "chaintalk-utils";
 import { EtherWallet } from "web3id";
 import { ERefDataTypes } from "./ERefDataTypes";
-import { SchemaUtil } from "../utils/SchemaUtil";
 
 /**
  * 	@module MRefEntity
@@ -14,7 +13,7 @@ export const MRefEntity : any = {
 		type : String,
 		validate : {
 			validator : ( v : string ) => TypeUtil.isNotEmptyString( v ) && EtherWallet.isValidAddress( v ),
-			message : ( props: any ) : string => `invalid ${props.path}`
+			message : ( props: any ) : string => `invalid ${ props.path }`
 		},
 		required : false
 	},
@@ -24,7 +23,7 @@ export const MRefEntity : any = {
 		type : String,
 		validate : {
 			validator : ( v : any ) => TypeUtil.isString( v ) && v.length < 128,
-			message : ( props: any ) : string => `invalid ${props.path}, should be less than 128 characters`
+			message : ( props: any ) : string => `invalid ${ props.path }, should be less than 128 characters`
 		},
 		required : false
 	},
@@ -34,7 +33,7 @@ export const MRefEntity : any = {
 		type : String,
 		validate : {
 			validator : ( v : any ) => TypeUtil.isString( v ) && v.length < 256,
-			message : ( props: any ) : string => `invalid ${props.path}, should be less than 256 characters`
+			message : ( props: any ) : string => `invalid ${ props.path }, should be less than 256 characters`
 		},
 		required : false
 	},
@@ -43,7 +42,7 @@ export const MRefEntity : any = {
 		type : String,
 		validate : {
 			validator : ( v : ERefDataTypes ) => Object.values( ERefDataTypes ).includes( v ),
-			message : ( props: any ) : string => `invalid ${props.path}`
+			message : ( props: any ) : string => `invalid ${ props.path }`
 		},
 		enum : Object.values( ERefDataTypes ),
 		required: false
@@ -54,8 +53,8 @@ export const MRefEntity : any = {
 		type : String,
 		validate : {
 			//	Starts with "0x" (case-insensitive)
-			validator : ( v : string ) => SchemaUtil.isValidKeccak256Hash( v ),
-			message : ( props: any ) : string => `invalid ${props.path}, must be 66 lowercase hex characters`
+			validator : ( v : string ) => TypeUtil.isNotEmptyString( v ) && 66 === v.length && /^0x[0-9a-f]{64}$/.test( v ),
+			message : ( props: any ) : string => `invalid ${ props.path }, must be 66 lowercase hex characters`
 		},
 		required: false
 	},
@@ -73,7 +72,7 @@ export const MRefEntity : any = {
 			// 	}
 			// 	return true;
 			// },
-			message : ( props: any ) : string => `invalid ${props.path}, must be less than 2048 characters`
+			message : ( props: any ) : string => `invalid ${ props.path }, must be less than 2048 characters`
 		},
 		required : false
 	},
