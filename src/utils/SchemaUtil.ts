@@ -44,28 +44,29 @@ export class SchemaUtil
 	}
 
 	/**
-	 *	@param service	{string}
-	 *	@returns {Array<string> | null}
+	 *	@param schemaName	{string}
+	 *	@returns { Schema | null }
 	 */
-	public static getRequiredKeysByService( service : string ) : Array<string> | null
+	public static getSchemaByName( schemaName : string ) : Schema | null
 	{
-		switch ( service )
+		switch ( schemaName )
 		{
 			case 'comment' :
-				return this.getRequiredKeys( commentSchema );
+				return commentSchema;
 			case 'contact':
-				return this.getRequiredKeys( contactSchema );
+				return contactSchema;
 			case 'favorite':
-				return this.getRequiredKeys( favoriteSchema );
+				return favoriteSchema;
 			case 'follower':
-				return this.getRequiredKeys( followerSchema );
+				return followerSchema;
 			case 'like':
-				return this.getRequiredKeys( likeSchema );
+				return likeSchema;
 			case 'post':
-				return this.getRequiredKeys( postSchema );
+				return postSchema;
 			case 'profile':
-				return this.getRequiredKeys( profileSchema );
+				return profileSchema;
 		}
+
 		return null;
 	}
 
@@ -73,16 +74,27 @@ export class SchemaUtil
 	 *	@param schema	{Schema}
 	 *	@returns {Array<string> | null}
 	 */
-	public static getRequiredKeys( schema : Schema ) : Array<string> | null
+	public static getRequiredKeys( schema : Schema | string ) : Array<string> | null
 	{
 		try
 		{
-			if ( ! schema )
+			let instance : Schema | null;
+			if ( schema instanceof Schema )
+			{
+				//	Schema
+				instance = schema;
+			}
+			else
+			{
+				//	string
+				instance = this.getSchemaByName( schema );
+			}
+			if ( ! instance )
 			{
 				return null;
 			}
 
-			return Object.keys( schema.paths ).filter( path => schema.paths[ path ].isRequired );
+			return Object.keys( instance.paths ).filter( path => instance && instance.paths[ path ].isRequired );
 		}
 		catch ( err )
 		{
@@ -92,15 +104,26 @@ export class SchemaUtil
 	}
 
 	/**
-	 *	@param schema	{Schema}
+	 *	@param schema	{ Schema | string }
 	 *	@param prefix	{string}
 	 *	@returns {Array<string> | null}
 	 */
-	public static getPrefixedKeys( schema : Schema, prefix : string ) : Array<string> | null
+	public static getPrefixedKeys( schema : Schema | string, prefix : string ) : Array<string> | null
 	{
 		try
 		{
-			if ( ! schema )
+			let instance : Schema | null;
+			if ( schema instanceof Schema )
+			{
+				//	Schema
+				instance = schema;
+			}
+			else
+			{
+				//	string
+				instance = this.getSchemaByName( schema );
+			}
+			if ( ! instance )
 			{
 				return null;
 			}
@@ -109,7 +132,7 @@ export class SchemaUtil
 				return null;
 			}
 
-			return Object.keys( schema.paths ).filter( path => path.startsWith( prefix ) );
+			return Object.keys( instance.paths ).filter( path => path.startsWith( prefix ) );
 		}
 		catch ( err )
 		{
