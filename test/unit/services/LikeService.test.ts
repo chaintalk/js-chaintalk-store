@@ -24,6 +24,7 @@ describe( "LikeService", () =>
 	const exceptedKeys : Array<string> = Array.isArray( statisticKeys ) ? statisticKeys : [];
 	let walletObj : TWalletBaseItem;
 	let savedPost : PostType;
+	let savedLike : LikeType;
 
 	beforeAll( async () =>
 	{
@@ -132,8 +133,8 @@ describe( "LikeService", () =>
 			expect( findPost.statisticLike ).toBeGreaterThanOrEqual( 0 );
 
 			//	add favorite and update statistic
-			const result = await likeService.add( walletObj.address, like, like.sig );
-			expect( result ).toBeDefined();
+			savedLike = await likeService.add( walletObj.address, like, like.sig );
+			expect( savedLike ).toBeDefined();
 
 			const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( likeSchema );
 			expect( Array.isArray( requiredKeys ) ).toBeTruthy();
@@ -141,7 +142,7 @@ describe( "LikeService", () =>
 			{
 				for ( const key of requiredKeys )
 				{
-					expect( result ).toHaveProperty( key );
+					expect( savedLike ).toHaveProperty( key );
 				}
 			}
 
@@ -190,7 +191,51 @@ describe( "LikeService", () =>
 
 	describe( "Query one", () =>
 	{
-		it( "should return a record by wallet and address from database", async () =>
+		it( "should return a record by hexId", async () =>
+		{
+			const likeService = new LikeService();
+			const result : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'hexId', hexId : savedLike._id.toHexString() } );
+			expect( result ).not.toBe( null );
+			expect( result ).toBeDefined();
+
+			if ( result )
+			{
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( likeSchema );
+				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
+				if ( requiredKeys )
+				{
+					for ( const key of requiredKeys )
+					{
+						expect( result ).toHaveProperty( key );
+					}
+				}
+			}
+
+		}, 60 * 10e3 );
+
+		it( "should return a record by hash", async () =>
+		{
+			const likeService = new LikeService();
+			const result : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'hash', hash : savedLike.hash } );
+			expect( result ).not.toBe( null );
+			expect( result ).toBeDefined();
+
+			if ( result )
+			{
+				const requiredKeys : Array<string> | null = SchemaUtil.getRequiredKeys( likeSchema );
+				expect( Array.isArray( requiredKeys ) ).toBeTruthy();
+				if ( requiredKeys )
+				{
+					for ( const key of requiredKeys )
+					{
+						expect( result ).toHaveProperty( key );
+					}
+				}
+			}
+
+		}, 60 * 10e3 );
+
+		it( "should return a record by refType and refHash", async () =>
 		{
 			const likeService = new LikeService();
 			const result : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : savedPost.hash } );
@@ -280,33 +325,268 @@ describe( "LikeService", () =>
 
 	describe( "Deletion", () =>
 	{
-		it( "should logically delete a record by wallet and address from database", async () =>
+		it( "should logically delete a record by hexId", async () =>
 		{
 			//
-			//	create a wallet by mnemonic
+			//	create a new contact with ether signature
 			//
-			const mnemonic : string = 'olympic cradle tragic crucial exit annual silly cloth scale fine gesture ancient';
-			const walletObj : TWalletBaseItem = EtherWallet.createWalletFromMnemonic( mnemonic );
+			let post : PostType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				sig : ``,
+				authorName : 'XING',
+				authorAvatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
+				body : 'Hello 1',
+				pictures : [],
+				videos : [],
+				bitcoinPrice : '25888',
+				statisticView : 0,
+				statisticRepost : 0,
+				statisticQuote : 0,
+				statisticLike : 0,
+				statisticFavorite : 0,
+				statisticReply : 0,
+				remark : 'no ...',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.hash = await Web3Digester.hashObject( post, exceptedKeys );
+			expect( post.sig ).toBeDefined();
+			expect( typeof post.sig ).toBe( 'string' );
+			expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//
+			//	try to save the record to database
+			//
+			const postService = new PostService();
+			savedPost = await postService.add( walletObj.address, post, post.sig );
+
+
+			//
+			//	create a new like with ether signature
+			//
+			let like : LikeType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				refType : ERefDataTypes.post,
+				refHash : savedPost.hash,
+				refBody : '',
+				sig : ``,
+				remark : 'no remark',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			like.sig = await Web3Signer.signObject( walletObj.privateKey, like );
+			like.hash = await Web3Digester.hashObject( like );
+			expect( like.sig ).toBeDefined();
+			expect( typeof like.sig ).toBe( 'string' );
+			expect( like.sig.length ).toBeGreaterThanOrEqual( 0 );
 
 			const likeService = new LikeService();
-			const findFavorite : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneLikeHash } );
-			if ( findFavorite )
-			{
-				let likeToBeDeleted : LikeType = { ...findFavorite,
-					deleted : SchemaUtil.createHexStringObjectIdFromTime( 1 ),
-				};
-				likeToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, likeToBeDeleted );
-				expect( likeToBeDeleted.sig ).toBeDefined();
-				expect( typeof likeToBeDeleted.sig ).toBe( 'string' );
-				expect( likeToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
+			savedLike = await likeService.add( walletObj.address, like, like.sig );
+			expect( savedLike ).toBeDefined();
 
-				//	...
-				const result : number = await likeService.delete( walletObj.address, likeToBeDeleted, likeToBeDeleted.sig );
-				expect( result ).toBeGreaterThanOrEqual( 0 );
+			//	...
+			let likeToBeDeleted : LikeType = {
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 1 ),
+				wallet : walletObj.address,
+				hexId : savedPost._id.toHexString(),
+			};
+			likeToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, likeToBeDeleted );
+			expect( likeToBeDeleted.sig ).toBeDefined();
+			expect( typeof likeToBeDeleted.sig ).toBe( 'string' );
+			expect( likeToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
 
-				const findFavoriteAgain : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneLikeHash } );
-				expect( findFavoriteAgain ).toBe( null );
-			}
+			//	...
+			const result : number = await likeService.delete( walletObj.address, likeToBeDeleted, likeToBeDeleted.sig );
+			expect( result ).toBeGreaterThanOrEqual( 0 );
+
+			const findFavoriteAgain : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneLikeHash } );
+			expect( findFavoriteAgain ).toBe( null );
+
+		}, 60 * 10e3 );
+
+		it( "should logically delete a record by hash", async () =>
+		{
+			//
+			//	create a new contact with ether signature
+			//
+			let post : PostType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				sig : ``,
+				authorName : 'XING',
+				authorAvatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
+				body : 'Hello 1',
+				pictures : [],
+				videos : [],
+				bitcoinPrice : '25888',
+				statisticView : 0,
+				statisticRepost : 0,
+				statisticQuote : 0,
+				statisticLike : 0,
+				statisticFavorite : 0,
+				statisticReply : 0,
+				remark : 'no ...',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.hash = await Web3Digester.hashObject( post, exceptedKeys );
+			expect( post.sig ).toBeDefined();
+			expect( typeof post.sig ).toBe( 'string' );
+			expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//
+			//	try to save the record to database
+			//
+			const postService = new PostService();
+			savedPost = await postService.add( walletObj.address, post, post.sig );
+
+
+			//
+			//	create a new like with ether signature
+			//
+			let like : LikeType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				refType : ERefDataTypes.post,
+				refHash : savedPost.hash,
+				refBody : '',
+				sig : ``,
+				remark : 'no remark',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			like.sig = await Web3Signer.signObject( walletObj.privateKey, like );
+			like.hash = await Web3Digester.hashObject( like );
+			expect( like.sig ).toBeDefined();
+			expect( typeof like.sig ).toBe( 'string' );
+			expect( like.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			const likeService = new LikeService();
+			savedLike = await likeService.add( walletObj.address, like, like.sig );
+			expect( savedLike ).toBeDefined();
+
+			//	...
+			let likeToBeDeleted : LikeType = {
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 1 ),
+				wallet : walletObj.address,
+				hash : savedLike.hash,
+			};
+			likeToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, likeToBeDeleted );
+			expect( likeToBeDeleted.sig ).toBeDefined();
+			expect( typeof likeToBeDeleted.sig ).toBe( 'string' );
+			expect( likeToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//	...
+			const result : number = await likeService.delete( walletObj.address, likeToBeDeleted, likeToBeDeleted.sig );
+			expect( result ).toBeGreaterThanOrEqual( 0 );
+
+			const findFavoriteAgain : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneLikeHash } );
+			expect( findFavoriteAgain ).toBe( null );
+
+		}, 60 * 10e3 );
+
+		it( "should logically delete a record by refType and refHash", async () =>
+		{
+			//
+			//	create a new contact with ether signature
+			//
+			let post : PostType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				sig : ``,
+				authorName : 'XING',
+				authorAvatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
+				body : 'Hello 1',
+				pictures : [],
+				videos : [],
+				bitcoinPrice : '25888',
+				statisticView : 0,
+				statisticRepost : 0,
+				statisticQuote : 0,
+				statisticLike : 0,
+				statisticFavorite : 0,
+				statisticReply : 0,
+				remark : 'no ...',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.hash = await Web3Digester.hashObject( post, exceptedKeys );
+			expect( post.sig ).toBeDefined();
+			expect( typeof post.sig ).toBe( 'string' );
+			expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//
+			//	try to save the record to database
+			//
+			const postService = new PostService();
+			savedPost = await postService.add( walletObj.address, post, post.sig );
+
+
+			//
+			//	create a new like with ether signature
+			//
+			let like : LikeType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				refType : ERefDataTypes.post,
+				refHash : savedPost.hash,
+				refBody : '',
+				sig : ``,
+				remark : 'no remark',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			like.sig = await Web3Signer.signObject( walletObj.privateKey, like );
+			like.hash = await Web3Digester.hashObject( like );
+			expect( like.sig ).toBeDefined();
+			expect( typeof like.sig ).toBe( 'string' );
+			expect( like.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			const likeService = new LikeService();
+			savedLike = await likeService.add( walletObj.address, like, like.sig );
+			expect( savedLike ).toBeDefined();
+
+			//	...
+			let likeToBeDeleted : LikeType = {
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 1 ),
+				wallet : walletObj.address,
+				refType : ERefDataTypes.post,
+				refHash : savedPost.hash,
+			};
+			likeToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, likeToBeDeleted );
+			expect( likeToBeDeleted.sig ).toBeDefined();
+			expect( typeof likeToBeDeleted.sig ).toBe( 'string' );
+			expect( likeToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//	...
+			const result : number = await likeService.delete( walletObj.address, likeToBeDeleted, likeToBeDeleted.sig );
+			expect( result ).toBeGreaterThanOrEqual( 0 );
+
+			const findFavoriteAgain : LikeType | null = await likeService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneLikeHash } );
+			expect( findFavoriteAgain ).toBe( null );
 
 		}, 60 * 10e3 );
 	} );

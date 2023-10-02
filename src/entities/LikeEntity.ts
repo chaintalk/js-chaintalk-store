@@ -16,6 +16,61 @@ export const likeSchema = new Schema( {
 }, {
 	timestamps: true,
 	query: {
+		//	base query helper
+		byId( id : Types.ObjectId )
+		{
+			//	find one
+			return this.where( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				_id : id,
+			} );
+		},
+		byHexId( hexId : string )
+		{
+			//	find one
+			return this.where( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				_id : Types.ObjectId.createFromHexString( hexId ),
+			} );
+		},
+		byWalletAndId( wallet : string, id : Types.ObjectId )
+		{
+			//	find one
+			return this.where( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				wallet : wallet,
+				_id : id,
+			} );
+		},
+		byWalletAndHexId( wallet : string, hexId : string )
+		{
+			//	find one
+			return this.where( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				wallet : wallet,
+				_id : Types.ObjectId.createFromHexString( hexId ),
+			} );
+		},
+		byHash( hash : string )
+		{
+			//	find one
+			return this.where( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				hash : hash
+			} );
+		},
+		byWalletAndRefTypeAndRefHash( wallet : string, refType : ERefDataTypes, refHash : string )
+		{
+			//	find one
+			return this.where( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				wallet : wallet,
+				refType : refType,
+				refHash : refHash,
+			} );
+		},
+
+
 		byWalletAndRefType( wallet: string, refType ?: ERefDataTypes )
 		{
 			if ( undefined !== refType )
@@ -33,16 +88,6 @@ export const likeSchema = new Schema( {
 					wallet : wallet
 				} );
 			}
-		},
-		byWalletAndRefTypeAndRefHash( wallet : string, refType : ERefDataTypes, refHash : string )
-		{
-			//	find one
-			return this.where( {
-				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
-				wallet : wallet,
-				refType : refType,
-				refHash : refHash,
-			} );
 		}
 	}
 } );

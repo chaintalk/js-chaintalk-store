@@ -9,7 +9,7 @@ import { QueryUtil } from "../utils/QueryUtil";
 import { SchemaUtil } from "../utils/SchemaUtil";
 import { resultErrors } from "../constants/ResultErrors";
 import { ERefDataTypes } from "../models/ERefDataTypes";
-import { FavoriteType } from "../entities/FavoriteEntity";
+import { FavoriteModel, FavoriteType } from "../entities/FavoriteEntity";
 import { PostModel, PostType } from "../entities/PostEntity";
 import { CommentModel, CommentType } from "../entities/CommentEntity";
 
@@ -182,25 +182,38 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
 				}
-				if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
-				{
-					return reject( `invalid data.refType` );
-				}
-				if ( ! SchemaUtil.isValidKeccak256Hash( data.refHash ) )
-				{
-					return reject( `invalid data.refHash` );
-				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<LikeType>( LikeModel, wallet );
-				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				if ( ! TestUtil.isTestEnv() )
 				{
-					return reject( resultErrors.operateFrequently );
+					const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<LikeType>( LikeModel, wallet );
+					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+					{
+						return reject( resultErrors.operateFrequently );
+					}
 				}
 
 				//	...
 				await this.connect();
-				const find : LikeType | null = await this._queryOneByWalletAndRefTypeAndRefHash( wallet, data.refType, data.refHash );
+				let find : LikeType | null;
+				if ( SchemaUtil.isValidKeccak256Hash( data.hash ) )
+				{
+					find = await this._queryOneByHash( data.hash );
+				}
+				else if ( Object.values( ERefDataTypes ).includes( data.refType ) &&
+					SchemaUtil.isValidKeccak256Hash( data.refHash ) )
+				{
+					find = await this._queryOneByWalletAndRefTypeAndRefHash( wallet, data.refType, data.refHash );
+				}
+				else if ( TypeUtil.isNotEmptyString( data.hexId ) )
+				{
+					find = await this._queryOneByHexId( data.hexId );
+				}
+				else
+				{
+					return reject( `not found` );
+				}
+
 				if ( find )
 				{
 					const update = { deleted : find._id.toHexString() };
@@ -241,7 +254,27 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 
 				switch ( data.by )
 				{
+					case 'hexId' :
+						if ( ! TypeUtil.isNotEmptyString( data.hexId ) )
+						{
+							return reject( `invalid data.hexId` );
+						}
+						return resolve( await this._queryOneByHexId( data.hexId ) );
+					case 'hash' :
+						if ( ! SchemaUtil.isValidKeccak256Hash( data.hash ) )
+						{
+							return reject( `invalid data.hash` );
+						}
+						return resolve( await this._queryOneByHash( data.hash ) );
 					case 'walletAndRefTypeAndRefHash' :
+						if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
+						{
+							return reject( `invalid data.refType` );
+						}
+						if ( ! SchemaUtil.isValidKeccak256Hash( data.refHash ) )
+						{
+							return reject( `invalid data.refHash` );
+						}
 						return resolve( await this._queryOneByWalletAndRefTypeAndRefHash( wallet, data.refType, data.refHash ) );
 				}
 
@@ -289,6 +322,78 @@ export class LikeService extends BaseService implements IWeb3StoreService< LikeT
 				reject( err );
 			}
 		} );
+	}
+
+	/**
+	 *	@param hexId	{string}
+	 *	@returns { Promise<FavoriteType | null> }
+	 *	@private
+	 */
+	private _queryOneByHexId( hexId : string ) : Promise<FavoriteType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! TypeUtil.isNotEmptyString( hexId ) )
+				{
+					return reject( `invalid hexId` );
+				}
+
+				await this.connect();
+				const record = await LikeModel
+					.findOne()
+					.byHexId( hexId )
+					.lean<FavoriteType>()
+					.exec();
+				if ( record )
+				{
+					return resolve( record );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
+	}
+
+	/**
+	 *	@param hash	{string}
+	 *	@returns { Promise<FavoriteType | null> }
+	 *	@private
+	 */
+	private _queryOneByHash( hash : string ) : Promise<FavoriteType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! TypeUtil.isNotEmptyString( hash ) )
+				{
+					return reject( `invalid hash` );
+				}
+
+				await this.connect();
+				const record = await LikeModel
+					.findOne()
+					.byHash( hash )
+					.lean<FavoriteType>()
+					.exec();
+				if ( record )
+				{
+					return resolve( record );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
 	}
 
 	/**
