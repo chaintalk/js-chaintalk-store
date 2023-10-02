@@ -248,7 +248,7 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 
 				switch ( data.by )
 				{
-					case 'walletAndRefType' :
+					case 'walletAndAddress' :
 						return resolve( await this._queryListByWalletAndAddress( wallet, data.address, data.options ) );
 				}
 
