@@ -369,9 +369,263 @@ describe( "FavoriteService", () =>
 
 	describe( "Deletion", () =>
 	{
-		it( "should logically delete a record by wallet and address from database", async () =>
+		it( "should logically delete a record by hexId", async () =>
 		{
+			//
+			//	create a new contact with ether signature
+			//
+			let post : PostType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				sig : ``,
+				authorName : 'XING',
+				authorAvatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
+				body : 'Hello 1',
+				pictures : [],
+				videos : [],
+				bitcoinPrice : '25888',
+				statisticView : 0,
+				statisticRepost : 0,
+				statisticQuote : 0,
+				statisticLike : 0,
+				statisticFavorite : 0,
+				statisticReply : 0,
+				remark : 'no ...',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.hash = await Web3Digester.hashObject( post, exceptedKeys );
+			expect( post.sig ).toBeDefined();
+			expect( typeof post.sig ).toBe( 'string' );
+			expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//
+			//	try to save the record to database
+			//
+			const postService = new PostService();
+			savedPost = await postService.add( walletObj.address, post, post.sig );
+
+
+			//
+			//	create a new favorite with ether signature
+			//
+			let favorite : FavoriteType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				refType : ERefDataTypes.post,
+				refHash : savedPost.hash,
+				refBody : '',
+				sig : ``,
+				remark : 'no remark',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			favorite.sig = await Web3Signer.signObject( walletObj.privateKey, favorite );
+			favorite.hash = await Web3Digester.hashObject( favorite );
+			expect( favorite.sig ).toBeDefined();
+			expect( typeof favorite.sig ).toBe( 'string' );
+			expect( favorite.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//
+			//	try to save the record to database
+			//
 			const favoriteService = new FavoriteService();
+			//	add favorite and update statistic
+			savedFavorite = await favoriteService.add( walletObj.address, favorite, favorite.sig );
+			expect( savedFavorite ).toBeDefined();
+
+			//	....
+			let favoriteToBeDeleted : FavoriteType = {
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 1 ),
+				wallet : walletObj.address,
+				hexId : savedFavorite._id.toHexString()
+			};
+			favoriteToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, favoriteToBeDeleted );
+			expect( favoriteToBeDeleted.sig ).toBeDefined();
+			expect( typeof favoriteToBeDeleted.sig ).toBe( 'string' );
+			expect( favoriteToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//	...
+			const result : number = await favoriteService.delete( walletObj.address, favoriteToBeDeleted, favoriteToBeDeleted.sig );
+			expect( result ).toBeGreaterThanOrEqual( 0 );
+
+			const findFavoriteAgain : FavoriteType | null = await favoriteService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneFavHash } );
+			expect( findFavoriteAgain ).toBe( null );
+
+		}, 60 * 10e3 );
+
+		it( "should logically delete a record by hash", async () =>
+		{
+			//
+			//	create a new contact with ether signature
+			//
+			let post : PostType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				sig : ``,
+				authorName : 'XING',
+				authorAvatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
+				body : 'Hello 1',
+				pictures : [],
+				videos : [],
+				bitcoinPrice : '25888',
+				statisticView : 0,
+				statisticRepost : 0,
+				statisticQuote : 0,
+				statisticLike : 0,
+				statisticFavorite : 0,
+				statisticReply : 0,
+				remark : 'no ...',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.hash = await Web3Digester.hashObject( post, exceptedKeys );
+			expect( post.sig ).toBeDefined();
+			expect( typeof post.sig ).toBe( 'string' );
+			expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//
+			//	try to save the record to database
+			//
+			const postService = new PostService();
+			savedPost = await postService.add( walletObj.address, post, post.sig );
+
+
+			//
+			//	create a new favorite with ether signature
+			//
+			let favorite : FavoriteType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				refType : ERefDataTypes.post,
+				refHash : savedPost.hash,
+				refBody : '',
+				sig : ``,
+				remark : 'no remark',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			favorite.sig = await Web3Signer.signObject( walletObj.privateKey, favorite );
+			favorite.hash = await Web3Digester.hashObject( favorite );
+			expect( favorite.sig ).toBeDefined();
+			expect( typeof favorite.sig ).toBe( 'string' );
+			expect( favorite.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//
+			//	try to save the record to database
+			//
+			const favoriteService = new FavoriteService();
+			//	add favorite and update statistic
+			savedFavorite = await favoriteService.add( walletObj.address, favorite, favorite.sig );
+			expect( savedFavorite ).toBeDefined();
+
+			//	....
+			let favoriteToBeDeleted : FavoriteType = {
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 1 ),
+				wallet : walletObj.address,
+				hash : savedFavorite.hash
+			};
+			favoriteToBeDeleted.sig = await Web3Signer.signObject( walletObj.privateKey, favoriteToBeDeleted );
+			expect( favoriteToBeDeleted.sig ).toBeDefined();
+			expect( typeof favoriteToBeDeleted.sig ).toBe( 'string' );
+			expect( favoriteToBeDeleted.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//	...
+			const result : number = await favoriteService.delete( walletObj.address, favoriteToBeDeleted, favoriteToBeDeleted.sig );
+			expect( result ).toBeGreaterThanOrEqual( 0 );
+
+			const findFavoriteAgain : FavoriteType | null = await favoriteService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneFavHash } );
+			expect( findFavoriteAgain ).toBe( null );
+
+		}, 60 * 10e3 );
+
+		it( "should logically delete a record by refType and refHash", async () =>
+		{
+			//
+			//	create a new contact with ether signature
+			//
+			let post : PostType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				sig : ``,
+				authorName : 'XING',
+				authorAvatar : 'https://avatars.githubusercontent.com/u/142800322?v=4',
+				body : 'Hello 1',
+				pictures : [],
+				videos : [],
+				bitcoinPrice : '25888',
+				statisticView : 0,
+				statisticRepost : 0,
+				statisticQuote : 0,
+				statisticLike : 0,
+				statisticFavorite : 0,
+				statisticReply : 0,
+				remark : 'no ...',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			post.sig = await Web3Signer.signObject( walletObj.privateKey, post, exceptedKeys );
+			post.hash = await Web3Digester.hashObject( post, exceptedKeys );
+			expect( post.sig ).toBeDefined();
+			expect( typeof post.sig ).toBe( 'string' );
+			expect( post.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//
+			//	try to save the record to database
+			//
+			const postService = new PostService();
+			savedPost = await postService.add( walletObj.address, post, post.sig );
+
+
+			//
+			//	create a new favorite with ether signature
+			//
+			let favorite : FavoriteType = {
+				timestamp : new Date().getTime(),
+				hash : '',
+				version : '1.0.0',
+				deleted : SchemaUtil.createHexStringObjectIdFromTime( 0 ),
+				wallet : walletObj.address,
+				refType : ERefDataTypes.post,
+				refHash : savedPost.hash,
+				refBody : '',
+				sig : ``,
+				remark : 'no remark',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			favorite.sig = await Web3Signer.signObject( walletObj.privateKey, favorite );
+			favorite.hash = await Web3Digester.hashObject( favorite );
+			expect( favorite.sig ).toBeDefined();
+			expect( typeof favorite.sig ).toBe( 'string' );
+			expect( favorite.sig.length ).toBeGreaterThanOrEqual( 0 );
+
+			//
+			//	try to save the record to database
+			//
+			const favoriteService = new FavoriteService();
+			//	add favorite and update statistic
+			savedFavorite = await favoriteService.add( walletObj.address, favorite, favorite.sig );
+			expect( savedFavorite ).toBeDefined();
+
+			//	....
 			const findFavorite : FavoriteType | null = await favoriteService.queryOne( walletObj.address, { by : 'walletAndRefTypeAndRefHash', refType : ERefDataTypes.post, refHash : oneFavHash } );
 			if ( findFavorite )
 			{

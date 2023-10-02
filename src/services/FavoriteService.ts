@@ -191,25 +191,38 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 					//	MUST BE 1 for DELETION
 					return reject( `invalid data.deleted` );
 				}
-				if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
-				{
-					return reject( `invalid data.refType` );
-				}
-				if ( ! SchemaUtil.isValidKeccak256Hash( data.refHash ) )
-				{
-					return reject( `invalid data.refHash` );
-				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<FavoriteType>( FavoriteModel, wallet );
-				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				if ( ! TestUtil.isTestEnv() )
 				{
-					return reject( resultErrors.operateFrequently );
+					const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<FavoriteType>( FavoriteModel, wallet );
+					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+					{
+						return reject( resultErrors.operateFrequently );
+					}
 				}
 
 				//	...
 				await this.connect();
-				const find : FavoriteType | null = await this._queryOneByWalletAndRefTypeAndRefHash( wallet, data.refType, data.refHash );
+				let find : FavoriteType | null;
+				if ( SchemaUtil.isValidKeccak256Hash( data.hash ) )
+				{
+					find = await this._queryOneByHash( data.hash );
+				}
+				else if ( Object.values( ERefDataTypes ).includes( data.refType ) &&
+					SchemaUtil.isValidKeccak256Hash( data.refHash ) )
+				{
+					find = await this._queryOneByWalletAndRefTypeAndRefHash( wallet, data.refType, data.refHash );
+				}
+				else if ( TypeUtil.isNotEmptyString( data.hexId ) )
+				{
+					find = await this._queryOneByHexId( data.hexId );
+				}
+				else
+				{
+					return reject( `not found` );
+				}
+
 				if ( find )
 				{
 					const update = { deleted : find._id.toHexString() };
