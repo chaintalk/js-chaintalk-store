@@ -51,6 +51,14 @@ export const favoriteSchema = new Schema( {
 				_id : Types.ObjectId.createFromHexString( hexId ),
 			} );
 		},
+		byHash( hash : string )
+		{
+			//	find one
+			return this.where( {
+				deleted : Types.ObjectId.createFromTime( 0 ).toHexString(),
+				hash : hash
+			} );
+		},
 
 
 		byWalletAndRefTypeAndRefHash( wallet : string, refType : ERefDataTypes, refHash : string )

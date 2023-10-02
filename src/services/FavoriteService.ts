@@ -246,18 +246,30 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 				{
 					return reject( `invalid data, missing key : by` );
 				}
-				if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
-				{
-					return reject( `invalid data.refType` );
-				}
-				if ( ! SchemaUtil.isValidKeccak256Hash( data.refHash ) )
-				{
-					return reject( `invalid data.refHash` );
-				}
 
 				switch ( data.by )
 				{
+					case 'hexId' :
+						if ( ! TypeUtil.isNotEmptyString( data.hexId ) )
+						{
+							return reject( `invalid data.hexId` );
+						}
+						return resolve( await this._queryOneByHexId( data.hexId ) );
+					case 'hash' :
+						if ( ! SchemaUtil.isValidKeccak256Hash( data.hash ) )
+						{
+							return reject( `invalid data.hash` );
+						}
+						return resolve( await this._queryOneByHash( data.hash ) );
 					case 'walletAndRefTypeAndRefHash' :
+						if ( ! Object.values( ERefDataTypes ).includes( data.refType ) )
+						{
+							return reject( `invalid data.refType` );
+						}
+						if ( ! SchemaUtil.isValidKeccak256Hash( data.refHash ) )
+						{
+							return reject( `invalid data.refHash` );
+						}
 						return resolve( await this._queryOneByWalletAndRefTypeAndRefHash( wallet, data.refType, data.refHash ) );
 				}
 
@@ -311,6 +323,78 @@ export class FavoriteService extends BaseService implements IWeb3StoreService< F
 		} );
 	}
 
+
+	/**
+	 *	@param hexId	{string}
+	 *	@returns { Promise<FavoriteType | null> }
+	 *	@private
+	 */
+	private _queryOneByHexId( hexId : string ) : Promise<FavoriteType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! TypeUtil.isNotEmptyString( hexId ) )
+				{
+					return reject( `invalid hexId` );
+				}
+
+				await this.connect();
+				const record = await FavoriteModel
+					.findOne()
+					.byHexId( hexId )
+					.lean<FavoriteType>()
+					.exec();
+				if ( record )
+				{
+					return resolve( record );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
+	}
+
+	/**
+	 *	@param hash	{string}
+	 *	@returns { Promise<FavoriteType | null> }
+	 *	@private
+	 */
+	private _queryOneByHash( hash : string ) : Promise<FavoriteType | null>
+	{
+		return new Promise( async ( resolve, reject ) =>
+		{
+			try
+			{
+				if ( ! TypeUtil.isNotEmptyString( hash ) )
+				{
+					return reject( `invalid hash` );
+				}
+
+				await this.connect();
+				const record = await FavoriteModel
+					.findOne()
+					.byHash( hash )
+					.lean<FavoriteType>()
+					.exec();
+				if ( record )
+				{
+					return resolve( record );
+				}
+
+				resolve( null );
+			}
+			catch ( err )
+			{
+				reject( err );
+			}
+		});
+	}
 
 	/**
 	 *	@param wallet	{string}	wallet address
