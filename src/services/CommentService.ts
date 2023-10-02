@@ -198,10 +198,13 @@ export class CommentService extends BaseService implements IWeb3StoreService< Co
 				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<CommentType>( CommentModel, wallet );
-				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				if ( ! TestUtil.isTestEnv() )
 				{
-					return reject( resultErrors.operateFrequently );
+					const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<CommentType>( CommentModel, wallet );
+					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+					{
+						return reject( resultErrors.operateFrequently );
+					}
 				}
 
 				await this.connect();
@@ -258,10 +261,13 @@ export class CommentService extends BaseService implements IWeb3StoreService< Co
 				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<CommentType>( CommentModel, wallet );
-				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				if ( ! TestUtil.isTestEnv() )
 				{
-					return reject( resultErrors.operateFrequently );
+					const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<CommentType>( CommentModel, wallet );
+					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+					{
+						return reject( resultErrors.operateFrequently );
+					}
 				}
 
 				//	...

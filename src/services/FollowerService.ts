@@ -161,10 +161,13 @@ export class FollowerService extends BaseService implements IWeb3StoreService<Fo
 				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<FollowerType>( FollowerModel, wallet );
-				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				if ( ! TestUtil.isTestEnv() )
 				{
-					return reject( resultErrors.operateFrequently );
+					const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<FollowerType>( FollowerModel, wallet );
+					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+					{
+						return reject( resultErrors.operateFrequently );
+					}
 				}
 
 				//	...

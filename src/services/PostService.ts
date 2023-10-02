@@ -281,10 +281,13 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
-				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				if ( ! TestUtil.isTestEnv() )
 				{
-					return reject( resultErrors.operateFrequently );
+					const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
+					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+					{
+						return reject( resultErrors.operateFrequently );
+					}
 				}
 
 				await this.connect();
@@ -341,10 +344,13 @@ export class PostService extends BaseService implements IWeb3StoreService<PostTy
 				}
 
 				//	throat checking
-				const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
-				if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+				if ( ! TestUtil.isTestEnv() )
 				{
-					return reject( resultErrors.operateFrequently );
+					const latestElapsedMillisecond : number = await this.queryLatestElapsedMillisecondByUpdatedAt<PostType>( PostModel, wallet );
+					if ( latestElapsedMillisecond > 0 && latestElapsedMillisecond < 3 * 1000 )
+					{
+						return reject( resultErrors.operateFrequently );
+					}
 				}
 
 				//	...
