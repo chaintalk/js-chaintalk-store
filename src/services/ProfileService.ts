@@ -101,6 +101,12 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 				{
 					return reject( resultErrors.failedValidate );
 				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'key' ] ) ||
+					! TypeUtil.isNotEmptyString( data.key ) )
+				{
+					//	MUST BE 1 for DELETION
+					return reject( `invalid data.key` );
+				}
 
 				//	throat checking
 				if ( ! TestUtil.isTestEnv() )
@@ -175,6 +181,12 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 				{
 					return reject( resultErrors.failedValidate );
 				}
+				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'key' ] ) ||
+					! TypeUtil.isNotEmptyString( data.key ) )
+				{
+					//	MUST BE 1 for DELETION
+					return reject( `invalid data.key` );
+				}
 				if ( ! TypeUtil.isNotNullObjectWithKeys( data, [ 'deleted' ] ) ||
 					Types.ObjectId.createFromTime( 1 ).toHexString() !== data.deleted )
 				{
@@ -195,14 +207,15 @@ export class ProfileService extends BaseService implements IWeb3StoreService< Pr
 				//	...
 				await this.connect();
 				const find : ProfileType | null = await this._queryOneByWalletAndKey( wallet, data.key );
-				if ( find )
+				if ( ! find )
 				{
-					const update = { deleted : find._id.toHexString() };
-					const newDoc = await ProfileModel.findOneAndUpdate( find, update, { new : true } );
-					return resolve( newDoc ? 1 : 0 );
+					return reject( resultErrors.notFound );
 				}
 
-				resolve( 0 );
+				//	...
+				const update = { deleted : find._id.toHexString() };
+				const newDoc = await ProfileModel.findOneAndUpdate( find, update, { new : true } );
+				return resolve( newDoc ? 1 : 0 );
 			}
 			catch ( err )
 			{

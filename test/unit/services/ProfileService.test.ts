@@ -402,7 +402,7 @@ describe( "ProfileService", () =>
 				const NoStr : string = Number(i).toString().padStart( 2, '0' );
 
 				walletObjNew = EtherWallet.createNewAddress( walletObjNew );
-				let like : ProfileType = {
+				let profile : ProfileType = {
 					timestamp : new Date().getTime(),
 					hash : '',
 					version : '1.0.0',
@@ -415,13 +415,13 @@ describe( "ProfileService", () =>
 					createdAt: new Date(),
 					updatedAt: new Date()
 				};
-				like.sig = await Web3Signer.signObject( walletObj.privateKey, like );
-				like.hash = await Web3Digester.hashObject( like );
-				expect( like.sig ).toBeDefined();
-				expect( typeof like.sig ).toBe( 'string' );
-				expect( like.sig.length ).toBeGreaterThanOrEqual( 0 );
+				profile.sig = await Web3Signer.signObject( walletObj.privateKey, profile );
+				profile.hash = await Web3Digester.hashObject( profile );
+				expect( profile.sig ).toBeDefined();
+				expect( typeof profile.sig ).toBe( 'string' );
+				expect( profile.sig.length ).toBeGreaterThanOrEqual( 0 );
 
-				const result = await profileService.add( walletObj.address, like, like.sig );
+				const result = await profileService.add( walletObj.address, profile, profile.sig );
 				expect( result ).toBeDefined();
 			}
 
